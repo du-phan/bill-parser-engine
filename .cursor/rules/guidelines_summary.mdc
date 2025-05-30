@@ -1,0 +1,45 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# DAPLOS Parser Development Guidelines Summary
+
+This document summarizes the key development principles for the DAPLOS Parser project.
+
+## Core Principles
+
+*   **Simplicity:** Prioritize the simplest solution.
+*   **Maintainability:** Write clean, readable, and well-documented code.
+*   **Robustness:** Implement comprehensive validation and error handling.
+*   **Performance:** Optimize judiciously, based on profiling.
+
+## Architecture
+
+*   **Modular Design:** Strictly adhere to a clear separation of concerns. The architecture should isolate responsibilities like parsing logic, data management, and core orchestration. This promotes maintainability and independent development of components.
+*   **Object-Oriented Principles (OOP):** Leverage OOP concepts like abstraction, inheritance, and polymorphism effectively to create reusable and extensible components.
+*   **SOLID Principles:** Apply SOLID principles to ensure classes are well-defined, flexible, and easy to maintain.
+*   **Clear Data Representation:** Use dedicated data structures (e.g., dataclasses) to clearly represent the hierarchical information being parsed, keeping data separate from complex logic.
+
+## Coding Standards
+
+*   **PEP 8 & Formatting:** Strictly follow PEP 8. Use tools like Black and Flake8/Ruff.
+*   **Type Hinting:** Use type hints extensively.
+*   **Docstrings:** Write clear docstrings for all public APIs (modules, classes, functions).
+*   **Naming:** Use clear, descriptive names following Python conventions.
+
+## Key Processes
+
+*   **Validation:** Perform validation within specific `FlagParser` implementations.
+*   **Error Handling:** Raise specific exceptions and use structured logging.
+*   **Testing:** Implement comprehensive unit, integration, and end-to-end tests.
+*   **Version Control:** Use Git with a standard workflow (e.g., Gitflow) and require PRs/code reviews.
+*   **Dependencies:** Minimize external dependencies and pin versions (`requirements.txt` or `pyproject.toml`).
+
+## Debugging and Bug Fixing
+
+*   **Root Cause Analysis:** Before fixing, invest time to understand the *true* root cause of the bug.
+*   **Focused Fixes:** Target the fix specifically to the identified problem. Avoid unrelated changes or "while you're here" modifications.
+*   **Minimize Scope:** Do not modify sections of the codebase that are functioning correctly and are unrelated to the bug. Resist the urge to refactor unrelated code during a bug fix.
+*   **Verify Fix:** Ensure the fix resolves the bug without introducing regressions. Add or update tests to cover the specific bug scenario.
+*   **Simplicity:** Apply the simplest change that effectively resolves the issue.
