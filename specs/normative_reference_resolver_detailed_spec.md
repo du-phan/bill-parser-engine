@@ -4,42 +4,153 @@
 
 The Normative Reference Resolver is a key component of the bill-parser-engine that processes legislative text, identifies normative references, resolves them recursively, and produces a fully interpretable, self-contained version of the text. The system leverages LLM agents for core processing tasks while maintaining a robust architecture for handling recursive references and ensuring performance.
 
+## 1.1 French Legislative Bill Hierarchy Structure
+
+French legislative bills follow a well-defined hierarchical structure, which is essential for both parsing and reference resolution. The main levels are:
+
+1. **Document Header**: Contains metadata such as bill number, session, date, and introductory statements.
+2. **TITRE (Title)**: Thematic divisions grouping related articles (e.g., "TITRE Iᴱᴿ").
+3. **Article**: The primary logical unit (e.g., "Article 1ᵉʳ").
+4. **Major Subdivision**: Roman numerals (I, II, III, etc.) for large sections within an article (may be absent).
+5. **Numbered Point**: Arabic numerals with degree sign (1°, 2°, 3°, etc.) for atomic legal provisions within a subdivision or article. This is the atomic level for splitting.
+6. **Lettered Subdivision**: Lowercase letters (a), b), c), etc.) for further breakdown within a numbered point.
+7. **Indented/Hyphenated Text**: Additional detail, often using hyphens or indentation, for lists or clarifications.
+
+**Reference Tracking and Context Preservation:**
+
+- Each atomic unit (numbered point) must retain its full hierarchical path (TITRE > Article > Subdivision > Numbered Point) for context.
+- Cross-references (e.g., "du même article", "au 3° du II") require a mapping between units and their positions in the hierarchy.
+- When splitting, metadata about parent TITRE, Article, and all ancestor levels must be preserved for each chunk.
+
 ## 2. Core Components
+
+### 2.0 BillSplitter (REVISED)
+
+**Component**: `BillSplitter`
+
+**Responsibility**: Deterministically split the legislative bill into atomic, manageable pieces for downstream LLM processing, following the legal document's hierarchy. The splitting logic is strictly rule-based (not LLM-powered) and ensures robust context and reference tracking.
+
+**Splitting Rules (Hierarchical and Deterministic):**
+
+1. **For each Article:**
+
+   - Identify the `article_introductory_phrase`: the text immediately following the Article heading, before any major subdivision or numbered point. This may be empty if not present.
+   - **If the Article contains direct child numbered points (1°, 2°, etc.):**
+     - Each numbered point becomes a chunk.
+     - Each chunk's context includes the `article_introductory_phrase`.
+   - **If the Article contains direct child major subdivisions (Roman numerals: I, II, etc.):**
+     - For each major subdivision:
+       - Identify the `major_subdivision_introductory_phrase`: the text immediately following the major subdivision heading, before any numbered point. This may be empty if not present.
+       - **If the major subdivision contains numbered points:**
+         - Each numbered point within the major subdivision becomes a chunk.
+         - Each chunk's context includes both the `article_introductory_phrase` and the `major_subdivision_introductory_phrase`.
+       - **If the major subdivision contains no numbered points:**
+         - The entire major subdivision becomes a single chunk.
+         - Its context includes the `article_introductory_phrase` and the `major_subdivision_introductory_phrase`.
+   - **If the Article contains neither direct child numbered points nor major subdivisions:**
+     - The entire Article content becomes a single chunk.
+     - Its context is the `article_introductory_phrase` (if any).
+
+2. **Handling Numbered Point Ranges:**
+
+   - If a range is specified (e.g., "1° à 3° (Supprimés)"), treat the entire range as a single chunk. The `numbered_point_label` should be the full range (e.g., "1° à 3°").
+   - The chunk's text is the content following the range label (e.g., "(Supprimés)").
+
+3. **Introductory Phrase Handling:**
+
+   - Always capture both `article_introductory_phrase` and, if applicable, `major_subdivision_introductory_phrase` as separate fields in the metadata.
+   - These phrases provide essential legal context (e.g., which code is being amended) and must be preserved for all child chunks.
+
+4. **Parent Metadata for Each Chunk (Explicit Field Definitions):**
+
+   - `titre_text`: The full TITRE (Title) heading under which the Article appears.
+   - `article_label`: The Article number and heading (e.g., "Article 2").
+   - `article_introductory_phrase`: The phrase immediately following the Article heading (may be empty).
+   - `major_subdivision_label`: The Roman numeral and its heading/phrase, if present (e.g., "I.", "II (nouveau)."), otherwise null.
+   - `major_subdivision_introductory_phrase`: The phrase immediately following the major subdivision heading (may be empty).
+   - `numbered_point_label`: The label of the numbered point (e.g., "1°", "2°", "1° à 3°"), if present, otherwise null.
+   - `hierarchy_path`: List of all parent headings/identifiers in order (e.g., [TITRE, Article, Major Subdivision, Numbered Point]).
+   - `chunk_id`: Unique identifier for the chunk (e.g., concatenation of TITRE, Article, subdivision, and point numbers/labels).
+   - `start_pos`, `end_pos`: Character positions in the original text.
+   - `cross_references`: (Optional) List of detected references to other units for advanced tracking.
+
+5. **Chunk Content:**
+
+   - The chunk's `text` is the full content of the numbered point or major subdivision, including any lettered subpoints (a), b), etc.) and indented/hyphenated lists that belong to it.
+   - **Do not** include parent headings or introductory phrases as a preamble in the chunk text. All context must be provided via metadata fields.
+
+6. **Special Markings:**
+
+   - Labels such as "(nouveau)", "(Supprimé)" must be included as part of the relevant label fields (e.g., `article_label`, `major_subdivision_label`, `numbered_point_label`) or as part of the chunk text, as they appear in the source.
+
+7. **Extremely Long Chunks:**
+
+   - If a chunk exceeds a practical token limit (e.g., >2000 tokens), consider further splitting at lettered subpoints (a), b), etc.), but only as a last resort and never across parent boundaries.
+
+8. **Examples:**
+
+   - **Article with direct numbered points:**
+     - Article 1: `article_introductory_phrase` + 1°, 2°, 3°, ...
+     - Each chunk = one numbered point, with parent metadata including the introductory phrase.
+   - **Article with major subdivisions containing numbered points:**
+     - Article 2: I. (`major_subdivision_introductory_phrase` + 1°, 2°, ...), II. (...)
+     - Each chunk = one numbered point within a major subdivision, with full parent metadata.
+   - **Article with only major subdivisions (no numbered points):**
+     - Article 4: I., II., III.
+     - Each chunk = one major subdivision, with parent metadata.
+   - **Article with neither:**
+     - Article X: Just a paragraph of text
+     - Single chunk, with parent metadata.
+   - **Numbered point range:**
+     - "1° à 3° (Supprimés)" is a single chunk, with `numbered_point_label` = "1° à 3°" and text = "(Supprimés)".
+
+9. **Implementation Notes:**
+
+   - Use regular expressions or a state machine to detect TITREs, Articles, introductory phrases, major subdivisions (Roman numerals), and numbered points (1°, 2°, etc.).
+   - Always associate each chunk with its full parent context for accurate reference resolution.
+   - Never use an LLM for this splitting step; deterministic parsing is required for reliability and reproducibility.
+
+10. **Integration:**
+    - The BillSplitter is the first step in the pipeline, preceding reference detection.
+    - Downstream components (ReferenceDetector, etc.) operate on these atomic chunks.
 
 ### 2.1 Reference Detection
 
 **Component**: `ReferenceDetector`
 
-**Implementation**: LLM Agent with specialized prompt engineering
+**Implementation**: Stateless LLM Agent with specialized prompt engineering
 
 **Responsibility**: Parse legislative text and identify all normative references using LLM-based understanding.
+
+**Inputs**:
+
+- `text: str` — The legislative text to analyze
+
+**Outputs**:
+
+- `List[Reference]` — List of detected references, each with:
+  - `text: str` (reference text)
+  - `start_pos: int`, `end_pos: int` (positions in input)
+  - `object: str` (the noun/concept being referenced in the initial text)
+  - `confidence: float`
+  - `reference_type: ReferenceType`
+  - Additional metadata
+
+**Ambiguous/Overlapping References:**
+
+- If references overlap or are nested, each should be returned as a separate entry, with a `parent_reference` field if applicable.
+- References with confidence below the threshold (default: 0.6) must be returned in a separate `low_confidence_references` field for manual review.
 
 **Reference Types** (v0 Scope):
 
 1. **Explicit References**:
-
    - Direct citations with clear identifiers (e.g., "l'article L. 254-1")
    - Specific section references (e.g., "au 3° du II")
    - Complete citations with source (e.g., "règlement (CE) n° 1107/2009")
-
 2. **Simple Implicit References**:
    - Contextual references (e.g., "du même article" referring to previously mentioned article)
    - Relative references (e.g., "l'article précédent")
    - Abbreviated references (e.g., "ledit article" or "ce même article")
-
-**Future Scope** (post v0):
-
-- References to concepts defined elsewhere (e.g., "les produits phytopharmaceutiques" without direct citation)
-- Historical reference tracking
-- Cross-code concept mapping
-- Definition evolution tracking
-
-**Rationale for v0 Scope**:
-
-1. **Reliability**: Focus on references that can be reliably detected and resolved
-2. **Performance**: Optimize for common reference patterns
-3. **Validation**: Ensure accurate resolution before expanding scope
-4. **User Value**: Deliver core functionality first
 
 **Key Features**:
 
@@ -52,24 +163,78 @@ The Normative Reference Resolver is a key component of the bill-parser-engine th
 **Prompt Structure**:
 
 ```
-You are a specialized legal reference detection agent. Your task is to identify all normative references in the following legislative text. For each reference:
+You are a specialized legal reference detection agent focusing on French legislative text. Your task is to identify all normative references in the following legislative text. For each reference:
 1. Extract the exact text of the reference
-2. Note its position in the text
-3. Provide a confidence score
+2. Note its position in the text (start and end character positions)
+3. Provide a confidence score (0.0-1.0, where 1.0 is highest confidence)
 4. Indicate if it's an implicit or explicit reference
+5. For implicit references, identify the likely referred entity
+
+Consider French legal system specificities like code structure, article numbering patterns, and common citation formats.
 
 Text: {input_text}
 ```
 
-**Outputs**: List of detected references with their locations, confidence scores, and metadata
+**Note:** The 'object' is the specific entity or concept in the initial text that the reference points to (e.g., "produits" in "Les produits définis à l'article L. 253-5..."). This field provides essential context for downstream components, especially for relevance determination in recursive resolution.
+
+**Example:**
+For the text: "Les produits définis à l'article L. 253-5..."
+
+- ReferenceDetector output:
+  ```python
+  Reference(
+      text="l'article L. 253-5",
+      start_pos=..., end_pos=...,
+      object="produits",
+      ...
+  )
+  ```
 
 ### 2.2 Reference Classification
 
 **Component**: `ReferenceClassifier`
 
-**Implementation**: LLM Agent with domain-specific knowledge
+**Implementation**: Stateless LLM Agent with domain-specific knowledge
 
 **Responsibility**: Categorize identified references by source and type using LLM understanding.
+
+**Inputs**:
+
+- `reference: Reference` — The detected reference object
+- `surrounding_text: str` — Context window from the original input (extracted by orchestration layer)
+
+**Outputs**:
+
+- `Reference` — The same reference object, enriched with:
+
+  - `source: ReferenceSource`
+  - `reference_type: ReferenceType`
+  - `components: Dict[str, str]` (parsed components)
+  - `confidence: float` (classification confidence)
+  - Additional metadata
+
+- The `components` parameter is a dictionary that breaks down the reference into its meaningful subparts (e.g., code, article, section, paragraph). This structured representation enables precise retrieval, disambiguation, and traceability.
+- **Purpose:**
+  - Disambiguation: Clarifies exactly which part of the law is referenced.
+  - Retrieval: Allows the TextRetriever agent to construct precise API queries.
+  - Traceability: Facilitates mapping between the original text and the resolved content.
+- **Examples:**
+  - For `"l'article L. 254-1 du code rural et de la pêche maritime"`:
+    ```python
+    {
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    }
+    ```
+  - For `"au 3° du II de l'article L. 254-1 du code rural"`:
+    ```python
+    {
+        "code": "code rural",
+        "article": "L. 254-1",
+        "section": "II",
+        "paragraph": "3°"
+    }
+    ```
 
 **Key Features**:
 
@@ -81,405 +246,285 @@ Text: {input_text}
 **Prompt Structure**:
 
 ```
-You are a specialized legal reference classification agent. For each reference:
+You are a specialized legal reference classification agent for French legislative texts. For each reference:
 1. Identify the source (French code, EU regulation, etc.)
-2. Determine the reference type
-3. Extract any specific components (article numbers, sections, etc.)
-4. Provide classification confidence
+2. Determine the reference type (article, section, paragraph, etc.)
+3. Extract specific components (article numbers, sections, etc.) with their hierarchical structure
+4. Provide classification confidence (0.0-1.0)
+5. If applicable, identify the version/date of the referenced text
 
 Reference: {reference_text}
 Context: {surrounding_text}
 ```
 
-**Outputs**: Classified reference objects with metadata about source and type
+**Inputs**:
+
+- The reference text
+- The 'surrounding_text' (context window from the original input)
+
+**Note:** The 'surrounding_text' is extracted by the orchestration layer (or a dedicated utility function) using the start and end positions provided by the ReferenceDetector. This ensures the ReferenceClassifier receives both the reference and its relevant context for accurate classification.
 
 ### 2.3 Text Retrieval
 
 **Component**: `TextRetriever`
 
-**Implementation**: Hybrid approach combining direct API integration with LLM web search capabilities
+**Implementation**: Hybrid approach combining direct API integration (using pylegifrance) with web search fallback
 
-**Responsibility**: Fetch and process the full text of referenced items from authoritative sources using a multi-layered approach.
+**Responsibility**: Fetch and process the full text of referenced items from authoritative sources, then extract the specific relevant portion pertaining to the referenced object (not the entire source document).
 
-**Architecture**:
+**Inputs**:
 
-1. **Primary Method**: Direct API Integration
-
-   - Legifrance API as primary source
-   - Structured error handling and validation
-   - Caching for frequently accessed texts
-   - Version control and tracking
-
-2. **Fallback Method**: LLM Web Search
-   - Used when API fails or returns invalid results
-   - Handles ambiguous or complex references
-   - Provides cross-referencing and validation
-   - Flexible reference format handling
-
-**Implementation Details**:
-
-```python
-class TextRetriever:
-    def __init__(self):
-        self.api_client = LegifranceAPIClient()
-        self.cache = TextCache()
-        self.llm_client = LLMClient()
-
-    def retrieve_text(self, reference: Reference) -> str:
-        try:
-            # Try API first
-            text = self._retrieve_from_api(reference)
-            if self._validate_text(text, reference):
-                self.cache.store(reference, text)
-                return text
-        except APIError:
-            # Fallback to web search
-            text = self._retrieve_from_web_search(reference)
-            if self._validate_text(text, reference):
-                self.cache.store(reference, text)
-                return text
-            else:
-                raise TextRetrievalError("Could not retrieve valid text")
-
-    def _retrieve_from_api(self, reference: Reference) -> str:
-        # API-specific implementation
-        pass
-
-    def _retrieve_from_web_search(self, reference: Reference) -> str:
-        # Web search implementation using LLM capabilities
-        pass
-
-    def _validate_text(self, text: str, reference: Reference) -> bool:
-        # Validation logic
-        pass
-```
-
-**Key Features**:
-
-- Multi-layered retrieval strategy
-- Robust error handling
-- Intelligent caching
-- Version management
-- Cross-reference validation
-- Context-aware processing
-
-**Error Handling**:
-
-1. **API Errors**:
-
-   - Authentication failures
-   - Rate limiting
-   - Network issues
-   - Invalid responses
-
-2. **Web Search Errors**:
-
-   - No results found
-   - Ambiguous results
-   - Outdated information
-   - Invalid references
-
-3. **Validation Errors**:
-   - Text mismatch
-   - Version mismatch
-   - Format issues
-   - Context inconsistencies
-
-**Caching Strategy**:
-
-- In-memory cache for frequent references
-- Disk-based cache for persistence
-- Cache invalidation based on:
-  - Time-based expiration
-  - Version changes
-  - Reference updates
-  - Manual invalidation
+- `reference: Reference` — The classified reference object (with source/type/components)
 
 **Outputs**:
 
-- Structured text content
-- Metadata about retrieval method used
-- Validation results
-- Cache status
-- Error information if applicable
+- `str` — The extracted relevant text content (specifically about the referenced object)
+- `str` — The broader context (for reference and validation)
+- `Dict` — Metadata including:
+  - Retrieval method (API, web search, cache)
+  - Validation results
+  - Source URL or API endpoint
+  - Cache status
+  - Error information (if applicable)
+  - Content scope (article, section, paragraph, etc.)
 
-**Performance Considerations**:
+**Legifrance API Integration (pylegifrance):**
 
-- API calls are prioritized for speed
-- Web search is used only when necessary
-- Caching reduces redundant retrievals
-- Parallel processing for multiple references
-- Batch processing for similar references
+- Use the `pylegifrance` package for direct API access. Example usage:
+
+  ```python
+  import os
+  from pylegifrance import recherche_code
+  from pylegifrance.models.constants import CodeNom
+
+  # Set environment variables for authentication
+  os.environ["LEGIFRANCE_CLIENT_ID"] = LEGIFRANCE_CLIENT_ID
+  os.environ["LEGIFRANCE_CLIENT_SECRET"] = LEGIFRANCE_CLIENT_SECRET
+
+  # Use the correct code_name and search value, CREDLPM = "Code rural et de la pêche maritime"
+  res = recherche_code(code_name=CodeNom.CREDLPM, search="L254‑6‑2")
+  ```
+
+- The `code_name` must be mapped from the reference's `components["code"]` using the `CodeNom` enum.
+- The `search` parameter should be the article or section identifier as it appears in the text (try multiple formats if needed).
+- If the API call fails or returns no result, fallback to web search using the reference text and object as the query.
+
+**Cache Key Construction:**
+
+- Cache keys must include reference, code, article, and (if available) version/date and format (e.g., `"CREDLPM@L254-6-2@2024-06-01@hyphen"`).
+
+**Error Handling:**
+
+- If the API call fails (network, auth, not found), log the error and fallback to web search.
+- If both API and web search fail, return a structured error object with the reference and error details.
+- All errors must be logged with a unique correlation ID.
+
+**Web Search Fallback:**
+
+- Construct queries using all available components and the 'object' field.
+- Validate results by checking for the presence of expected legal terms and structure.
+
+**Performance:**
+
+- API calls should have a timeout (default: 10s).
+- Use in-memory cache for frequent references.
 
 ### 2.4 Reference Resolution
 
 **Component**: `ReferenceResolver`
 
-**Responsibility**: Extract the precise subpart of text referred to and handle recursive resolution.
+**Responsibility**: Extract the precise subpart of text referred to, determine which nested references need resolution, and handle recursive resolution based on relevance to the original reference.
 
-**Key Features**:
+**Inputs**:
 
-- Orchestration of LLM agents for detection and classification
-- Recursive resolution management
-- Circular reference detection
-- Versioning awareness
+- `reference: Reference` — The classified reference object
+- `text_content: str` — The retrieved text content for the reference
+- `max_depth: int` — Maximum recursion depth
+- `resolution_path: List[Reference]` — (For tracking recursion/circularity)
 
-**Resolution Flow**:
+**Outputs**:
 
-1. Call ReferenceDetector LLM agent
-2. For each detected reference:
-   a. Call ReferenceClassifier LLM agent
-   b. Retrieve text via TextRetriever
-   c. If nested references exist:
-   - Recursively call resolution process
-   - Track resolution path
-   - Handle circular references
+- `ResolvedReference` —
+  - `reference: Reference`
+  - `content: str` (resolved content)
+  - `sub_references: List[ResolvedReference]` (nested references that were resolved)
+  - `unresolved_sub_references: List[Reference]` (nested references deemed not necessary)
+  - `resolution_path: List[Reference]`
+  - `resolution_status: ResolutionStatus`
+  - `relevance_metadata: Dict[str, Any]`
 
-**Outputs**: Resolved text content with all nested references processed
+**Relevance Determination Algorithm:**
+
+- Use a decision tree:
+  1. Is the nested reference directly required to define or constrain the 'object'? (Yes → essential)
+  2. Is it only supplementary or tangential? (Yes → non-essential)
+  3. Is it ambiguous? (Flag for manual review)
+- Add `resolution_warnings: List[str]` to `ResolvedReference` for circularity, max depth, or partial failures.
+
+**Example:**
+Original text:
+"Le conseil mentionné au 3° du II de l'article L. 254‑1 couvre toute recommandation d'utilisation de produits phytopharmaceutiques. Il est formalisé par écrit. La prestation est effectuée à titre onéreux. Il s'inscrit dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253‑6."
+
+Detected references:
+
+- "3° du II de l'article L. 254‑1" (defines the scope of the council)
+- "article L. 253‑6" (provides principles for integrated pest management)
+
+Relevance determination:
+
+- **Essential:**
+  - "3° du II de l'article L. 254‑1" — Essential, as it defines the main object (the council's scope).
+  - "article L. 253‑6" — Essential, as it provides the legal principles that the council must respect (directly constrains the object).
+- **Non-Essential:**
+  - If the text referenced other articles about, for example, general administrative procedures or unrelated background, these would be considered non-essential and could be skipped in the recursive resolution.
+
+Explanation:
+
+- Both references are essential because they are directly required to understand the legal requirements and scope of the council described in the original text. If a reference only provided supplementary context (e.g., a general definition not directly constraining the object), it would be marked as non-essential.
 
 ### 2.5 Text Substitution
 
 **Component**: `TextSubstitutor`
 
-**Implementation**: LLM Agent with legal text simplification expertise
+**Implementation**: Stateless LLM Agent with legal text simplification expertise
 
-**Responsibility**: Replace references with their resolved content and rewrite the text to be clear, concise, and easily understandable while maintaining legal accuracy.
+**Responsibility**: Replace references with their resolved content and slightly reformulate that part of the text if needed to be clear and understandable while maintaining absolute legal accuracy.
 
-**Key Features**:
+**Inputs**:
 
-- LLM-powered text rewriting for clarity
-- Maintains legal accuracy while improving readability
-- Handles complex nested references elegantly
-- Preserves important legal terminology
-- Generates natural, flowing text
-
-**Prompt Structure**:
-
-```
-You are a specialized legal text simplification agent. Your task is to rewrite the following text, which contains resolved references, to make it clear and concise while maintaining legal accuracy.
-
-Guidelines:
-1. Replace technical references with their clear meanings
-2. Maintain all legal requirements and conditions
-3. Use plain language where possible
-4. Keep important legal terms that cannot be simplified
-5. Ensure the text flows naturally
-6. Preserve the original intent and scope
-
-Original text: {original_text}
-Resolved references: {resolved_references}
-
-Please provide:
-1. The rewritten, clear text
-2. A list of any terms that were kept in their original form (with explanation)
-3. A confidence score for the simplification
-```
-
-**Example Transformation**:
-
-```
-Input: "Les produits définis à l'article L. 253-5 du code rural et de la pêche maritime, à l'exception de ceux mentionnés au 3° du II de l'article L. 254-1"
-
-Output: "Les produits autorisés en agriculture, à l'exception de ceux nécessitant des procédures particulières en raison de leur impact potentiel sur l'environnement"
-```
+- `original_text: str` — The input legislative text
+- `resolved_references: List[ResolvedReference]` — All resolved references and their content
 
 **Outputs**:
 
-- Clear, rewritten text
-- Metadata about kept terms and simplification decisions
-- Confidence score for the transformation
+- `FlattenedText` —
+
+  - `original_text: str`
+  - `flattened_text: str` (with all references resolved/substituted)
+  - `reference_map: Dict[Reference, ResolvedReference]`
+  - `unresolved_references: List[Reference]`
+  - `confidence_score: float`
+  - `processing_metadata: Dict[str, Any]`
+  - `validation_status: str` ("validated", "fallback", "manual_review")
+
+- If the LLM's confidence in the rewritten text is below 0.8, fall back to the original reference and flag for manual review.
+
+### 2.6 Versioning Management
+
+**Note:** Versioning management is out of scope for v0. All references are resolved against the latest available version. This section is reserved for future extension.
 
 ## 3. Data Models
 
-### 3.1 Reference
+**Note:** Data models and enums are aligned with the codebase. All models include a `version: str` field for future extensibility.
 
 ```python
+from dataclasses import dataclass
+from enum import Enum
+from typing import Dict, List, Optional, Any
+
+class ReferenceType(Enum):
+    EXPLICIT_DIRECT = "explicit_direct"
+    EXPLICIT_SECTION = "explicit_section"
+    EXPLICIT_COMPLETE = "explicit_complete"
+    IMPLICIT_CONTEXTUAL = "implicit_contextual"
+    IMPLICIT_RELATIVE = "implicit_relative"
+    IMPLICIT_ABBREVIATED = "implicit_abbreviated"
+
+class ReferenceSource(Enum):
+    CODE_RURAL = "code_rural"
+    CODE_ENVIRONNEMENT = "code_environnement"
+    EU_REGULATION = "eu_regulation"
+    DECREE = "decree"
+    ARRETE = "arrete"
+    LAW = "law"
+    OTHER = "other"
+
 @dataclass
 class Reference:
-    text: str  # Original reference text
-    start_pos: int  # Start position in original text
-    end_pos: int  # End position in original text
-    reference_type: ReferenceType  # Enum of reference types
-    source: ReferenceSource  # Source classification
-    components: Dict[str, str]  # Parsed components (e.g., article, paragraph)
-```
+    text: str
+    start_pos: int
+    end_pos: int
+    object: str
+    reference_type: ReferenceType
+    source: ReferenceSource
+    components: Dict[str, str]
+    confidence: float
+    parent_reference: Optional[str] = None
+    version: str = "v0"
 
-### 3.2 ResolvedReference
-
-```python
 @dataclass
 class ResolvedReference:
-    reference: Reference  # Original reference
-    content: str  # Resolved content
-    sub_references: List["ResolvedReference"]  # Nested references
-    resolution_path: List[Reference]  # Path of resolution for traceability
-    resolution_status: ResolutionStatus  # Success, partial, failed
-```
+    reference: Reference
+    content: str
+    sub_references: List["ResolvedReference"]
+    unresolved_sub_references: List[Reference]
+    resolution_path: List[Reference]
+    resolution_status: str
+    relevance_metadata: Dict[str, Any]
+    resolution_warnings: List[str] = None
+    version: str = "v0"
 
-### 3.3 FlattendText
-
-```python
 @dataclass
 class FlattenedText:
-    original_text: str  # Input text
-    flattened_text: str  # Output text with all references resolved
-    reference_map: Dict[Reference, ResolvedReference]  # Mapping for traceability
-    unresolved_references: List[Reference]  # References that couldn't be resolved
+    original_text: str
+    flattened_text: str
+    reference_map: Dict[Reference, ResolvedReference]
+    unresolved_references: List[Reference]
+    confidence_score: float
+    processing_metadata: Dict[str, Any]
+    validation_status: str
+    version: str = "v0"
 ```
 
 ## 4. Processing Pipeline
 
 1. **Input**: Legislative text paragraph
-2. **Reference Detection**: LLM agent identifies all references
-3. **Reference Classification**: LLM agent categorizes each reference
-4. **For each reference**:
-   a. Text Retrieval: Fetch the referenced content
-   b. Extract the specific subpart referenced
-   c. Reference Resolution: Check for nested references
-   d. If nested references exist, recursively resolve them
-5. **Text Substitution**: Replace references with resolved content
-6. **Output**: Flattened text and reference metadata
+2. **Reference Detection**: Stateless LLM agent identifies all references, their positions, and the referenced object
+3. **Context Extraction**: The orchestration layer extracts 'surrounding_text' for each reference using start/end positions
+4. **Reference Classification**: Stateless LLM agent categorizes each reference, using both the reference and its context
+5. **For each reference**:
+   a. Text Retrieval: Fetch and extract the specific relevant portion from the source (using pylegifrance, fallback to web search)
+   b. Relevance Analysis: Use the 'object' field to identify which nested references are essential for understanding
+   c. Recursive Resolution: Only resolve nested references that are necessary for understanding the original reference/object
+   d. If essential nested references exist, recursively resolve them
+6. **Text Substitution**: Replace references with their resolved content
+7. **Output**: Flattened text and reference metadata
 
 ## 5. LLM Agent Management
 
-### 5.1 Agent Configuration
+- All agents are stateless for v0 (automated, non-interactive usage, no persistent conversation required).
+- Use the latest Mistral Python SDK (>=1.8.1, Python 3.10+ required for agent features).
+- Example agent usage:
 
-- Model selection based on task requirements
-- Temperature settings for each agent
-- Token limits and cost optimization
-- Fallback strategies for API failures
+  ```python
+  from mistralai import Mistral
+  import os
 
-### 5.2 Prompt Management
+  with Mistral(api_key=os.getenv("MISTRAL_API_KEY", "")) as mistral:
+      res = mistral.agents.complete(
+          messages=[{"role": "user", "content": "Detect all references in the following text: ..."}],
+          agent_id="<agent_id>"
+      )
+  ```
 
-- Version control for prompts
-- A/B testing of prompt variations
-- Performance monitoring
-- Continuous improvement based on results
-
-### 5.3 Cost Optimization
-
-- Batch processing of references
-- Caching of common reference resolutions
-- Token usage optimization
-- Fallback to simpler models when appropriate
+- For each step (detection, classification, substitution), call the agent in a stateless, automated, non-interactive manner.
+- No persistent conversation or agent memory is required for the current use case.
 
 ## 6. Error Handling
 
-### 6.1 Reference Detection Errors
+- Log ambiguous references and errors with a unique correlation ID.
+- Provide confidence scores for uncertain matches.
+- Set minimum confidence threshold (default: 0.6).
+- Fallback to web search if API retrieval fails.
+- Return structured error objects for unresolved references.
 
-- Log ambiguous references for manual review
-- Provide confidence scores for uncertain matches
+## 7. Performance, Security, and Resource Management
 
-### 6.2 Text Retrieval Errors
-
-- Graceful degradation when API sources are unavailable
-- Fallback to local cache when possible
-- Clear error messages for unresolvable references
-
-### 6.3 Resolution Errors
-
-- Partial resolution when some nested references cannot be resolved
-- Detailed logging of resolution failures
-
-## 7. Performance Considerations
-
-### 7.1 Parallel Processing
-
-- Process independent references in parallel where possible
-- Implement worker pool for API requests
-
-### 7.2 Caching
-
-- Multi-level cache (in-memory, disk-based)
-- Preemptive caching for commonly referenced texts
-
-### 7.3 Batch Processing
-
-- Group similar references to reduce API calls
-- Optimize text retrieval for bulk operations
-
-## 8. API Interface
-
-### 8.1 Main Function
-
-```python
-def resolve_references(
-    text: str,
-    max_depth: int = 5,
-    include_metadata: bool = True
-) -> Union[str, Tuple[str, Dict]]:
-    """
-    Resolve all normative references in the provided text.
-
-    Args:
-        text: The legislative text to process
-        max_depth: Maximum recursion depth for nested references
-        include_metadata: Whether to return reference metadata
-
-    Returns:
-        If include_metadata is False, returns the flattened text.
-        Otherwise, returns a tuple of (flattened_text, metadata).
-    """
-```
-
-### 8.2 Utility Functions
-
-```python
-def extract_references(text: str) -> List[Reference]:
-    """Extract all references from text without resolving them."""
-
-def get_reference_tree(text: str, reference: str) -> ResolvedReference:
-    """Get the full resolution tree for a specific reference."""
-
-def resolve_single_reference(reference: str) -> str:
-    """Resolve a single reference string to its content."""
-```
-
-## 9. Implementation Approach
-
-1. Start with reference detection patterns for most common cases
-2. Implement basic text retrieval from Legifrance API
-3. Build simple reference resolution for non-nested cases
-4. Add recursive resolution with proper safeguards
-5. Enhance detection patterns to cover edge cases
-6. Optimize performance with caching and parallel processing
-7. Implement comprehensive error handling and logging
-
-## 10. Test Approach
-
-1. Unit tests for pattern matching with various reference formats
-2. Integration tests with mock API responses
-3. Regression tests using known legislative examples
-4. Performance benchmarks for large texts
-5. Edge case tests for circular references and maximum depth scenarios
-
-## 11. LLM-Specific Considerations
-
-### 11.1 Performance Optimization
-
-- Parallel processing of independent references
-- Batch processing of similar references
-- Caching of common reference patterns
-- Token usage optimization
-
-### 11.2 Error Handling
-
-- LLM API failure handling
-- Fallback to simpler detection methods
-- Retry strategies with exponential backoff
-- Graceful degradation
-
-### 11.3 Monitoring and Metrics
-
-- Token usage tracking
-- Response time monitoring
-- Accuracy metrics
-- Cost tracking
-- Error rate monitoring
-
-### 11.4 Continuous Improvement
-
-- Prompt engineering optimization
-- Model performance tracking
-- A/B testing of different approaches
-- Regular review of edge cases
+- **Resource Management:**
+  - Set timeouts for all external API calls (default: 10s).
+  - Monitor memory and CPU usage for large documents.
+- **Security:**
+  - Store all API keys (Mistral, Legifrance) securely using environment variables or a secrets manager.
+  - Validate all input data to prevent injection or malformed requests.
+  - Rate limit external API calls to avoid abuse.
+  - Ensure compliance with GDPR and French data privacy laws for legal texts.

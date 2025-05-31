@@ -2,7 +2,7 @@
 Data models for the reference resolver.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -58,4 +58,25 @@ class FlattenedText:
     original_text: str
     flattened_text: str
     reference_map: Dict[Reference, ResolvedReference]
-    unresolved_references: List[Reference] 
+    unresolved_references: List[Reference]
+
+
+@dataclass
+class BillChunk:
+    """
+    Represents an atomic chunk of a legislative bill, with all relevant context and metadata for downstream processing.
+    """
+    text: str
+    titre_text: str
+    article_label: str
+    article_introductory_phrase: str
+    major_subdivision_label: Optional[str]
+    major_subdivision_label_raw: Optional[str] = None
+    major_subdivision_introductory_phrase: Optional[str] = None
+    numbered_point_label: Optional[str] = None
+    numbered_point_label_raw: Optional[str] = None
+    hierarchy_path: List[str] = field(default_factory=list)
+    chunk_id: str = ""
+    start_pos: int = 0
+    end_pos: int = 0
+    cross_references: List[str] = field(default_factory=list) 
