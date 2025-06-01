@@ -24,7 +24,7 @@ French legislative bills follow a well-defined hierarchical structure, which is 
 
 ## 2. Core Components
 
-### 2.0 BillSplitter (REVISED)
+### 2.0 BillSplitter
 
 **Component**: `BillSplitter`
 
@@ -114,13 +114,130 @@ French legislative bills follow a well-defined hierarchical structure, which is 
     - The BillSplitter is the first step in the pipeline, preceding reference detection.
     - Downstream components (ReferenceDetector, etc.) operate on these atomic chunks.
 
+### 2.1 Target Article Identification
+
+**Component**: `TargetArticleIdentifier`
+
+**Implementation**: Stateless LLM Agent with prompt engineering
+
+**Responsibility**: For each chunk produced by the BillSplitter, infer the primary legal article, section, or code provision that is the _target_ of the modification, insertion, or abrogation described in the chunk. This is the legal reference that the chunk is intended to create, update, or remove (the "target article"). This is distinct from references _within_ the chunk's text, which are handled by the ReferenceDetector.
+
+**Inputs**:
+
+- `chunk: BillChunk` — The chunk of legislative text to analyze (with all BillSplitter metadata)
+
+**Outputs**:
+
+- `TargetArticle` — Structured information about the target legal article/section, including:
+  - `operation_type: TargetOperationType` (e.g., INSERT, MODIFY, ABROGATE, etc.)
+  - `code: str` (e.g., "code rural et de la pêche maritime")
+  - `article: str` (e.g., "L. 411-2-2")
+  - `full_citation: str` (e.g., "article L. 411-2-2 du code de l'environnement")
+  - `confidence: float`
+  - `raw_text: str` (the exact phrase in the chunk that led to this inference, if any)
+  - `version: str` (for future extensibility)
+
+**Operation Types**:
+
+- `INSERT`: The chunk creates a new article/section
+- `MODIFY`: The chunk modifies an existing article/section
+- `ABROGATE`: The chunk abrogates (removes) an article/section
+- `RENUMBER`: The chunk renumbers an article/section
+- `OTHER`: Any other operation (fallback)
+
+**Key Features**:
+
+- LLM-powered extraction of the _target_ legal article/section for each chunk
+- Distinguishes between the target ("canvas") and embedded references ("children references")
+- Handles cases where no explicit target is present (e.g., general provisions)
+- Provides a confidence score for the inference
+
+**Prompt Structure**:
+
+```
+You are a legal bill analysis agent. For the following chunk of legislative text, identify the main legal article, section, or code provision that is the *target* of the modification, insertion, or abrogation described. Return the operation type (INSERT, MODIFY, ABROGATE, etc.), the code, the article/section identifier, the full citation, and the exact phrase in the chunk that led to this inference (if any). If no explicit target is present, return nulls and set operation_type to OTHER.
+
+Chunk:
+{chunk.text}
+
+Metadata:
+{chunk metadata fields}
+```
+
+**Example**:
+
+For the chunk:
+
+```
+7° (nouveau) Après l'article L. 411-2-1, il est inséré un article L. 411-2-2 ainsi rédigé :
+
+	« Art. L. 411-2-2. – Sont présumés répondre à une raison impérative d'intérêt public majeur, au sens du c du 4° du I de l'article L. 411-2, ... »
+```
+
+- TargetArticle output:
+  - operation_type: INSERT
+  - code: "code de l'environnement"
+  - article: "L. 411-2-2"
+  - full_citation: "article L. 411-2-2 du code de l'environnement"
+  - confidence: 0.98
+  - raw_text: "il est inséré un article L. 411-2-2"
+
+For a chunk with no explicit target (e.g., general policy statement):
+
+- operation_type: OTHER
+- code: null
+- article: null
+- full_citation: null
+- confidence: 0.7
+- raw_text: null
+
+**Integration**:
+
+- The TargetArticleIdentifier is called immediately after BillSplitter, before ReferenceDetector.
+- The output is attached to each BillChunk as a new field: `target_article: Optional[TargetArticle]`
+
+**Special Case: Chunks With No Explicit Legal Reference (General Provisions)**
+
+- Some chunks do not create, modify, or abrogate a specific article, section, or code provision. These are typically general provisions, policy statements, mandates, or reporting requirements (e.g., "L'État met en place un plan pluriannuel ...").
+- In such cases, the TargetArticleIdentifier should output:
+  - `operation_type: OTHER`
+  - `code: None`
+  - `article: None`
+  - `full_citation: None`
+  - `confidence: < 1.0` (reflecting the absence of an explicit target)
+  - `raw_text: None`
+- These chunks are still legally binding and must be included in the output, but are not mapped to a code article. Downstream components should process them as standalone provisions.
+
+**Summary Table:**
+
+| Chunk Type               | TargetArticleIdentifier Output | Downstream Handling                 |
+| ------------------------ | ------------------------------ | ----------------------------------- |
+| Code amendment/insertion | code/article/citation present  | Map to code, update/insert/abrogate |
+| General provision        | None, operation_type=OTHER     | Include as standalone, no mapping   |
+
+**Example (General Provision):**
+
+For a chunk like:
+
+```
+III (nouveau). – L'État met en place un plan pluriannuel de renforcement de l'offre d'assurance récolte destinée aux prairies. ...
+```
+
+- TargetArticle output:
+  - operation_type: OTHER
+  - code: None
+  - article: None
+  - full_citation: None
+  - confidence: 0.7
+  - raw_text: None
+
 ### 2.1 Reference Detection
 
 **Component**: `ReferenceDetector`
 
 **Implementation**: Stateless LLM Agent with specialized prompt engineering
 
-**Responsibility**: Parse legislative text and identify all normative references using LLM-based understanding.
+**Responsibility**: Parse legislative text and identify all normative references using LLM-based understanding. Only return references that are essential for understanding the legislative text—specifically, those that define, constrain, or clarify a key noun/concept (object) within the chunk. The goal is to help users understand changes by specifying how notions in the text are defined or affected by other legal provisions.
 
 **Inputs**:
 
@@ -131,10 +248,31 @@ French legislative bills follow a well-defined hierarchical structure, which is 
 - `List[Reference]` — List of detected references, each with:
   - `text: str` (reference text)
   - `start_pos: int`, `end_pos: int` (positions in input)
-  - `object: str` (the noun/concept being referenced in the initial text)
+  - `object: str` (the noun/concept in the chunk that the reference helps define, constrain, or clarify)
   - `confidence: float`
   - `reference_type: ReferenceType`
   - Additional metadata
+
+**Reference Detection Purpose and Object Field**:
+
+- The primary goal is to identify references that are essential for understanding the legislative text, especially those that define, constrain, or clarify key nouns/concepts (objects) within the current chunk.
+- The **object** is the specific noun or noun phrase _within the current chunk's text_ that the reference directly defines, constrains, or clarifies.
+- For references to annexes, directives, or regulations, the object is typically the entity, process, or item being regulated or described by that external text (e.g., "les installations d'élevage" are defined/constrained by the EU directive).
+- Prefer the most specific phrase. For example, if a reference clarifies "produits phytopharmaceutiques", and the text says "l'utilisation de produits phytopharmaceutiques", the object is "produits phytopharmaceutiques".
+- If the object is ambiguous, return the most plausible candidate.
+
+**Example of 'object' linked to a definitional reference:**
+
+- Text: "...mentionnées à l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil..."
+- Reference: "l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil"
+- Object: "les installations d'élevage" (because the directive defines which installations are covered)
+
+Another example:
+
+- Text: "...respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253‑6."
+- Reference: "l'article L. 253‑6"
+- Object: "principes généraux de la lutte intégrée contre les ennemis des cultures"
+  (Because L. 253-6 _defines_ or _details_ these principles)
 
 **Ambiguous/Overlapping References:**
 
@@ -159,36 +297,43 @@ French legislative bills follow a well-defined hierarchical structure, which is 
 - Handling of abbreviated and implicit references
 - Detection of embedded references within text
 - Confidence scoring for each detected reference
+- Only return references that are essential for understanding or defining a concept in the chunk
 
 **Prompt Structure**:
 
 ```
-You are a specialized legal reference detection agent focusing on French legislative text. Your task is to identify all normative references in the following legislative text. For each reference:
-1. Extract the exact text of the reference
-2. Note its position in the text (start and end character positions)
-3. Provide a confidence score (0.0-1.0, where 1.0 is highest confidence)
-4. Indicate if it's an implicit or explicit reference
-5. For implicit references, identify the likely referred entity
+You are a specialized legal reference detection agent for French legislative texts. Your task is to analyze a given legislative chunk and extract ONLY the embedded normative references—any mention (explicit or implicit) of another legal text, article, code, regulation, decree, or section that is referenced within the text.
 
-Consider French legal system specificities like code structure, article numbering patterns, and common citation formats.
+The primary goal is to identify references that are essential for understanding the legislative text, especially those that define, constrain, or clarify key nouns/concepts (objects) within the current chunk. Only return references that are directly linked to an "object" in the text—i.e., references that help explain, define, or limit the meaning or scope of a specific noun or concept in the chunk.
 
-Text: {input_text}
+For each reference, include:
+- text: The exact reference string as it appears in the input.
+- start_pos: The starting character index of the reference in the input text.
+- end_pos: The ending character index (exclusive) of the reference in the input text.
+- object: The noun/concept in the chunk that the reference helps define, constrain, or clarify.
+- confidence: A float between 0.0 and 1.0 indicating your confidence in the detection.
+- reference_type: One of: explicit_direct, explicit_section, explicit_complete, implicit_contextual, implicit_relative, implicit_abbreviated.
+- If the reference is nested or overlaps with another, include a parent_reference field (the text of the parent reference).
+- If your confidence is below 0.6, include the reference in a separate low_confidence_references list.
+
+Example:
+Text: "...mentionnées à l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil..."
+Output:
+{
+  "references": [
+    {
+      "text": "l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil",
+      "start_pos": 204,
+      "end_pos": 264,
+      "object": "les installations d'élevage",
+      ...
+    }
+  ],
+  "low_confidence_references": []
+}
 ```
 
-**Note:** The 'object' is the specific entity or concept in the initial text that the reference points to (e.g., "produits" in "Les produits définis à l'article L. 253-5..."). This field provides essential context for downstream components, especially for relevance determination in recursive resolution.
-
-**Example:**
-For the text: "Les produits définis à l'article L. 253-5..."
-
-- ReferenceDetector output:
-  ```python
-  Reference(
-      text="l'article L. 253-5",
-      start_pos=..., end_pos=...,
-      object="produits",
-      ...
-  )
-  ```
+**Note:** The 'object' is the specific entity or concept in the initial text that the reference points to or helps define. This field provides essential context for downstream components, especially for relevance determination in recursive resolution.
 
 ### 2.2 Reference Classification
 
@@ -474,21 +619,57 @@ class FlattenedText:
     processing_metadata: Dict[str, Any]
     validation_status: str
     version: str = "v0"
+
+class TargetOperationType(Enum):
+    INSERT = "insert"
+    MODIFY = "modify"
+    ABROGATE = "abrogate"
+    RENUMBER = "renumber"
+    OTHER = "other"
+
+@dataclass
+class TargetArticle:
+    operation_type: TargetOperationType
+    code: Optional[str]
+    article: Optional[str]
+    full_citation: Optional[str]
+    confidence: float  # < 1.0 if no explicit target
+    raw_text: Optional[str]
+    version: str = "v0"
+
+@dataclass
+class BillChunk:
+    text: str
+    titre_text: str
+    article_label: str
+    article_introductory_phrase: Optional[str]
+    major_subdivision_label: Optional[str]
+    major_subdivision_introductory_phrase: Optional[str]
+    numbered_point_label: Optional[str]
+    hierarchy_path: List[str]
+    chunk_id: str
+    start_pos: int
+    end_pos: int
+    cross_references: Optional[List[str]] = None
+    target_article: Optional[TargetArticle] = None
+    version: str = "v0"
 ```
 
 ## 4. Processing Pipeline
 
 1. **Input**: Legislative text paragraph
-2. **Reference Detection**: Stateless LLM agent identifies all references, their positions, and the referenced object
-3. **Context Extraction**: The orchestration layer extracts 'surrounding_text' for each reference using start/end positions
-4. **Reference Classification**: Stateless LLM agent categorizes each reference, using both the reference and its context
-5. **For each reference**:
+2. **Bill Splitting**: Deterministic splitting into atomic chunks (BillSplitter)
+3. **Target Article Identification**: For each chunk, infer the main legal article/section being created, modified, or abrogated (TargetArticleIdentifier)
+4. **Reference Detection**: Stateless LLM agent identifies all references _within_ the chunk text (ReferenceDetector)
+5. **Context Extraction**: The orchestration layer extracts 'surrounding_text' for each reference using start/end positions
+6. **Reference Classification**: Stateless LLM agent categorizes each reference, using both the reference and its context
+7. **For each reference**:
    a. Text Retrieval: Fetch and extract the specific relevant portion from the source (using pylegifrance, fallback to web search)
    b. Relevance Analysis: Use the 'object' field to identify which nested references are essential for understanding
    c. Recursive Resolution: Only resolve nested references that are necessary for understanding the original reference/object
    d. If essential nested references exist, recursively resolve them
-6. **Text Substitution**: Replace references with their resolved content
-7. **Output**: Flattened text and reference metadata
+8. **Text Substitution**: Replace references with their resolved content
+9. **Output**: Flattened text and reference metadata
 
 ## 5. LLM Agent Management
 
