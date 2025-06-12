@@ -6,14 +6,16 @@ section, or code provision that is the target of modification, insertion, or abr
 """
 
 import json
-from mistralai import Mistral
+import os
 from typing import List, Optional
-from dataclasses import replace
+
+from mistralai import Mistral
 
 from bill_parser_engine.core.reference_resolver.models import BillChunk, TargetArticle, TargetOperationType
-from bill_parser_engine.core.reference_resolver.prompts import TARGET_ARTICLE_IDENTIFICATION_AGENT_PROMPT
 from bill_parser_engine.core.reference_resolver.config import MISTRAL_MODEL
-from bill_parser_engine.core.reference_resolver.utils import extract_mistral_agent_output_content
+from bill_parser_engine.core.reference_resolver.prompts import TARGET_ARTICLE_IDENTIFIER_SYSTEM_PROMPT
+from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache, get_cache
+from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
 
 
 class TargetArticleIdentifier:
@@ -26,160 +28,170 @@ class TargetArticleIdentifier:
     2. The operation type (INSERT, MODIFY, ABROGATE, RENUMBER, or OTHER)
     3. The relevant code and article identifiers
     
-    It distinguishes between the target article (the "canvas" being modified) and
-    embedded references within the chunk text (which are handled by ReferenceDetector).
+    Uses Mistral Chat API in JSON Mode for structured output.
     """
     
-    def __init__(self, client: Mistral, agent_id: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, cache: Optional[SimpleCache] = None, use_cache: bool = True):
         """
-        Initialize the identifier. If agent_id is not provided, create the agent automatically.
+        Initialize the identifier with Mistral client.
 
         Args:
-            client: An initialized Mistral client
-            agent_id: (Optional) The agent ID for the Mistral target article identification agent
+            api_key: Mistral API key (defaults to MISTRAL_API_KEY environment variable)
+            cache: Cache instance for storing intermediate results (uses global if None)
+            use_cache: Whether to use caching (useful to disable when iterating on prompts)
         """
-        self.client = client
-        if agent_id is None:
-            self.agent_id = self._create_target_article_identification_agent()
-        else:
-            self.agent_id = agent_id
+        self.client = Mistral(api_key=api_key or os.getenv("MISTRAL_API_KEY"))
+        self.system_prompt = TARGET_ARTICLE_IDENTIFIER_SYSTEM_PROMPT
+        self.cache = cache or get_cache()
+        self.use_cache = use_cache
 
-    def _create_target_article_identification_agent(self) -> str:
-        """
-        Create a Mistral agent for target article identification with the correct configuration.
 
-        Returns:
-            The agent ID of the created target article identification agent
-        """
-        agent = self.client.beta.agents.create(
-            model=MISTRAL_MODEL,
-            description="Identifies the primary legal article, section, or code provision that is the target of modification, insertion, or abrogation in legislative text.",
-            name="Target Article Identification Agent",
-            instructions=TARGET_ARTICLE_IDENTIFICATION_AGENT_PROMPT,
-        )
-        return agent.id
 
-    def identify(self, chunk: BillChunk) -> BillChunk:
+    def identify(self, chunk: BillChunk) -> TargetArticle:
         """
-        Identify the target article for a bill chunk using the LLM agent.
+        Identify the target article for a bill chunk using Mistral JSON Mode.
 
         Args:
             chunk: The BillChunk to analyze
 
         Returns:
-            A new BillChunk object with the identified target_article field set
+            TargetArticle object with identified information
         """
-        # Create a prompt with the chunk text and relevant metadata
-        prompt = self._create_prompt(chunk)
+        # Try to get from cache first (if enabled)
+        if self.use_cache:
+            cache_key_data = {
+                'text': chunk.text,
+                'article_introductory_phrase': chunk.article_introductory_phrase,
+                'major_subdivision_introductory_phrase': chunk.major_subdivision_introductory_phrase,
+                'hierarchy_path': chunk.hierarchy_path
+            }
+            
+            cached_result = self.cache.get("target_identifier", cache_key_data)
+            if cached_result is not None:
+                print(f"✓ Using cached result for TargetArticleIdentifier")
+                return cached_result
+        
+        print(f"→ Processing new chunk with TargetArticleIdentifier")
+        
+        user_prompt = self._create_user_prompt(chunk)
 
         try:
-            # Call the Mistral agent
-            response = self.client.beta.conversations.start(
-                agent_id=self.agent_id,
-                inputs=prompt
+            # Use shared rate limiter across all components
+            rate_limiter.wait_if_needed("TargetArticleIdentifier")
+            
+            # Use the chat.complete method with response_format for JSON mode
+            response = self.client.chat.complete(
+                model=MISTRAL_MODEL,
+                temperature=0.0,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": self.system_prompt
+                    },
+                    {
+                        "role": "user", 
+                        "content": user_prompt
+                    }
+                ],
+                response_format={"type": "json_object"}
             )
-            target_article = self._parse_response(extract_mistral_agent_output_content(response), chunk)
-            # Return a new BillChunk with target_article set
-            return replace(chunk, target_article=target_article)
+            
+            content = json.loads(response.choices[0].message.content)
+            target_article = self._create_target_article(content)
+            
+            # Cache the successful result (if enabled)
+            if self.use_cache:
+                self.cache.set("target_identifier", cache_key_data, target_article)
+                print(f"✓ Cached result for future use")
+            
+            return target_article
+            
         except Exception as e:
-            raise RuntimeError(f"Mistral agent call failed: {e}")
+            # Log the error and re-raise it - no silent failures
+            import traceback
+            print(f"TargetArticleIdentifier failed: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
+            raise RuntimeError(f"TargetArticleIdentifier API call failed: {str(e)}") from e
 
-    def identify_batch(self, chunks: List[BillChunk]) -> List[BillChunk]:
+    def _create_user_prompt(self, chunk: BillChunk) -> str:
         """
-        Process multiple chunks and enrich them with target article information.
-        
-        This method identifies the target article for each chunk and returns a new list
-        of BillChunk objects with the target_article field set. Never mutates input chunks.
-
-        Args:
-            chunks: List of BillChunk objects to process
-
-        Returns:
-            A new list of BillChunk objects, each with target_article set
-        """
-        return [self.identify(chunk) for chunk in chunks]
-
-    def _create_prompt(self, chunk: BillChunk) -> str:
-        """
-        Create a prompt for the Mistral agent based on the chunk and its metadata.
+        Create a user prompt with chunk text and all available metadata context.
 
         Args:
             chunk: The BillChunk to analyze
 
         Returns:
-            A formatted prompt string
+            Formatted user prompt string with comprehensive context
         """
+        # Collect all available context information
+        context_parts = []
+        
+        if chunk.article_introductory_phrase:
+            context_parts.append(f"Article Context: {chunk.article_introductory_phrase}")
+        
+        if chunk.major_subdivision_introductory_phrase:
+            context_parts.append(f"Subdivision Context: {chunk.major_subdivision_introductory_phrase}")
+        
+        # Combine context parts, or use "None" if no context available
+        context_text = " | ".join(context_parts) if context_parts else "None"
+        
         return f"""
-Analyze the following chunk of legislative text and identify the target article:
-
-Chunk Text:
-{chunk.text}
-
-Chunk Metadata:
-- Title: {chunk.titre_text}
-- Article: {chunk.article_label}
-- Article Introductory Phrase: {chunk.article_introductory_phrase}
-- Major Subdivision: {chunk.major_subdivision_label if chunk.major_subdivision_label else 'None'}
-- Numbered Point: {chunk.numbered_point_label if chunk.numbered_point_label else 'None'}
+Chunk: {chunk.text}
+Context: {context_text}
+Hierarchy: {' > '.join(chunk.hierarchy_path)}
 """
 
-    def _parse_response(self, response_text: str, chunk: BillChunk) -> TargetArticle:
+    def _create_target_article(self, content: dict) -> TargetArticle:
         """
-        Parse the agent's response to extract the TargetArticle information.
+        Create TargetArticle object from parsed JSON content.
 
         Args:
-            response_text: The text response from the agent
-            chunk: The original chunk (for fallback information if parsing fails)
+            content: Parsed JSON response from Mistral
 
         Returns:
             TargetArticle object
         """
+        # Validate and convert operation_type
+        operation_type_str = content.get("operation_type", "OTHER").upper()
         try:
-            # Extract JSON from the response
-            json_start = response_text.find('{')
-            json_end = response_text.rfind('}') + 1
-            if json_start != -1 and json_end != -1:
-                json_str = response_text[json_start:json_end]
-                data = json.loads(json_str)
-                
-                # Convert operation_type string to enum
-                operation_type_str = data.get("operation_type", "OTHER").upper()
-                try:
-                    operation_type = TargetOperationType[operation_type_str]
-                except KeyError:
-                    # Default to OTHER if the operation type is invalid
-                    operation_type = TargetOperationType.OTHER
-                
-                # Create TargetArticle object
-                return TargetArticle(
-                    operation_type=operation_type,
-                    code=data.get("code"),
-                    article=data.get("article"),
-                    full_citation=data.get("full_citation"),
-                    confidence=float(data.get("confidence", 0.5)),
-                    raw_text=data.get("raw_text"),
-                    version="v0"
-                )
-            
-            # Fallback: If we can't parse the JSON, return a default TargetArticle
-            return TargetArticle(
-                operation_type=TargetOperationType.OTHER,
-                code=None,
-                article=None,
-                full_citation=None,
-                confidence=0.1,  # Very low confidence
-                raw_text=None,
-                version="v0"
-            )
-        except Exception as e:
-            # Log the error and return a default TargetArticle
-            print(f"Error parsing target article from response: {e}")
-            return TargetArticle(
-                operation_type=TargetOperationType.OTHER,
-                code=None,
-                article=None,
-                full_citation=None,
-                confidence=0.1,  # Very low confidence
-                raw_text=None,
-                version="v0"
-            ) 
+            operation_type = TargetOperationType[operation_type_str]
+        except KeyError:
+            operation_type = TargetOperationType.OTHER
+
+        return TargetArticle(
+            operation_type=operation_type,
+            code=content.get("code"),
+            article=content.get("article"),
+            full_citation=self._generate_full_citation(content.get("code"), content.get("article")),
+            confidence=float(content.get("confidence", 0.5)),
+            raw_text=content.get("raw_text"),
+            version="v0"
+        )
+
+    def _generate_full_citation(self, code: Optional[str], article: Optional[str]) -> Optional[str]:
+        """
+        Generate full citation from code and article if both are present.
+
+        Args:
+            code: The code name
+            article: The article identifier
+
+        Returns:
+            Full citation string or None
+        """
+        if code and article:
+            return f"article {article} du {code}"
+        return None
+
+    def clear_cache(self) -> int:
+        """
+        Clear cached results for this component.
+        
+        Useful when iterating on prompts or when you want fresh results.
+        
+        Returns:
+            Number of cache entries cleared
+        """
+        return self.cache.invalidate("target_identifier")
+
+ 

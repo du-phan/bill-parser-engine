@@ -7,6 +7,19 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 
+# --- Enums ---
+
+class TargetOperationType(Enum):
+    INSERT = "INSERT"
+    MODIFY = "MODIFY"
+    ABROGATE = "ABROGATE"
+    RENUMBER = "RENUMBER"
+    OTHER = "OTHER"
+
+class ReferenceSourceType(Enum):
+    DELETIONAL = "DELETIONAL"
+    DEFINITIONAL = "DEFINITIONAL"
+
 class ReferenceType(Enum):
     """
     Types of normative references, as per detailed spec.
@@ -44,13 +57,7 @@ class ResolutionStatus(Enum):
     FAILED = "failed"
 
 
-class TargetOperationType(Enum):
-    """Types of operations on target articles."""
-    INSERT = "insert"
-    MODIFY = "modify"
-    ABROGATE = "abrogate"
-    RENUMBER = "renumber"
-    OTHER = "other"
+
 
 
 @dataclass
@@ -67,27 +74,68 @@ class Reference:
 
 @dataclass
 class TargetArticle:
-    """
-    Represents the primary legal article/section that is the target 
-    of a modification, insertion, or abrogation in a legislative bill chunk.
-    """
+    """Identifies the legal article being targeted by an amendment chunk."""
     operation_type: TargetOperationType
     code: Optional[str]
     article: Optional[str]
-    full_citation: Optional[str]
-    confidence: float  # < 1.0 if no explicit target
+    confidence: float
     raw_text: Optional[str]
-    version: str = "v0"
+    full_citation: Optional[str] = None
+    version: Optional[str] = None
+
+@dataclass
+class ReconstructorOutput:
+    """Output from the TextReconstructor, providing the 'before' and 'after' text fragments."""
+    deleted_or_replaced_text: str
+    intermediate_after_state_text: str
+
+@dataclass
+class LocatedReference:
+    """Represents a reference found in a text fragment, tagged by its source."""
+    reference_text: str
+    start_position: int
+    end_position: int
+    source: ReferenceSourceType
+    confidence: float
+
+@dataclass
+class LinkedReference:
+    """Represents a reference that has been grammatically linked to its object."""
+    reference_text: str
+    source: ReferenceSourceType
+    object: str
+    agreement_analysis: str
+    confidence: float
+
+@dataclass
+class ResolutionResult:
+    """The complete output from the ResolutionOrchestrator."""
+    resolved_deletional_references: List["ResolvedReference"]
+    resolved_definitional_references: List["ResolvedReference"]
+    resolution_tree: Dict
+    unresolved_references: List[LinkedReference]
+
+@dataclass
+class LegalState:
+    """Represents a fully resolved legal state (either before or after amendment)."""
+    state_text: str
+    synthesis_metadata: Dict
+
+@dataclass
+class LegalAnalysisOutput:
+    """The final, high-level output of the entire pipeline."""
+    before_state: LegalState
+    after_state: LegalState
+    source_chunk: "BillChunk"
+    target_article: TargetArticle
 
 
 @dataclass
 class ResolvedReference:
-    """Represents a resolved reference with its content."""
-    reference: Reference
-    content: str
-    sub_references: List["ResolvedReference"]
-    resolution_path: List[Reference]
-    resolution_status: ResolutionStatus
+    """Contains a linked reference and its fetched content."""
+    linked_reference: LinkedReference
+    resolved_content: str
+    retrieval_metadata: Dict[str, str]
 
 
 @dataclass
@@ -101,22 +149,19 @@ class FlattenedText:
 
 @dataclass
 class BillChunk:
-    """
-    Represents an atomic chunk of a legislative bill, with all relevant context and metadata for downstream processing.
-    """
+    """Represents an atomic, processable piece of a legislative bill, as output by the BillSplitter."""
     text: str
     titre_text: str
     article_label: str
-    article_introductory_phrase: str
+    article_introductory_phrase: Optional[str]
     major_subdivision_label: Optional[str]
-    major_subdivision_label_raw: Optional[str] = None
-    major_subdivision_introductory_phrase: Optional[str] = None
-    numbered_point_label: Optional[str] = None
-    numbered_point_label_raw: Optional[str] = None
-    hierarchy_path: List[str] = field(default_factory=list)
-    chunk_id: str = ""
-    start_pos: int = 0
-    end_pos: int = 0
+    major_subdivision_introductory_phrase: Optional[str]
+    numbered_point_label: Optional[str]
+    hierarchy_path: List[str]
+    chunk_id: str
+    start_pos: int
+    end_pos: int
+    # Backwards compatibility for existing BillSplitter
     cross_references: List[str] = field(default_factory=list)
     target_article: Optional[TargetArticle] = None
 

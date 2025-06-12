@@ -1,1 +1,1 @@
-MISTRAL_MODEL = "mistral-large-latest" 
+MISTRAL_MODEL = "magistral-medium-2506" 

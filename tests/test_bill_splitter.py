@@ -68,19 +68,19 @@ Ceci est un article sans subdivisions ni points.
 def test_numbered_point_range_supprimes(bill_text):
     splitter = BillSplitter()
     chunks = splitter.split(bill_text)
-    # Article 3, I. should have a chunk with numbered_point_label_raw '1° à 3°'
-    range_chunk = next((c for c in chunks if c.article_label.startswith("Article 3") and c.numbered_point_label_raw and "1° à 3°" in c.numbered_point_label_raw), None)
+    # Article 3, I. should have a chunk with numbered_point_label '1° à 3°' (normalized)
+    range_chunk = next((c for c in chunks if c.article_label.startswith("Article 3") and c.numbered_point_label and "1° à 3°" in c.numbered_point_label), None)
     assert range_chunk is not None
-    assert "Supprimé" in range_chunk.text or "Supprimés" in range_chunk.text or (range_chunk.numbered_point_label_raw and "Supprimé" in range_chunk.numbered_point_label_raw)
+    assert "Supprimé" in range_chunk.text or "Supprimés" in range_chunk.text or (range_chunk.numbered_point_label and "Supprimé" in range_chunk.numbered_point_label)
 
 def test_special_markings_nouveau_supprime(bill_text):
     splitter = BillSplitter()
     chunks = splitter.split(bill_text)
-    # Find a chunk with (nouveau) in the raw label
-    nouveau_chunk = next((c for c in chunks if c.numbered_point_label_raw and "(nouveau)" in c.numbered_point_label_raw), None)
+    # Find a chunk with (nouveau) in the text (since it's normalized out of numbered_point_label)
+    nouveau_chunk = next((c for c in chunks if "(nouveau)" in c.text), None)
     assert nouveau_chunk is not None
-    # Find a chunk with (Supprimé) in the text or raw label
-    supprime_chunk = next((c for c in chunks if (c.numbered_point_label_raw and "Supprimé" in c.numbered_point_label_raw) or ("Supprimé" in c.text)), None)
+    # Find a chunk with (Supprimé) in the text or numbered_point_label
+    supprime_chunk = next((c for c in chunks if (c.numbered_point_label and "Supprimé" in c.numbered_point_label) or ("Supprimé" in c.text)), None)
     assert supprime_chunk is not None
 
 def test_lettered_subpoints_included(bill_text):

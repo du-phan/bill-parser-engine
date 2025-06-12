@@ -4,7 +4,7 @@
 
 The Normative Reference Resolver is a key component of the bill-parser-engine that processes legislative text, identifies normative references, resolves them recursively, and produces a fully interpretable, self-contained version of the text. The system leverages LLM agents for core processing tasks while maintaining a robust architecture for handling recursive references and ensuring performance.
 
-## 1.1 French Legislative Bill Hierarchy Structure
+### 1.1 French Legislative Bill Hierarchy Structure
 
 French legislative bills follow a well-defined hierarchical structure, which is essential for both parsing and reference resolution. The main levels are:
 
@@ -22,13 +22,132 @@ French legislative bills follow a well-defined hierarchical structure, which is 
 - Cross-references (e.g., "du même article", "au 3° du II") require a mapping between units and their positions in the hierarchy.
 - When splitting, metadata about parent TITRE, Article, and all ancestor levels must be preserved for each chunk.
 
-## 2. Core Components
+### 1.2 The Lawyer's Mental Model: A Guiding Principle
 
-### 2.0 BillSplitter
+The entire architecture of this system is designed to replicate the methodical and efficient workflow of an expert legal analyst. A lawyer does not read a legislative amendment in isolation; they interpret it as a precise set of instructions for modifying an existing legal document. Our pipeline is a direct reflection of this mental model.
+
+The core principles of this model are:
+
+1.  **The Goal is the "Diff"**: The ultimate objective is not to produce a single, flattened text, but to generate a clear, comparative analysis of the law **before** and **after** the amendment. The final output must be two distinct, fully-resolved states: the `BeforeState` and the `AfterState`.
+
+2.  **Analysis is Amendment-Driven**: A lawyer's analysis is targeted. They start with the specific change described in the amendment and only pull in context from the original law as it becomes necessary to understand that change. They do not waste time analyzing parts of the original law that are unaffected. Our pipeline reflects this by starting with the `AmendmentChunk` and using the original law as a lookup resource.
+
+3.  **Structure Precedes Semantics**: Before analyzing the meaning of references, a lawyer first understands the structural changes. They mechanically apply the deletions, replacements, and insertions to form a clear picture of the new text's structure. Our `TextReconstructor` component models this crucial, rule-based first step.
+
+4.  **Analysis Involves Micro-Tasks**: Identifying a reference and understanding its connection to the text are two distinct cognitive tasks.
+    - **Spotting (Perception)**: Rapidly identifying patterns that look like references.
+    - **Linking (Cognition)**: Carefully analyzing grammar and context to link the reference to its specific object.
+      Our pipeline mirrors this with the separate `ReferenceLocator` and `ReferenceObjectLinker` components.
+
+By adhering to this model, we ensure each component has a simple, well-defined purpose, which is essential for building a robust and accurate system, especially one that leverages Large Language Models for complex cognitive tasks.
+
+#### Example: Step-by-Step Legal Analysis
+
+Suppose the bill contains the following amendment:
+
+> b) Le VI est ainsi modifié :
+>
+> - à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique » ;
+
+A lawyer's workflow, and the corresponding pipeline steps, would be:
+
+1. **Retrieve the Original Law**: Find the current text of Article L. 254-1, VI.
+2. **Mechanically Apply the Amendment** (`TextReconstructor`):
+   - Remove the phrase `incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV`.
+   - Insert the new, long phrase in its place.
+   - The result is two texts: the deleted phrase ("before"), and the new phrase ("after").
+3. **Spot References** (`ReferenceLocator`):
+   - In the deleted phrase: spot `aux 1° ou 2° du II` and `au IV` (tagged as DELETIONAL).
+   - In the new phrase: spot `du 11 de l'article 3 du règlement (CE) n° 1107/2009`, `à l'article L. 253-5`, `au sens de l'article 23 du règlement (CE) n° 1107/2009`, `au sens de l'article 47 du même règlement (CE) n° 1107/2009` (tagged as DEFINITIONAL).
+4. **Link References to Objects** (`ReferenceObjectLinker`):
+   - For each DELETIONAL reference, use the original law as context to find the object (e.g., "activités").
+   - For each DEFINITIONAL reference, use the new phrase as context to find the object (e.g., "producteurs", "la liste", etc.).
+5. **Resolve References** (`ResolutionOrchestrator`):
+   - Recursively fetch the content of each reference as needed.
+6. **Synthesize Final States** (`LegalStateSynthesizer`):
+   - Substitute the resolved content into the original and new texts to produce the fully interpretable `BeforeState` and `AfterState`.
+
+This example illustrates how the pipeline mirrors the lawyer's real-world workflow, ensuring both accuracy and efficiency.
+
+## 2. System Architecture & Pipeline
+
+The system is designed as a multi-stage pipeline where a legislative bill is progressively enriched with metadata until a fully resolved, self-contained version of the text is produced. The `ResolutionOrchestrator` acts as the central stateful component, managing the recursive resolution process and leveraging other specialized, stateless components as tools.
+
+### 2.1 Visual Pipeline
+
+```mermaid
+graph TD
+    subgraph "Main Pipeline"
+        InputText[Legislative Text] --> BillSplitter;
+        BillSplitter --> TargetArticleIdentifier;
+        TargetArticleIdentifier --> OriginalTextRetriever;
+        OriginalTextRetriever --> TextReconstructor;
+        TextReconstructor --> ReferenceLocator;
+        ReferenceLocator --> ReferenceObjectLinker;
+        ReferenceObjectLinker --> ResolutionOrchestrator;
+        ResolutionOrchestrator --> LegalStateSynthesizer;
+        LegalStateSynthesizer --> LegalAnalysisOutput{Legal Analysis Output};
+    end
+
+    subgraph "Orchestrator Loop (for each Definitional & Deletional Reference)"
+        ResolutionOrchestrator -- "1. Assess" --> RelevanceAssessor;
+        RelevanceAssessor -- "Essential" --> ReferenceClassifier;
+        ReferenceClassifier -- "2. Classify" --> TextRetriever;
+        TextRetriever -- "3. Retrieve" --> RetrievedContent{Retrieved Text};
+        RetrievedContent -- "4. Locate Sub-References" --> RecursiveLocator[ReferenceLocator];
+        RecursiveLocator -- "5. Link Sub-References" --> RecursiveLinker[ReferenceObjectLinker];
+        RecursiveLinker -- "New Definitional Refs" --> ResolutionOrchestrator;
+    end
+
+    %% Styling
+    classDef component fill:#f9f,stroke:#333,stroke-width:2px;
+    class BillSplitter,TargetArticleIdentifier,OriginalTextRetriever,TextReconstructor,ReferenceLocator,ReferenceObjectLinker,ResolutionOrchestrator,LegalStateSynthesizer,RelevanceAssessor,ReferenceClassifier,TextRetriever,RecursiveLocator,RecursiveLinker component;
+```
+
+### 2.2 Processing Steps
+
+1.  **Input**: Receive legislative text.
+2.  **Bill Splitting**: `BillSplitter` parses the text into atomic `BillChunk`s.
+3.  **Target Article Identification**: `TargetArticleIdentifier` infers the legal article being modified.
+4.  **Original Text Retrieval**: `OriginalTextRetriever` fetches the current text of the target article.
+5.  **Text Reconstruction (NEW)**: A new, rule-based `TextReconstructor` mechanically applies the amendment to the original text. It outputs two clean strings: the exact `DeletedOrReplacedText` and the `IntermediateAfterStateText` (the full text after the change, but before reference resolution).
+6.  **Reference Locating**: The `ReferenceLocator` scans _only_ the `DeletedOrReplacedText` and `IntermediateAfterStateText` to find all reference strings, tagging them as `DELETIONAL` or `DEFINITIONAL`. This completely replaces the need for a separate `ReferenceFunctionalAnalysis` step.
+7.  **Reference-Object Linking**: The `ReferenceObjectLinker` takes each located reference and uses the appropriate context (original text for `DELETIONAL`, intermediate "after" text for `DEFINITIONAL`) to link it to its grammatical object.
+8.  **Resolution Orchestration**: `ResolutionOrchestrator` recursively resolves all essential linked references.
+9.  **Legal State Synthesis**: `LegalStateSynthesizer` performs the final substitution, populating the original and intermediate texts with their resolved content to produce the final `BeforeState` and `AfterState`.
+10. **Output**: The `LegalAnalysisOutput` provides the two fully resolved legal states for comparison.
+
+## 3. Core Component Specifications
+
+This section provides detailed specifications for each component in the pipeline.
+
+### 3.1 BillSplitter
 
 **Component**: `BillSplitter`
 
+**Implementation**: Rule-based parsing (no LLM)
+
 **Responsibility**: Deterministically split the legislative bill into atomic, manageable pieces for downstream LLM processing, following the legal document's hierarchy. The splitting logic is strictly rule-based (not LLM-powered) and ensures robust context and reference tracking.
+
+**Inputs**:
+
+- `legislative_text` (string): The raw text of the legislative bill.
+
+**Outputs**:
+
+- A list of `BillChunk` objects, where each object contains:
+  - `text` (string): The content of the numbered point or major subdivision.
+  - `titre_text` (string): The full TITRE (Title) heading.
+  - `article_label` (string): The Article number and heading.
+  - `article_introductory_phrase` (string or null): The phrase immediately following the Article heading.
+  - `major_subdivision_label` (string or null): The Roman numeral and its heading/phrase.
+  - `major_subdivision_introductory_phrase` (string or null): The phrase immediately following the major subdivision heading.
+  - `numbered_point_label` (string or null): The label of the numbered point.
+  - `hierarchy_path` (list of strings): All parent headings/identifiers in order.
+  - `chunk_id` (string): Unique identifier for the chunk.
+  - `start_pos` (integer): Character position in the original text.
+  - `end_pos` (integer): Character position in the original text.
+  - `cross_references` (list of strings, optional): List of detected references to other units.
 
 **Splitting Rules (Hierarchical and Deterministic):**
 
@@ -112,600 +231,873 @@ French legislative bills follow a well-defined hierarchical structure, which is 
 
 10. **Integration:**
     - The BillSplitter is the first step in the pipeline, preceding reference detection.
-    - Downstream components (ReferenceDetector, etc.) operate on these atomic chunks.
+    - Downstream components (ReferenceLocator, etc.) operate on these atomic chunks.
 
-### 2.1 Target Article Identification
+### 3.2 TargetArticleIdentifier
 
 **Component**: `TargetArticleIdentifier`
 
-**Implementation**: Stateless LLM Agent with prompt engineering
+**Implementation**: Mistral Chat API (JSON Mode)
 
-**Responsibility**: For each chunk produced by the BillSplitter, infer the primary legal article, section, or code provision that is the _target_ of the modification, insertion, or abrogation described in the chunk. This is the legal reference that the chunk is intended to create, update, or remove (the "target article"). This is distinct from references _within_ the chunk's text, which are handled by the ReferenceDetector.
-
-**Inputs**:
-
-- `chunk: BillChunk` — The chunk of legislative text to analyze (with all BillSplitter metadata)
-
-**Outputs**:
-
-- `TargetArticle` — Structured information about the target legal article/section, including:
-  - `operation_type: TargetOperationType` (e.g., INSERT, MODIFY, ABROGATE, etc.)
-  - `code: str` (e.g., "code rural et de la pêche maritime")
-  - `article: str` (e.g., "L. 411-2-2")
-  - `full_citation: str` (e.g., "article L. 411-2-2 du code de l'environnement")
-  - `confidence: float`
-  - `raw_text: str` (the exact phrase in the chunk that led to this inference, if any)
-  - `version: str` (for future extensibility)
-
-**Operation Types**:
-
-- `INSERT`: The chunk creates a new article/section
-- `MODIFY`: The chunk modifies an existing article/section
-- `ABROGATE`: The chunk abrogates (removes) an article/section
-- `RENUMBER`: The chunk renumbers an article/section
-- `OTHER`: Any other operation (fallback)
-
-**Key Features**:
-
-- LLM-powered extraction of the _target_ legal article/section for each chunk
-- Distinguishes between the target ("canvas") and embedded references ("children references")
-- Handles cases where no explicit target is present (e.g., general provisions)
-- Provides a confidence score for the inference
-
-**Prompt Structure**:
-
-```
-You are a legal bill analysis agent. For the following chunk of legislative text, identify the main legal article, section, or code provision that is the *target* of the modification, insertion, or abrogation described. Return the operation type (INSERT, MODIFY, ABROGATE, etc.), the code, the article/section identifier, the full citation, and the exact phrase in the chunk that led to this inference (if any). If no explicit target is present, return nulls and set operation_type to OTHER.
-
-Chunk:
-{chunk.text}
-
-Metadata:
-{chunk metadata fields}
-```
-
-**Example**:
-
-For the chunk:
-
-```
-7° (nouveau) Après l'article L. 411-2-1, il est inséré un article L. 411-2-2 ainsi rédigé :
-
-	« Art. L. 411-2-2. – Sont présumés répondre à une raison impérative d'intérêt public majeur, au sens du c du 4° du I de l'article L. 411-2, ... »
-```
-
-- TargetArticle output:
-  - operation_type: INSERT
-  - code: "code de l'environnement"
-  - article: "L. 411-2-2"
-  - full_citation: "article L. 411-2-2 du code de l'environnement"
-  - confidence: 0.98
-  - raw_text: "il est inséré un article L. 411-2-2"
-
-For a chunk with no explicit target (e.g., general policy statement):
-
-- operation_type: OTHER
-- code: null
-- article: null
-- full_citation: null
-- confidence: 0.7
-- raw_text: null
-
-**Integration**:
-
-- The TargetArticleIdentifier is called immediately after BillSplitter, before ReferenceDetector.
-- The output is attached to each BillChunk as a new field: `target_article: Optional[TargetArticle]`
-
-**Special Case: Chunks With No Explicit Legal Reference (General Provisions)**
-
-- Some chunks do not create, modify, or abrogate a specific article, section, or code provision. These are typically general provisions, policy statements, mandates, or reporting requirements (e.g., "L'État met en place un plan pluriannuel ...").
-- In such cases, the TargetArticleIdentifier should output:
-  - `operation_type: OTHER`
-  - `code: None`
-  - `article: None`
-  - `full_citation: None`
-  - `confidence: < 1.0` (reflecting the absence of an explicit target)
-  - `raw_text: None`
-- These chunks are still legally binding and must be included in the output, but are not mapped to a code article. Downstream components should process them as standalone provisions.
-
-**Summary Table:**
-
-| Chunk Type               | TargetArticleIdentifier Output | Downstream Handling                 |
-| ------------------------ | ------------------------------ | ----------------------------------- |
-| Code amendment/insertion | code/article/citation present  | Map to code, update/insert/abrogate |
-| General provision        | None, operation_type=OTHER     | Include as standalone, no mapping   |
-
-**Example (General Provision):**
-
-For a chunk like:
-
-```
-III (nouveau). – L'État met en place un plan pluriannuel de renforcement de l'offre d'assurance récolte destinée aux prairies. ...
-```
-
-- TargetArticle output:
-  - operation_type: OTHER
-  - code: None
-  - article: None
-  - full_citation: None
-  - confidence: 0.7
-  - raw_text: None
-
-### 2.1 Reference Detection
-
-**Component**: `ReferenceDetector`
-
-**Implementation**: Stateless LLM Agent with specialized prompt engineering
-
-**Responsibility**: Parse legislative text and identify all normative references using LLM-based understanding. Only return references that are essential for understanding the legislative text—specifically, those that define, constrain, or clarify a key noun/concept (object) within the chunk. The goal is to help users understand changes by specifying how notions in the text are defined or affected by other legal provisions.
+**Responsibility**: For each chunk, infer the primary legal article, section, or code provision that is the _target_ of the modification, insertion, or abrogation described in the chunk.
 
 **Inputs**:
 
-- `text: str` — The legislative text to analyze
+- `bill_chunk` (BillChunk object): A single chunk from the `BillSplitter`, containing the text and metadata of a numbered point or major subdivision.
 
 **Outputs**:
 
-- `List[Reference]` — List of detected references, each with:
-  - `text: str` (reference text)
-  - `start_pos: int`, `end_pos: int` (positions in input)
-  - `object: str` (the noun/concept in the chunk that the reference helps define, constrain, or clarify)
-  - `confidence: float`
-  - `reference_type: ReferenceType`
-  - Additional metadata
+- A JSON object with the following fields:
+  - `operation_type` (string): One of "INSERT", "MODIFY", "ABROGATE", "RENUMBER", or "OTHER".
+  - `code` (string or null): The code being modified (e.g., "code rural et de la pêche maritime").
+  - `article` (string or null): The article identifier (e.g., "L. 411-2-2").
+  - `confidence` (float): A number between 0 and 1 indicating confidence.
+  - `raw_text` (string or null): The exact phrase in the chunk that led to this inference.
 
-**Reference Detection Purpose and Object Field**:
+**API Strategy**: **JSON Mode**. The task is to extract a single, structured `TargetArticle` object with a relatively simple schema. JSON Mode is sufficient and efficient here because the output schema is straightforward and doesn't require precise character positions.
 
-- The primary goal is to identify references that are essential for understanding the legislative text, especially those that define, constrain, or clarify key nouns/concepts (objects) within the current chunk.
-- The **object** is the specific noun or noun phrase _within the current chunk's text_ that the reference directly defines, constrains, or clarifies.
-- For references to annexes, directives, or regulations, the object is typically the entity, process, or item being regulated or described by that external text (e.g., "les installations d'élevage" are defined/constrained by the EU directive).
-- Prefer the most specific phrase. For example, if a reference clarifies "produits phytopharmaceutiques", and the text says "l'utilisation de produits phytopharmaceutiques", the object is "produits phytopharmaceutiques".
-- If the object is ambiguous, return the most plausible candidate.
+**Prompt Focus**: The prompt should clearly describe the target fields (`operation_type`, `code`, `article`, etc.) and provide 2-3 examples covering different operations (INSERT, MODIFY, ABROGATE).
 
-**Example of 'object' linked to a definitional reference:**
+**Example API Usage**:
 
-- Text: "...mentionnées à l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil..."
-- Reference: "l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil"
-- Object: "les installations d'élevage" (because the directive defines which installations are covered)
+```python
+from mistralai.client import MistralClient
+from mistralai.models.chat_completion import ChatMessage
+import os
+import json
 
-Another example:
+client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
 
-- Text: "...respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253‑6."
-- Reference: "l'article L. 253‑6"
-- Object: "principes généraux de la lutte intégrée contre les ennemis des cultures"
-  (Because L. 253-6 _defines_ or _details_ these principles)
+system_prompt = """
+You are a legal bill analysis agent. Your task is to identify the main legal article, section, or code provision that is the *target* of the modification, insertion, or abrogation described in the given chunk of legislative text.
 
-**Ambiguous/Overlapping References:**
+Return a JSON object with the following fields:
+- operation_type: One of "INSERT", "MODIFY", "ABROGATE", "RENUMBER", or "OTHER"
+- code: The code being modified (e.g., "code rural et de la pêche maritime") or null if none
+- article: The article identifier (e.g., "L. 411-2-2") or null if none
+- confidence: A number between 0 and 1 indicating your confidence
+- raw_text: The exact phrase in the chunk that led to this inference, or null if none
 
-- If references overlap or are nested, each should be returned as a separate entry, with a `parent_reference` field if applicable.
-- References with confidence below the threshold (default: 0.6) must be returned in a separate `low_confidence_references` field for manual review.
-
-**Reference Types** (v0 Scope):
-
-1. **Explicit References**:
-   - Direct citations with clear identifiers (e.g., "l'article L. 254-1")
-   - Specific section references (e.g., "au 3° du II")
-   - Complete citations with source (e.g., "règlement (CE) n° 1107/2009")
-2. **Simple Implicit References**:
-   - Contextual references (e.g., "du même article" referring to previously mentioned article)
-   - Relative references (e.g., "l'article précédent")
-   - Abbreviated references (e.g., "ledit article" or "ce même article")
-
-**Key Features**:
-
-- LLM-powered detection of explicit and implicit references
-- Context-aware understanding of legal language
-- Handling of abbreviated and implicit references
-- Detection of embedded references within text
-- Confidence scoring for each detected reference
-- Only return references that are essential for understanding or defining a concept in the chunk
-
-**Prompt Structure**:
-
-```
-You are a specialized legal reference detection agent for French legislative texts. Your task is to analyze a given legislative chunk and extract ONLY the embedded normative references—any mention (explicit or implicit) of another legal text, article, code, regulation, decree, or section that is referenced within the text.
-
-The primary goal is to identify references that are essential for understanding the legislative text, especially those that define, constrain, or clarify key nouns/concepts (objects) within the current chunk. Only return references that are directly linked to an "object" in the text—i.e., references that help explain, define, or limit the meaning or scope of a specific noun or concept in the chunk.
-
-For each reference, include:
-- text: The exact reference string as it appears in the input.
-- start_pos: The starting character index of the reference in the input text.
-- end_pos: The ending character index (exclusive) of the reference in the input text.
-- object: The noun/concept in the chunk that the reference helps define, constrain, or clarify.
-- confidence: A float between 0.0 and 1.0 indicating your confidence in the detection.
-- reference_type: One of: explicit_direct, explicit_section, explicit_complete, implicit_contextual, implicit_relative, implicit_abbreviated.
-- If the reference is nested or overlaps with another, include a parent_reference field (the text of the parent reference).
-- If your confidence is below 0.6, include the reference in a separate low_confidence_references list.
-
-Example:
-Text: "...mentionnées à l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil..."
+EXAMPLE:
+Chunk: "7° (nouveau) Après l'article L. 411-2-1, il est inséré un article L. 411-2-2 ainsi rédigé : ..."
 Output:
 {
-  "references": [
+  "operation_type": "INSERT",
+  "code": "code de l'environnement",
+  "article": "L. 411-2-2",
+  "confidence": 0.98,
+  "raw_text": "il est inséré un article L. 411-2-2"
+}
+"""
+
+chunk_text = "7° (nouveau) Après l'article L. 411-2-1, il est inséré un article L. 411-2-2 ainsi rédigé : ..."
+
+response = client.chat(
+    model="mistral-large-latest",
+    temperature=0.0,
+    messages=[
+        ChatMessage(role="system", content=system_prompt),
+        ChatMessage(role="user", content=chunk_text)
+    ],
+    response_format={"type": "json_object"}
+)
+target_article = json.loads(response.choices[0].message.content)
+```
+
+### 3.3 OriginalTextRetriever
+
+**Component**: `OriginalTextRetriever`
+
+**Implementation**: Hybrid approach combining direct API integration (using `pylegifrance`) with web search fallback.
+
+**Responsibility**: Fetch the current/existing text of the target article identified by `TargetArticleIdentifier`. This is **critical** because reference objects may only be visible in the original law, not in the amendment text. Without this context, the `ReferenceObjectLinker` cannot properly identify what concepts/objects the references in deleted text refer to.
+
+**Inputs**:
+
+- `target_article` (JSON object): The output from `TargetArticleIdentifier`, containing `operation_type`, `code`, `article`, `confidence`, and `raw_text`.
+
+**Outputs**:
+
+- `original_law_article` (string): The full text of the target article with proper segmentation (maintaining hierarchy: I, II, 1°, 2°, etc.). For INSERT operations where the article doesn't exist yet, returns empty string.
+- `retrieval_metadata` (JSON object): Contains retrieval status, source, and any error information.
+
+**Core Logic**:
+
+1. Receive `TargetArticle` metadata from `TargetArticleIdentifier`
+2. Use the identified code and article (e.g., "code rural et de la pêche maritime", "L. 254-1") to fetch the current legal text
+3. Return the full article text with proper segmentation (maintaining hierarchy: I, II, 1°, 2°, etc.)
+4. Handle cases where target articles don't exist yet (for INSERT operations)
+
+**Example Workflow**:
+
+```python
+# Input from TargetArticleIdentifier
+target = TargetArticle(
+    operation_type=TargetOperationType.MODIFY,
+    code="code rural et de la pêche maritime",
+    article="L. 254-1",
+    confidence=0.95
+)
+
+# Fetch original text
+original_text = retriever.fetch_article_text(
+    code="code rural et de la pêche maritime",
+    article="L. 254-1"
+)
+
+# Returns structured text like:
+# "Article L. 254-1
+# I. - ...
+# II. - ...
+# 1° ...
+# 2° ...
+# 3° Le conseil prévu aux articles L. 254-6-2 et L. 254-6-3..."
+```
+
+**Error Handling**: For articles that don't exist (INSERT operations), return empty text with appropriate metadata.
+
+### 3.4 TextReconstructor
+
+**Component**: `TextReconstructor`
+
+**Implementation**: LLM-based (Mistral API, **JSON Mode**)
+
+**Responsibility**: Given the `OriginalLawArticle` text and an `AmendmentChunk`, deterministically apply the amendment instructions using an LLM and output two clean text fragments.
+
+**Inputs**:
+
+- `original_law_article` (string): The full text of the target article from `OriginalTextRetriever`.
+- `amendment_chunk` (BillChunk object): A single chunk containing the amendment instructions.
+
+**Outputs**:
+
+- A JSON object with two required fields:
+  - `deleted_or_replaced_text` (string): The exact text that was removed or replaced from the original.
+  - `intermediate_after_state_text` (string): The full text of the article after the modifications have been applied, but before reference resolution.
+
+**API Strategy**:
+
+- Use the Mistral Chat API in **JSON Mode** (not function calling mode).
+- The LLM must return a single JSON object with two required fields:
+  - `deleted_or_replaced_text` (string): The exact text that was deleted or replaced.
+  - `intermediate_after_state_text` (string): The full text of the article after the amendment is applied.
+
+**Prompt Construction**:
+
+- The system prompt must clearly instruct the LLM to:
+  - Mechanically apply the amendment to the original article, with no interpretation or reference resolution.
+  - Output only the two required fields in a JSON object.
+  - Use deterministic logic (no creative rewriting).
+- The user message must provide:
+  - The full original article text.
+  - The amendment instruction(s).
+- The prompt must include at least two real amendment examples, showing the expected before/after fragments and the required JSON output.
+
+**Example API Usage**:
+
+```python
+from mistralai.client import MistralClient
+from mistralai.models.chat_completion import ChatMessage
+import os
+import json
+
+client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
+
+system_prompt = """
+You are a legal text amendment agent. Given the original article and an amendment instruction, mechanically apply the amendment and return a JSON object with:
+- deleted_or_replaced_text: the exact text that was deleted or replaced (string)
+- intermediate_after_state_text: the full text of the article after the amendment (string)
+
+Do not resolve references or interpret the law. Only apply the amendment as written.
+
+EXAMPLE 1:
+Original article: "VI. – L'exercice de l'activité de conseil à l'utilisation des produits phytopharmaceutiques est incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV. La prestation de conseil est formalisée par écrit."
+Amendment: "à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009... » ; la seconde phrase est supprimée ;"
+Output:
+{
+  "deleted_or_replaced_text": "incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV. La prestation de conseil est formalisée par écrit.",
+  "intermediate_after_state_text": "VI. – L'exercice de l'activité de conseil à l'utilisation des produits phytopharmaceutiques est interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009..."
+}
+
+EXAMPLE 2:
+Original article: "Article L. 254-1. – I. – Le conseil est obligatoire. II. – Les modalités sont fixées par décret."
+Amendment: "Au II, les mots : « Les modalités sont fixées par décret. » sont remplacés par les mots : « Les modalités sont fixées par arrêté. »"
+Output:
+{
+  "deleted_or_replaced_text": "Les modalités sont fixées par décret.",
+  "intermediate_after_state_text": "Article L. 254-1. – I. – Le conseil est obligatoire. II. – Les modalités sont fixées par arrêté."
+}
+"""
+
+response = client.chat(
+    model="mistral-large-latest",
+    temperature=0.0,
+    messages=[
+        ChatMessage(role="system", content=system_prompt),
+        ChatMessage(role="user", content=json.dumps({
+            "original_article": "...",
+            "amendment": "..."
+        }))
+    ],
+    response_format={"type": "json_object"}
+)
+result = json.loads(response.choices[0].message.content)
+```
+
+**Best Practices**:
+
+- Always use `temperature=0` for deterministic output.
+- Validate that the returned JSON object contains both required fields and that the amendment was applied mechanically.
+- Log all LLM outputs for review and prompt improvement.
+- If the LLM is uncertain or cannot apply the amendment, it must return a warning or flag in a dedicated field (e.g., `"warning": "Could not apply amendment"`).
+
+**Testing and Validation**:
+
+- Test the component with a diverse set of real amendment instructions, including edge cases (multiple replacements, deletions, insertions, and ambiguous instructions).
+- Ensure the output is always a valid JSON object with the required fields.
+
+### 3.5 ReferenceLocator
+
+**Component**: `ReferenceLocator`
+
+**Implementation**: LLM-based (Mistral API, **JSON Mode**)
+
+**Responsibility**: Given the `DeletedOrReplacedText` and `IntermediateAfterStateText` produced by the `TextReconstructor`, use an LLM to identify all normative references in each fragment and output a structured list of located references, each tagged with its source (DELETIONAL or DEFINITIONAL).
+
+**Inputs**:
+
+- `deleted_or_replaced_text` (string): The text fragment that was deleted or replaced from the original law (from `TextReconstructor`).
+- `intermediate_after_state_text` (string): The text fragment representing the article after the amendment (from `TextReconstructor`).
+
+**Outputs**:
+
+- A JSON object with a single field:
+  - `located_references` (list of objects), where each object contains:
+    - `reference_text` (string): The exact reference phrase as it appears in the text.
+    - `start_position` (integer): Start character index of the reference in the relevant text fragment.
+    - `end_position` (integer): End character index (exclusive) of the reference in the relevant text fragment.
+    - `source` (string): Either `DELETIONAL` (if found in `deleted_or_replaced_text`) or `DEFINITIONAL` (if found in `intermediate_after_state_text`).
+    - `confidence` (float): Confidence score between 0 and 1.
+
+**API Strategy**:
+
+- Use the Mistral Chat API in **JSON Mode** (not function calling mode).
+- The LLM must return a single JSON object with the required `located_references` field as described above.
+
+**Prompt Construction**:
+
+- The system prompt must clearly instruct the LLM to:
+  - Identify all normative references (to articles, codes, regulations, decrees, etc.) in both input fragments.
+  - For each reference, return the exact phrase, its character positions, the source (DELETIONAL or DEFINITIONAL), and a confidence score.
+  - Output only the required JSON object.
+- The user message must provide:
+  - The `deleted_or_replaced_text` and `intermediate_after_state_text` as separate fields.
+- The prompt must include at least two real examples, showing the expected input and output JSON.
+
+**Example API Usage**:
+
+```python
+from mistralai.client import MistralClient
+from mistralai.models.chat_completion import ChatMessage
+import os
+import json
+
+client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
+
+system_prompt = """
+You are a legal reference locator. Given two text fragments from a legislative amendment process:
+- deleted_or_replaced_text: the text that was deleted or replaced
+- intermediate_after_state_text: the text after the amendment
+
+Identify all normative references (to articles, codes, regulations, decrees, etc.) in both fragments. For each reference, return:
+- reference_text: the exact phrase
+- start_position: character index in the relevant fragment
+- end_position: character index (exclusive)
+- source: 'DELETIONAL' or 'DEFINITIONAL'
+- confidence: 0-1
+
+Return a JSON object with a single field 'located_references', which is a list of these objects.
+
+EXAMPLE 1:
+deleted_or_replaced_text: "incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV."
+intermediate_after_state_text: "interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique"
+Output:
+{
+  "located_references": [
     {
-      "text": "l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil",
-      "start_pos": 204,
-      "end_pos": 264,
-      "object": "les installations d'élevage",
-      ...
+      "reference_text": "aux 1° ou 2° du II",
+      "start_position": 44,
+      "end_position": 63,
+      "source": "DELETIONAL",
+      "confidence": 0.98
+    },
+    {
+      "reference_text": "au IV",
+      "start_position": 67,
+      "end_position": 73,
+      "source": "DELETIONAL",
+      "confidence": 0.95
+    },
+    {
+      "reference_text": "du 11 de l'article 3 du règlement (CE) n° 1107/2009",
+      "start_position": 28,
+      "end_position": 75,
+      "source": "DEFINITIONAL",
+      "confidence": 0.99
+    },
+    {
+      "reference_text": "à l'article L. 253-5 du présent code",
+      "start_position": 133,
+      "end_position": 168,
+      "source": "DEFINITIONAL",
+      "confidence": 0.97
+    },
+    {
+      "reference_text": "au sens de l'article 23 du règlement (CE) n° 1107/2009",
+      "start_position": 206,
+      "end_position": 255,
+      "source": "DEFINITIONAL",
+      "confidence": 0.98
+    },
+    {
+      "reference_text": "au sens de l'article 47 du même règlement (CE) n° 1107/2009",
+      "start_position": 285,
+      "end_position": 338,
+      "source": "DEFINITIONAL",
+      "confidence": 0.98
     }
-  ],
-  "low_confidence_references": []
+  ]
+}
+
+EXAMPLE 2:
+deleted_or_replaced_text: "Les modalités sont fixées par décret."
+intermediate_after_state_text: "Les modalités sont fixées par arrêté."
+Output:
+{
+  "located_references": []
+}
+"""
+
+response = client.chat(
+    model="mistral-large-latest",
+    temperature=0.0,
+    messages=[
+        ChatMessage(role="system", content=system_prompt),
+        ChatMessage(role="user", content=json.dumps({
+            "deleted_or_replaced_text": "...",
+            "intermediate_after_state_text": "..."
+        }))
+    ],
+    response_format={"type": "json_object"}
+)
+result = json.loads(response.choices[0].message.content)
+```
+
+**Best Practices**:
+
+- Always use `temperature=0` for deterministic output.
+- Validate that the returned JSON object contains the required field and that all references are correctly tagged and positioned.
+- Log all LLM outputs for review and prompt improvement.
+- If the LLM is uncertain or cannot identify references, it must return an empty list or a warning field.
+
+**Testing and Validation**:
+
+- Test the component with a diverse set of real amendment fragments, including edge cases (multiple references, no references, ambiguous references).
+- Ensure the output is always a valid JSON object with the required schema.
+
+### 3.6 ReferenceObjectLinker
+
+**Component**: `ReferenceObjectLinker`
+
+**Implementation**: Mistral Chat API (Function Calling) with a focused prompt.
+
+**Responsibility**: To perform the "linking" task with smart context-switching. It takes one located reference at a time and determines its precise grammatical object using the correct contextual document.
+
+**Inputs**:
+
+- `located_references` (list): The output from `ReferenceLocator`, containing a list of reference objects with `reference_text`, `start_position`, `end_position`, `source`, and `confidence`.
+- `original_law_article` (string): The full text of the original article (for DELETIONAL references).
+- `intermediate_after_state_text` (string): The text after amendment (for DEFINITIONAL references).
+
+**Outputs**:
+
+- A list of `LinkedReference` objects, where each object contains:
+  - `reference_text` (string): The original reference phrase.
+  - `source` (string): Either "DELETIONAL" or "DEFINITIONAL".
+  - `object` (string): The complete noun phrase that the reference defines/clarifies.
+  - `agreement_analysis` (string): Brief explanation of the grammatical agreement used.
+  - `confidence` (float): Confidence score (0-1).
+
+**Core Logic**:
+
+1.  Iterate through each `LocatedReference` provided by the `ReferenceLocator`.
+2.  Check the reference's `source` field.
+3.  **If `source` is `DEFINITIONAL`**: Construct a prompt using the `IntermediateAfterStateText` as the text context.
+4.  **If `source` is `DELETIONAL`**: Construct a prompt using the `OriginalLawArticle` as the text context.
+5.  Execute the focused LLM call with the correct context to ask: "What is the exact and complete noun phrase that this reference modifies?"
+6.  The LLM call will use the advanced, grammar-aware function calling schema to ensure accurate linking.
+
+**Advanced Function Schema (for this component)**:
+
+```python
+# This is the detailed schema for the ReferenceObjectLinker's tool
+linker_tool = [
+    {
+        "type": "function",
+        "function": {
+            "name": "link_reference_to_object",
+            "description": "Given a reference and its context, identify its object using French grammatical analysis.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "object": {
+                        "type": "string",
+                        "description": "The complete noun phrase that the reference defines/clarifies."
+                    },
+                    "agreement_analysis": {
+                        "type": "string",
+                        "description": "Brief explanation of the grammatical agreement (gender, number) used to determine the object."
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "description": "Confidence score (0-1), lower for ambiguous grammatical cases."
+                    }
+                },
+                "required": ["object", "agreement_analysis", "confidence"]
+            }
+        }
+    }
+]
+```
+
+**Testing and Validation**: This component, specifically, will be tested against the grammatical edge cases we identified (nested clauses, long-distance agreement, etc.).
+
+### 3.7 ResolutionOrchestrator
+
+**Component**: `ResolutionOrchestrator`
+
+**Implementation**: Stateful orchestration component with internal LLM agents for relevance assessment and classification.
+
+**Responsibility**: This is the stateful, central component that manages the entire recursive resolution process. It uses other components as stateless tools to process a queue of linked references, determine their relevance, handle recursion, and gracefully manage errors.
+
+**Inputs**:
+
+- `linked_references` (list): The output from `ReferenceObjectLinker`, containing both DELETIONAL and DEFINITIONAL linked references.
+
+**Outputs**:
+
+- A `ResolutionResult` object containing:
+  - `resolved_deletional_references` (list): Fully resolved DELETIONAL references with their retrieved content.
+  - `resolved_definitional_references` (list): Fully resolved DEFINITIONAL references with their retrieved content.
+  - `resolution_tree` (nested object): Hierarchical structure showing the recursive resolution process.
+  - `unresolved_references` (list): References that could not be resolved due to errors or irrelevance.
+
+**Core Algorithm**:
+
+1.  **Initialization**: Receives the two lists of linked references (`DELETIONAL` and `DEFINITIONAL`). It pushes all of them onto a `resolution_stack`.
+2.  **Processing Loop**: While the `resolution_stack` is not empty, pop a linked reference.
+3.  **Relevance Assessment**: Use the internal `RelevanceAssessor` agent to determine if resolving the reference is essential.
+4.  **Resolution Step**: For essential references, call `ReferenceClassifier` and `TextRetriever`.
+5.  **Recursive Delegation**: On newly retrieved text, call `ReferenceLocator` and `ReferenceObjectLinker` to find and link any sub-references. Push new `DEFINITIONAL` sub-references onto the stack.
+6.  **Finalization**: Return the complete list of resolved references and their content, separated by their original types (DELETIONAL vs DEFINITIONAL).
+
+### 3.8 LegalStateSynthesizer
+
+**Component**: `LegalStateSynthesizer`
+
+**Implementation**: LLM-based (Mistral API, **JSON Mode**)
+
+**Responsibility**: Perform the final synthesis step by taking the resolved references and substituting them into the original text fragments to produce two fully interpretable, self-contained legal states: the `BeforeState` and the `AfterState`.
+
+**Inputs**:
+
+- `resolution_result` (ResolutionResult object): The complete output from `ResolutionOrchestrator`, containing resolved DELETIONAL and DEFINITIONAL references.
+- `deleted_or_replaced_text` (string): The original text fragment that was deleted/replaced (from `TextReconstructor`).
+- `intermediate_after_state_text` (string): The text after amendment but before reference resolution (from `TextReconstructor`).
+
+**Outputs**:
+
+- A JSON object with two required fields:
+  - `before_state` (string): The `deleted_or_replaced_text` with all DELETIONAL references substituted with their resolved content.
+  - `after_state` (string): The `intermediate_after_state_text` with all DEFINITIONAL references substituted with their resolved content.
+  - `synthesis_metadata` (object): Information about the substitution process, including any warnings or partial substitutions.
+
+**API Strategy**:
+
+- Use the Mistral Chat API in **JSON Mode** (not function calling mode).
+- The LLM must intelligently substitute resolved content while maintaining readability and legal coherence.
+- For each reference, the LLM should replace the reference phrase with its resolved content in a grammatically correct way.
+
+**Prompt Construction**:
+
+- The system prompt must clearly instruct the LLM to:
+  - Substitute each resolved reference with its content while maintaining grammatical coherence.
+  - Preserve the overall structure and readability of the legal text.
+  - Handle nested substitutions gracefully (when resolved content contains other references).
+  - Return the two required fields in a JSON object.
+- The user message must provide:
+  - The text fragments to be processed.
+  - The complete list of resolved references with their content.
+- The prompt must include examples showing how to substitute references while maintaining legal text quality.
+
+**Example API Usage**:
+
+```python
+from mistralai.client import MistralClient
+from mistralai.models.chat_completion import ChatMessage
+import os
+import json
+
+client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
+
+system_prompt = """
+You are a legal text synthesizer. Given text fragments and their resolved references, substitute each reference with its resolved content to create fully interpretable legal states.
+
+For each reference, replace the reference phrase with its resolved content while maintaining:
+- Grammatical correctness
+- Legal text style and readability
+- Proper punctuation and formatting
+
+Return a JSON object with:
+- before_state: the deleted/replaced text with DELETIONAL references resolved
+- after_state: the intermediate text with DEFINITIONAL references resolved
+- synthesis_metadata: information about the substitution process
+
+EXAMPLE:
+Input text: "incompatible avec celui des activités mentionnées aux 1° ou 2° du II"
+Resolved reference: "aux 1° ou 2° du II" -> "la vente et la distribution de produits phytopharmaceutiques"
+Output: "incompatible avec celui des activités de vente et de distribution de produits phytopharmaceutiques"
+"""
+
+response = client.chat(
+    model="mistral-large-latest",
+    temperature=0.0,
+    messages=[
+        ChatMessage(role="system", content=system_prompt),
+        ChatMessage(role="user", content=json.dumps({
+            "deleted_or_replaced_text": "...",
+            "intermediate_after_state_text": "...",
+            "resolved_references": [...]
+        }))
+    ],
+    response_format={"type": "json_object"}
+)
+result = json.loads(response.choices[0].message.content)
+```
+
+**Best Practices**:
+
+- Always use `temperature=0` for deterministic output.
+- Validate that the returned JSON contains both required fields and that substitutions are grammatically correct.
+- Log all synthesis outputs for review and quality assessment.
+- Handle cases where resolved content is very long by using appropriate formatting (bullet points, parenthetical clauses, etc.).
+
+**Testing and Validation**:
+
+- Test with various reference types (internal references, EU regulations, definitions, etc.).
+- Ensure the synthesized text remains legally coherent and readable.
+- Validate that all references have been properly substituted and none remain unresolved.
+
+## 4. Complete Pipeline Demonstration
+
+This section demonstrates the complete pipeline using the example from section 1.2 to validate our design and illustrate how each component works together.
+
+### 4.1 Example Input
+
+We'll use the amendment from the mental model section:
+
+```
+b) Le VI est ainsi modifié :
+
+- à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique » ;
+```
+
+### 4.2 Component-by-Component Walkthrough
+
+#### Step 1: BillSplitter
+
+**Input**: The legislative text containing the amendment above.
+
+**Output**:
+
+```json
+{
+  "text": "à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique » ;",
+  "titre_text": "TITRE Ier",
+  "article_label": "Article 2",
+  "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+  "major_subdivision_label": "2°",
+  "major_subdivision_introductory_phrase": "L'article L. 254-1 est ainsi modifié :",
+  "numbered_point_label": "b)",
+  "hierarchy_path": ["TITRE Ier", "Article 2", "2°", "b)"],
+  "chunk_id": "TITRE_1_ART_2_2_b",
+  "start_pos": 245,
+  "end_pos": 687
 }
 ```
 
-**Note:** The 'object' is the specific entity or concept in the initial text that the reference points to or helps define. This field provides essential context for downstream components, especially for relevance determination in recursive resolution.
+#### Step 2: TargetArticleIdentifier
 
-### 2.2 Reference Classification
+**Input**: The BillChunk from Step 1.
 
-**Component**: `ReferenceClassifier`
+**Output**:
 
-**Implementation**: Stateless LLM Agent with domain-specific knowledge
+```json
+{
+  "operation_type": "MODIFY",
+  "code": "code rural et de la pêche maritime",
+  "article": "L. 254-1",
+  "confidence": 0.98,
+  "raw_text": "L'article L. 254-1 est ainsi modifié"
+}
+```
 
-**Responsibility**: Categorize identified references by source and type using LLM understanding.
+#### Step 3: OriginalTextRetriever
 
-**Inputs**:
+**Input**: The target article identification from Step 2.
 
-- `reference: Reference` — The detected reference object
-- `surrounding_text: str` — Context window from the original input (extracted by orchestration layer)
+**Output**:
 
-**Outputs**:
+```
+Article L. 254-1
 
-- `Reference` — The same reference object, enriched with:
+I. - [text of subdivision I]
 
-  - `source: ReferenceSource`
-  - `reference_type: ReferenceType`
-  - `components: Dict[str, str]` (parsed components)
-  - `confidence: float` (classification confidence)
-  - Additional metadata
+II. - [text of subdivision II with numbered points 1°, 2°, 3°...]
 
-- The `components` parameter is a dictionary that breaks down the reference into its meaningful subparts (e.g., code, article, section, paragraph). This structured representation enables precise retrieval, disambiguation, and traceability.
-- **Purpose:**
-  - Disambiguation: Clarifies exactly which part of the law is referenced.
-  - Retrieval: Allows the TextRetriever agent to construct precise API queries.
-  - Traceability: Facilitates mapping between the original text and the resolved content.
-- **Examples:**
-  - For `"l'article L. 254-1 du code rural et de la pêche maritime"`:
-    ```python
+...
+
+VI. – L'exercice de l'activité de conseil à l'utilisation des produits phytopharmaceutiques est incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV. La prestation de conseil est formalisée par écrit.
+
+...
+```
+
+#### Step 4: TextReconstructor
+
+**Input**:
+
+- `original_law_article`: The full Article L. 254-1 text from Step 3
+- `amendment_chunk`: The BillChunk from Step 1
+
+**Output**:
+
+```json
+{
+  "deleted_or_replaced_text": "incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV. La prestation de conseil est formalisée par écrit.",
+  "intermediate_after_state_text": "Article L. 254-1\n\nI. - [text of subdivision I]\n\nII. - [text of subdivision II]\n\n...\n\nVI. – L'exercice de l'activité de conseil à l'utilisation des produits phytopharmaceutiques est interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique."
+}
+```
+
+#### Step 5: ReferenceLocator
+
+**Input**: The two text fragments from Step 4.
+
+**Output**:
+
+```json
+{
+  "located_references": [
     {
-        "code": "code rural et de la pêche maritime",
-        "article": "L. 254-1"
-    }
-    ```
-  - For `"au 3° du II de l'article L. 254-1 du code rural"`:
-    ```python
+      "reference_text": "aux 1° ou 2° du II",
+      "start_position": 44,
+      "end_position": 63,
+      "source": "DELETIONAL",
+      "confidence": 0.98
+    },
     {
-        "code": "code rural",
-        "article": "L. 254-1",
-        "section": "II",
-        "paragraph": "3°"
+      "reference_text": "au IV",
+      "start_position": 67,
+      "end_position": 73,
+      "source": "DELETIONAL",
+      "confidence": 0.95
+    },
+    {
+      "reference_text": "du 11 de l'article 3 du règlement (CE) n° 1107/2009",
+      "start_position": 28,
+      "end_position": 75,
+      "source": "DEFINITIONAL",
+      "confidence": 0.99
+    },
+    {
+      "reference_text": "à l'article L. 253-5 du présent code",
+      "start_position": 133,
+      "end_position": 168,
+      "source": "DEFINITIONAL",
+      "confidence": 0.97
+    },
+    {
+      "reference_text": "au sens de l'article 23 du règlement (CE) n° 1107/2009",
+      "start_position": 206,
+      "end_position": 255,
+      "source": "DEFINITIONAL",
+      "confidence": 0.98
+    },
+    {
+      "reference_text": "au sens de l'article 47 du même règlement (CE) n° 1107/2009",
+      "start_position": 285,
+      "end_position": 338,
+      "source": "DEFINITIONAL",
+      "confidence": 0.98
     }
-    ```
-
-**Key Features**:
-
-- LLM-powered classification of references
-- Understanding of legal document hierarchies
-- Handling of ambiguous cases
-- Source verification and validation
-
-**Prompt Structure**:
-
-```
-You are a specialized legal reference classification agent for French legislative texts. For each reference:
-1. Identify the source (French code, EU regulation, etc.)
-2. Determine the reference type (article, section, paragraph, etc.)
-3. Extract specific components (article numbers, sections, etc.) with their hierarchical structure
-4. Provide classification confidence (0.0-1.0)
-5. If applicable, identify the version/date of the referenced text
-
-Reference: {reference_text}
-Context: {surrounding_text}
+  ]
+}
 ```
 
-**Inputs**:
+#### Step 6: ReferenceObjectLinker
 
-- The reference text
-- The 'surrounding_text' (context window from the original input)
+**Input**:
 
-**Note:** The 'surrounding_text' is extracted by the orchestration layer (or a dedicated utility function) using the start and end positions provided by the ReferenceDetector. This ensures the ReferenceClassifier receives both the reference and its relevant context for accurate classification.
+- `located_references`: From Step 5
+- `original_law_article`: From Step 3 (for DELETIONAL references)
+- `intermediate_after_state_text`: From Step 4 (for DEFINITIONAL references)
 
-### 2.3 Text Retrieval
+**Output** (example for key references):
 
-**Component**: `TextRetriever`
-
-**Implementation**: Hybrid approach combining direct API integration (using pylegifrance) with web search fallback
-
-**Responsibility**: Fetch and process the full text of referenced items from authoritative sources, then extract the specific relevant portion pertaining to the referenced object (not the entire source document).
-
-**Inputs**:
-
-- `reference: Reference` — The classified reference object (with source/type/components)
-
-**Outputs**:
-
-- `str` — The extracted relevant text content (specifically about the referenced object)
-- `str` — The broader context (for reference and validation)
-- `Dict` — Metadata including:
-  - Retrieval method (API, web search, cache)
-  - Validation results
-  - Source URL or API endpoint
-  - Cache status
-  - Error information (if applicable)
-  - Content scope (article, section, paragraph, etc.)
-
-**Legifrance API Integration (pylegifrance):**
-
-- Use the `pylegifrance` package for direct API access. Example usage:
-
-  ```python
-  import os
-  from pylegifrance import recherche_code
-  from pylegifrance.models.constants import CodeNom
-
-  # Set environment variables for authentication
-  os.environ["LEGIFRANCE_CLIENT_ID"] = LEGIFRANCE_CLIENT_ID
-  os.environ["LEGIFRANCE_CLIENT_SECRET"] = LEGIFRANCE_CLIENT_SECRET
-
-  # Use the correct code_name and search value, CREDLPM = "Code rural et de la pêche maritime"
-  res = recherche_code(code_name=CodeNom.CREDLPM, search="L254‑6‑2")
-  ```
-
-- The `code_name` must be mapped from the reference's `components["code"]` using the `CodeNom` enum.
-- The `search` parameter should be the article or section identifier as it appears in the text (try multiple formats if needed).
-- If the API call fails or returns no result, fallback to web search using the reference text and object as the query.
-
-**Cache Key Construction:**
-
-- Cache keys must include reference, code, article, and (if available) version/date and format (e.g., `"CREDLPM@L254-6-2@2024-06-01@hyphen"`).
-
-**Error Handling:**
-
-- If the API call fails (network, auth, not found), log the error and fallback to web search.
-- If both API and web search fail, return a structured error object with the reference and error details.
-- All errors must be logged with a unique correlation ID.
-
-**Web Search Fallback:**
-
-- Construct queries using all available components and the 'object' field.
-- Validate results by checking for the presence of expected legal terms and structure.
-
-**Performance:**
-
-- API calls should have a timeout (default: 10s).
-- Use in-memory cache for frequent references.
-
-### 2.4 Reference Resolution
-
-**Component**: `ReferenceResolver`
-
-**Responsibility**: Extract the precise subpart of text referred to, determine which nested references need resolution, and handle recursive resolution based on relevance to the original reference.
-
-**Inputs**:
-
-- `reference: Reference` — The classified reference object
-- `text_content: str` — The retrieved text content for the reference
-- `max_depth: int` — Maximum recursion depth
-- `resolution_path: List[Reference]` — (For tracking recursion/circularity)
-
-**Outputs**:
-
-- `ResolvedReference` —
-  - `reference: Reference`
-  - `content: str` (resolved content)
-  - `sub_references: List[ResolvedReference]` (nested references that were resolved)
-  - `unresolved_sub_references: List[Reference]` (nested references deemed not necessary)
-  - `resolution_path: List[Reference]`
-  - `resolution_status: ResolutionStatus`
-  - `relevance_metadata: Dict[str, Any]`
-
-**Relevance Determination Algorithm:**
-
-- Use a decision tree:
-  1. Is the nested reference directly required to define or constrain the 'object'? (Yes → essential)
-  2. Is it only supplementary or tangential? (Yes → non-essential)
-  3. Is it ambiguous? (Flag for manual review)
-- Add `resolution_warnings: List[str]` to `ResolvedReference` for circularity, max depth, or partial failures.
-
-**Example:**
-Original text:
-"Le conseil mentionné au 3° du II de l'article L. 254‑1 couvre toute recommandation d'utilisation de produits phytopharmaceutiques. Il est formalisé par écrit. La prestation est effectuée à titre onéreux. Il s'inscrit dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253‑6."
-
-Detected references:
-
-- "3° du II de l'article L. 254‑1" (defines the scope of the council)
-- "article L. 253‑6" (provides principles for integrated pest management)
-
-Relevance determination:
-
-- **Essential:**
-  - "3° du II de l'article L. 254‑1" — Essential, as it defines the main object (the council's scope).
-  - "article L. 253‑6" — Essential, as it provides the legal principles that the council must respect (directly constrains the object).
-- **Non-Essential:**
-  - If the text referenced other articles about, for example, general administrative procedures or unrelated background, these would be considered non-essential and could be skipped in the recursive resolution.
-
-Explanation:
-
-- Both references are essential because they are directly required to understand the legal requirements and scope of the council described in the original text. If a reference only provided supplementary context (e.g., a general definition not directly constraining the object), it would be marked as non-essential.
-
-### 2.5 Text Substitution
-
-**Component**: `TextSubstitutor`
-
-**Implementation**: Stateless LLM Agent with legal text simplification expertise
-
-**Responsibility**: Replace references with their resolved content and slightly reformulate that part of the text if needed to be clear and understandable while maintaining absolute legal accuracy.
-
-**Inputs**:
-
-- `original_text: str` — The input legislative text
-- `resolved_references: List[ResolvedReference]` — All resolved references and their content
-
-**Outputs**:
-
-- `FlattenedText` —
-
-  - `original_text: str`
-  - `flattened_text: str` (with all references resolved/substituted)
-  - `reference_map: Dict[Reference, ResolvedReference]`
-  - `unresolved_references: List[Reference]`
-  - `confidence_score: float`
-  - `processing_metadata: Dict[str, Any]`
-  - `validation_status: str` ("validated", "fallback", "manual_review")
-
-- If the LLM's confidence in the rewritten text is below 0.8, fall back to the original reference and flag for manual review.
-
-### 2.6 Versioning Management
-
-**Note:** Versioning management is out of scope for v0. All references are resolved against the latest available version. This section is reserved for future extension.
-
-## 3. Data Models
-
-**Note:** Data models and enums are aligned with the codebase. All models include a `version: str` field for future extensibility.
-
-```python
-from dataclasses import dataclass
-from enum import Enum
-from typing import Dict, List, Optional, Any
-
-class ReferenceType(Enum):
-    EXPLICIT_DIRECT = "explicit_direct"
-    EXPLICIT_SECTION = "explicit_section"
-    EXPLICIT_COMPLETE = "explicit_complete"
-    IMPLICIT_CONTEXTUAL = "implicit_contextual"
-    IMPLICIT_RELATIVE = "implicit_relative"
-    IMPLICIT_ABBREVIATED = "implicit_abbreviated"
-
-class ReferenceSource(Enum):
-    CODE_RURAL = "code_rural"
-    CODE_ENVIRONNEMENT = "code_environnement"
-    EU_REGULATION = "eu_regulation"
-    DECREE = "decree"
-    ARRETE = "arrete"
-    LAW = "law"
-    OTHER = "other"
-
-@dataclass
-class Reference:
-    text: str
-    start_pos: int
-    end_pos: int
-    object: str
-    reference_type: ReferenceType
-    source: ReferenceSource
-    components: Dict[str, str]
-    confidence: float
-    parent_reference: Optional[str] = None
-    version: str = "v0"
-
-@dataclass
-class ResolvedReference:
-    reference: Reference
-    content: str
-    sub_references: List["ResolvedReference"]
-    unresolved_sub_references: List[Reference]
-    resolution_path: List[Reference]
-    resolution_status: str
-    relevance_metadata: Dict[str, Any]
-    resolution_warnings: List[str] = None
-    version: str = "v0"
-
-@dataclass
-class FlattenedText:
-    original_text: str
-    flattened_text: str
-    reference_map: Dict[Reference, ResolvedReference]
-    unresolved_references: List[Reference]
-    confidence_score: float
-    processing_metadata: Dict[str, Any]
-    validation_status: str
-    version: str = "v0"
-
-class TargetOperationType(Enum):
-    INSERT = "insert"
-    MODIFY = "modify"
-    ABROGATE = "abrogate"
-    RENUMBER = "renumber"
-    OTHER = "other"
-
-@dataclass
-class TargetArticle:
-    operation_type: TargetOperationType
-    code: Optional[str]
-    article: Optional[str]
-    full_citation: Optional[str]
-    confidence: float  # < 1.0 if no explicit target
-    raw_text: Optional[str]
-    version: str = "v0"
-
-@dataclass
-class BillChunk:
-    text: str
-    titre_text: str
-    article_label: str
-    article_introductory_phrase: Optional[str]
-    major_subdivision_label: Optional[str]
-    major_subdivision_introductory_phrase: Optional[str]
-    numbered_point_label: Optional[str]
-    hierarchy_path: List[str]
-    chunk_id: str
-    start_pos: int
-    end_pos: int
-    cross_references: Optional[List[str]] = None
-    target_article: Optional[TargetArticle] = None
-    version: str = "v0"
+```json
+[
+  {
+    "reference_text": "aux 1° ou 2° du II",
+    "source": "DELETIONAL",
+    "object": "activités",
+    "agreement_analysis": "Feminine plural agreement with 'activités' mentioned before the reference",
+    "confidence": 0.95
+  },
+  {
+    "reference_text": "du 11 de l'article 3 du règlement (CE) n° 1107/2009",
+    "source": "DEFINITIONAL",
+    "object": "producteurs",
+    "agreement_analysis": "Defines the sense/meaning of 'producteurs' mentioned earlier",
+    "confidence": 0.98
+  },
+  {
+    "reference_text": "à l'article L. 253-5 du présent code",
+    "source": "DEFINITIONAL",
+    "object": "la liste",
+    "agreement_analysis": "Feminine singular agreement with 'la liste' mentioned before",
+    "confidence": 0.97
+  }
+]
 ```
 
-## 4. Processing Pipeline
+#### Step 7: ResolutionOrchestrator
 
-1. **Input**: Legislative text paragraph
-2. **Bill Splitting**: Deterministic splitting into atomic chunks (BillSplitter)
-3. **Target Article Identification**: For each chunk, infer the main legal article/section being created, modified, or abrogated (TargetArticleIdentifier)
-4. **Reference Detection**: Stateless LLM agent identifies all references _within_ the chunk text (ReferenceDetector)
-5. **Context Extraction**: The orchestration layer extracts 'surrounding_text' for each reference using start/end positions
-6. **Reference Classification**: Stateless LLM agent categorizes each reference, using both the reference and its context
-7. **For each reference**:
-   a. Text Retrieval: Fetch and extract the specific relevant portion from the source (using pylegifrance, fallback to web search)
-   b. Relevance Analysis: Use the 'object' field to identify which nested references are essential for understanding
-   c. Recursive Resolution: Only resolve nested references that are necessary for understanding the original reference/object
-   d. If essential nested references exist, recursively resolve them
-8. **Text Substitution**: Replace references with their resolved content
-9. **Output**: Flattened text and reference metadata
+**Input**: The linked references from Step 6.
 
-## 5. LLM Agent Management
+**Process**:
 
-- All agents are stateless for v0 (automated, non-interactive usage, no persistent conversation required).
-- Use the latest Mistral Python SDK (>=1.8.1, Python 3.10+ required for agent features).
-- Example agent usage:
+1. **Relevance Assessment**: Determines that EU regulation references are essential for understanding "producteurs" definition, and that L. 253-5 is essential for understanding the biocontrol product list.
 
-  ```python
-  from mistralai import Mistral
-  import os
+2. **Text Retrieval**: Fetches:
 
-  with Mistral(api_key=os.getenv("MISTRAL_API_KEY", "")) as mistral:
-      res = mistral.agents.complete(
-          messages=[{"role": "user", "content": "Detect all references in the following text: ..."}],
-          agent_id="<agent_id>"
-      )
-  ```
+   - Article 3, paragraph 11 of EU Regulation 1107/2009
+   - Article L. 253-5 of the rural code
+   - Articles 23 and 47 of EU Regulation 1107/2009
 
-- For each step (detection, classification, substitution), call the agent in a stateless, automated, non-interactive manner.
-- No persistent conversation or agent memory is required for the current use case.
+3. **Recursive Resolution**: Finds no additional references needing resolution in the retrieved texts.
 
-## 6. Error Handling
+**Output**:
 
-- Log ambiguous references and errors with a unique correlation ID.
-- Provide confidence scores for uncertain matches.
-- Set minimum confidence threshold (default: 0.6).
-- Fallback to web search if API retrieval fails.
-- Return structured error objects for unresolved references.
+```json
+{
+  "resolved_deletional_references": [
+    {
+      "reference": "aux 1° ou 2° du II",
+      "object": "activités",
+      "resolved_content": "la vente, la distribution, l'application et le conseil à l'utilisation de produits phytopharmaceutiques; la distribution de produits phytopharmaceutiques"
+    },
+    {
+      "reference": "au IV",
+      "object": "activités",
+      "resolved_content": "l'activité de traitement de semences avec des produits phytopharmaceutiques"
+    }
+  ],
+  "resolved_definitional_references": [
+    {
+      "reference": "du 11 de l'article 3 du règlement (CE) n° 1107/2009",
+      "object": "producteurs",
+      "resolved_content": "toute personne physique ou morale qui fabrique une substance active, un phytoprotecteur, un synergiste ou un produit phytopharmaceutique, ou qui fait fabriquer de telles substances ou de tels produits et les commercialise sous son nom"
+    },
+    {
+      "reference": "à l'article L. 253-5 du présent code",
+      "object": "la liste",
+      "resolved_content": "la liste des produits de biocontrôle dont l'usage est autorisé, établie par l'autorité administrative compétente et régulièrement mise à jour"
+    },
+    {
+      "reference": "au sens de l'article 23 du règlement (CE) n° 1107/2009",
+      "object": "substances de base",
+      "resolved_content": "une substance active, y compris une substance d'origine naturelle ou identique à une substance naturelle, qui présente un intérêt pour la protection des végétaux et qui n'est pas principalement utilisée à des fins phytopharmaceutiques"
+    },
+    {
+      "reference": "au sens de l'article 47 du même règlement (CE) n° 1107/2009",
+      "object": "produits à faible risque",
+      "resolved_content": "un produit phytopharmaceutique qui ne contient que des substances actives à faible risque et qui présente un risque particulièrement faible"
+    }
+  ],
+  "resolution_tree": {
+    "depth": 1,
+    "total_references_resolved": 6,
+    "recursive_resolution_needed": false
+  },
+  "unresolved_references": []
+}
+```
 
-## 7. Performance, Security, and Resource Management
+#### Step 8: LegalStateSynthesizer
 
-- **Resource Management:**
-  - Set timeouts for all external API calls (default: 10s).
-  - Monitor memory and CPU usage for large documents.
-- **Security:**
-  - Store all API keys (Mistral, Legifrance) securely using environment variables or a secrets manager.
-  - Validate all input data to prevent injection or malformed requests.
-  - Rate limit external API calls to avoid abuse.
-  - Ensure compliance with GDPR and French data privacy laws for legal texts.
+**Input**:
+
+- `resolution_result`: The complete resolution result from Step 7
+- `deleted_or_replaced_text`: "incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV. La prestation de conseil est formalisée par écrit."
+- `intermediate_after_state_text`: The full article text after amendment from Step 4
+
+**Output**:
+
+```json
+{
+  "before_state": "VI. – L'exercice de l'activité de conseil à l'utilisation des produits phytopharmaceutiques est incompatible avec celui des activités de vente, de distribution, d'application et de conseil à l'utilisation de produits phytopharmaceutiques, ainsi qu'avec l'activité de traitement de semences avec des produits phytopharmaceutiques. La prestation de conseil est formalisée par écrit.",
+
+  "after_state": "VI. – L'exercice de l'activité de conseil à l'utilisation des produits phytopharmaceutiques est interdit aux personnes physiques ou morales qui fabriquent une substance active, un phytoprotecteur, un synergiste ou un produit phytopharmaceutique, ou qui font fabriquer de telles substances ou de tels produits et les commercialisent sous leur nom, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste des produits de biocontrôle dont l'usage est autorisé (établie par l'autorité administrative compétente et régulièrement mise à jour), des produits composés uniquement de substances actives d'origine naturelle ou identique à une substance naturelle qui présentent un intérêt pour la protection des végétaux et qui ne sont pas principalement utilisées à des fins phytopharmaceutiques, ou de produits phytopharmaceutiques qui ne contiennent que des substances actives à faible risque et qui présentent un risque particulièrement faible, et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique.",
+
+  "synthesis_metadata": {
+    "substitutions_made": 6,
+    "deletional_references_resolved": 2,
+    "definitional_references_resolved": 4,
+    "warnings": [],
+    "readability_score": "complex_but_coherent"
+  }
+}
+```
+
+### 4.3 Pipeline Assessment and Validation Results
+
+#### ✅ Validated Strengths:
+
+1. **Complete Data Flow**: All 8 components now have well-defined inputs/outputs that chain together seamlessly, from raw legislative text to fully resolved legal states.
+
+2. **Context Preservation**: The DELETIONAL/DEFINITIONAL tagging successfully ensures references are resolved using the correct context (original law vs. amended text).
+
+3. **Recursive Handling**: The orchestrator demonstrates capability to handle complex nested references while maintaining traceability.
+
+4. **Realistic Output Quality**: The final synthesis produces genuinely interpretable legal text that preserves the legal meaning while substituting all references.
+
+5. **Comprehensive Resolution**: The example demonstrates resolution of 6 different types of references (internal code references, EU regulation references, definition references) in a single amendment.
+
+6. **Reference Pattern Handling**: References like "au 3° du II de l'article L. 254-1" and "du 11 de l'article 3 du règlement (CE) n° 1107/2009" are **precise and structured**—the pipeline handles these correctly through recursive resolution. Even "du même règlement" references are resolvable with proper context tracking.
+
+#### ⚠️ Remaining Challenges Identified:
+
+1. **Text Readability Management**: The synthesized "after_state" is very long and complex (300+ words for a single sentence). **Impact**: High - affects usability. **Mitigation**: Readability optimization will be handled by a dedicated downstream module, applied after the LegalStateSynthesizer produces fully resolved (reference-free) legal states. This allows for advanced formatting and summarization without impacting legal fidelity.
+
+2. **Performance Optimization**: With 6+ LLM calls per amendment (not due to reference complexity, but volume), processing time could be substantial. **Impact**: Medium - affects user experience. **Mitigation**: Implement static document caching (EU regulations, base codes), LLM response caching, and batching in the orchestrator.
+
+3. **Error Propagation Risk**: Early misidentification in TargetArticleIdentifier or TextReconstructor could cascade through the entire pipeline. **Impact**: High - affects accuracy. **Mitigation**: Add confidence thresholds and validation at each step, with graceful degradation.
+
+#### 🔍 New Insights from Realistic Example:
+
+1. **Reference Complexity is Manageable**: Analysis of real legislative text shows that most references are **precise and structured** (e.g., "au 3° du II de l'article L. 254-1"), not ambiguous. The pipeline's recursive resolution architecture handles these effectively.
+
+2. **Synthesis Complexity is the Real Challenge**: The final synthesis step is more challenging than reference resolution - substituting 6 references while maintaining readability requires sophisticated language processing.
+
+3. **Performance Issues are Volume-Based**: Performance concerns stem from the **number** of LLM calls (6+ per amendment), not the complexity of individual references.
+
+4. **Multi-Source Resolution Works**: The example demonstrates successful handling of references to multiple legal sources (French rural code, EU regulations) in a single amendment.
