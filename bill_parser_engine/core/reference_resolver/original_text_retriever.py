@@ -260,35 +260,35 @@ class OriginalTextRetriever:
             logger.warning("Mistral client not available for subsection extraction")
             return None
         
-        system_prompt = f"""You are a legal text extraction specialist. Given a French legal article text and a subsection identifier, extract the specific subsection content.
+        system_prompt = f"""Vous êtes un spécialiste de l'extraction de textes juridiques. Étant donné un texte d'article juridique français et un identifiant de sous-section, extrayez le contenu spécifique de la sous-section.
 
-Your task:
-1. Find the subsection identified by "{subsection}" in the provided legal text
-2. Extract the complete content of that subsection
-3. Return only the content of that specific subsection
+Votre tâche :
+1. Trouvez la sous-section identifiée par "{subsection}" dans le texte juridique fourni
+2. Extrayez le contenu complet de cette sous-section
+3. Retournez uniquement le contenu de cette sous-section spécifique
 
-The subsection identifier "{subsection}" might appear as:
-- A standalone number: "{subsection}"
-- With degree symbol: "{subsection}°"
-- In a numbered list format
-- As part of a hierarchical structure
+L'identifiant de sous-section "{subsection}" peut apparaître comme :
+- Un numéro autonome : "{subsection}"
+- Avec le symbole degré : "{subsection}°"
+- Dans un format de liste numérotée
+- Comme partie d'une structure hiérarchique
 
-Return a JSON object with:
-- "found": boolean (true if subsection was found)
-- "content": string (the extracted subsection content, or empty string if not found)
-- "explanation": string (brief explanation of what was found or why it failed)
+Retournez un objet JSON avec :
+- "found": booléen (true si la sous-section a été trouvée)
+- "content": chaîne (le contenu extrait de la sous-section, ou chaîne vide si non trouvée)
+- "explanation": chaîne (brève explication de ce qui a été trouvé ou pourquoi cela a échoué)
 
-Example:
-If looking for subsection "2" in text containing "1° First item... 2° Second item content here... 3° Third item...", 
-return {{"found": true, "content": "2° Second item content here", "explanation": "Found subsection 2 as numbered point"}}"""
+Exemple :
+Si vous cherchez la sous-section "2" dans un texte contenant "1° Premier élément... 2° Contenu du deuxième élément ici... 3° Troisième élément...", 
+retournez {{"found": true, "content": "2° Contenu du deuxième élément ici", "explanation": "Sous-section 2 trouvée comme point numéroté"}}"""
 
-        user_message = f"""Extract subsection "{subsection}" from this legal article text:
+        user_message = f"""Extrayez la sous-section "{subsection}" de ce texte d'article juridique :
 
-Original article sought: {original_article}
-Parent article text:
+Article original recherché : {original_article}
+Texte de l'article parent :
 {parent_text}
 
-Find and extract the complete content of subsection "{subsection}"."""
+Trouvez et extrayez le contenu complet de la sous-section "{subsection}"."""
 
         try:
             response = self.mistral_client.chat.complete(

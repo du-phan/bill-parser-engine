@@ -1,16 +1,25 @@
 """
-Reference location component.
+Reference location component for the normative reference resolver pipeline.
 
-This component identifies all normative references in before/after text fragments
-and tags them by source type. It uses Mistral API in JSON Mode for structured
-output with precise positioning.
+This component identifies all normative references (legal citations) in before/after 
+text fragments and tags them by source type (DELETIONAL/DEFINITIONAL). It uses 
+Mistral API in JSON Mode for structured output.
+
+Key Features:
+- Dual fragment analysis (deleted vs. new text)
+- DELETIONAL/DEFINITIONAL classification  
+- French legal reference pattern recognition
+- Simplified output without error-prone position tracking
+- Confidence-based filtering
+
+The component focuses on accuracy over precision - better to miss an ambiguous 
+reference than include a false positive.
 """
 
 import json
 import logging
 import os
-import time
-from typing import List
+from typing import List, Optional
 
 from mistralai import Mistral
 
@@ -20,6 +29,8 @@ from bill_parser_engine.core.reference_resolver.models import (
     ReconstructorOutput,
     ReferenceSourceType,
 )
+from bill_parser_engine.core.reference_resolver.prompts import REFERENCE_LOCATOR_SYSTEM_PROMPT
+from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache, get_cache
 from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
 
 logger = logging.getLogger(__name__)
@@ -27,371 +38,295 @@ logger = logging.getLogger(__name__)
 
 class ReferenceLocator:
     """
-    Locates all normative references in text fragments and tags by source type.
+    Locates normative references in text fragments and tags by source type.
     
     This component implements the DELETIONAL/DEFINITIONAL classification that drives
-    the entire downstream process. DELETIONAL references use original law context,
-    DEFINITIONAL use amended text context.
+    the entire downstream process:
+    - DELETIONAL references: Found in deleted/replaced text, use original law context
+    - DEFINITIONAL references: Found in new/amended text, use amended text context
     
-    Uses Mistral Chat API in JSON Mode for structured list output with precise positioning.
+    Uses Mistral Chat API in JSON Mode for reliable structured output.
+    
+    **Simplified Design Philosophy:**
+    - Removed error-prone character position tracking
+    - Focus on reference text and source classification 
+    - Simple validation without complex correction logic
+    - Confidence-based quality filtering
     """
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str = None, min_confidence: float = 0.5, cache: Optional[SimpleCache] = None, use_cache: bool = True):
         """
-        Initialize the reference locator with Mistral client.
+        Initialize the reference locator.
 
         Args:
             api_key: Mistral API key (defaults to MISTRAL_API_KEY environment variable)
+            min_confidence: Minimum confidence threshold for including references
+            cache: Cache instance for storing intermediate results (uses global if None)
+            use_cache: Whether to use caching (useful to disable when iterating on prompts)
         """
         self.client = Mistral(api_key=api_key or os.getenv("MISTRAL_API_KEY"))
-        self.system_prompt = self._create_system_prompt()
-        self.min_confidence = 0.5  # Lowered from 0.7 to allow more references for testing
-
-    def _create_system_prompt(self) -> str:
-        """
-        Create the system prompt for reference location.
-        
-        Returns:
-            The system prompt with real French legal reference examples
-        """
-        return """
-You are a legal reference locator for French legislative texts. Given two text fragments from a legislative amendment process:
-- deleted_or_replaced_text: the text that was deleted or replaced (tag references as 'DELETIONAL')
-- intermediate_after_state_text: the text after the amendment (tag references as 'DEFINITIONAL')
-
-Identify all normative references (to articles, codes, regulations, decrees, etc.) in both fragments. For each reference, return:
-- reference_text: the exact phrase as it appears in the text
-- start_position: character index in the relevant fragment (0-based)
-- end_position: character index (exclusive, 0-based)
-- source: 'DELETIONAL' or 'DEFINITIONAL' 
-- confidence: 0-1 confidence score
-
-Return a JSON object with a single field 'located_references', which is a list of these objects.
-
-FRENCH LEGAL REFERENCE PATTERNS TO IDENTIFY:
-- Internal cross-references: "aux 1° ou 2° du II", "au IV", "du même article", "au 3° du II de l'article L. 254-1"
-- Code articles: "l'article L. 254-1", "à l'article L. 253-5 du présent code", "aux articles L. 254-6-2 et L. 254-6-3"
-- EU regulations: "du règlement (CE) n° 1107/2009", "de l'article 3 du règlement (CE) n° 1107/2009"
-- Relative references: "du même règlement", "dudit article"
-- Numbered provisions: "au sens du 11 de l'article 3", "au sens de l'article 23"
-
-EXAMPLE 1:
-deleted_or_replaced_text: "incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV."
-intermediate_after_state_text: "interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique"
-
-Output:
-{
-  "located_references": [
-    {
-      "reference_text": "aux 1° ou 2° du II",
-      "start_position": 44,
-      "end_position": 63,
-      "source": "DELETIONAL",
-      "confidence": 0.98
-    },
-    {
-      "reference_text": "au IV",
-      "start_position": 67,
-      "end_position": 72,
-      "source": "DELETIONAL",
-      "confidence": 0.95
-    },
-    {
-      "reference_text": "du 11 de l'article 3 du règlement (CE) n° 1107/2009",
-      "start_position": 28,
-      "end_position": 81,
-      "source": "DEFINITIONAL",
-      "confidence": 0.99
-    },
-    {
-      "reference_text": "à l'article L. 253-5 du présent code",
-      "start_position": 162,
-      "end_position": 199,
-      "source": "DEFINITIONAL",
-      "confidence": 0.97
-    },
-    {
-      "reference_text": "au sens de l'article 23 du règlement (CE) n° 1107/2009",
-      "start_position": 265,
-      "end_position": 320,
-      "source": "DEFINITIONAL",
-      "confidence": 0.98
-    },
-    {
-      "reference_text": "au sens de l'article 47 du même règlement (CE) n° 1107/2009",
-      "start_position": 344,
-      "end_position": 404,
-      "source": "DEFINITIONAL",
-      "confidence": 0.98
-    }
-  ]
-}
-
-EXAMPLE 2:
-deleted_or_replaced_text: "Les modalités sont fixées par décret."
-intermediate_after_state_text: "Les modalités sont fixées par arrêté."
-
-Output:
-{
-  "located_references": []
-}
-
-EXAMPLE 3:
-deleted_or_replaced_text: "prévu aux articles L. 254-6-2 et L. 254-6-3"
-intermediate_after_state_text: "à l'utilisation des produits phytopharmaceutiques"
-
-Output:
-{
-  "located_references": [
-    {
-      "reference_text": "aux articles L. 254-6-2 et L. 254-6-3",
-      "start_position": 6,
-      "end_position": 43,
-      "source": "DELETIONAL",
-      "confidence": 0.99
-    }
-  ]
-}
-
-IMPORTANT RULES:
-- Be precise with character positions (0-based indexing)
-- Only identify legal/normative references, not general mentions
-- Include prepositions when they're part of the reference phrase
-- Confidence should reflect clarity and precision of the reference
-- Empty result list is valid when no references are found
-"""
+        self.min_confidence = min_confidence
+        self.cache = cache or get_cache()
+        self.use_cache = use_cache
 
     def locate(self, reconstructor_output: ReconstructorOutput) -> List[LocatedReference]:
         """
         Locate all normative references in the before/after text fragments.
+        
+        This is the core method that processes both text fragments simultaneously
+        and returns all located references with proper source classification.
 
         Args:
-            reconstructor_output: Output from TextReconstructor with before/after text fragments
+            reconstructor_output: Output from TextReconstructor containing:
+                - deleted_or_replaced_text: Text that was removed (DELETIONAL source)
+                - intermediate_after_state_text: Text after amendment (DEFINITIONAL source)
 
         Returns:
-            List of LocatedReference objects with precise positioning and source tagging
+            List of LocatedReference objects with reference_text, source, and confidence
 
         Raises:
             ValueError: If input validation fails
+            RuntimeError: If API call fails or returns invalid JSON
         """
         # Input validation
         if not isinstance(reconstructor_output, ReconstructorOutput):
             raise ValueError("Input must be a ReconstructorOutput object")
 
-        fragments = {
-            "DELETIONAL": reconstructor_output.deleted_or_replaced_text,
-            "DEFINITIONAL": reconstructor_output.intermediate_after_state_text
-        }
+        # Try to get from cache first (if enabled)
+        if self.use_cache:
+            cache_key_data = {
+                'deleted_or_replaced_text': reconstructor_output.deleted_or_replaced_text,
+                'intermediate_after_state_text': reconstructor_output.intermediate_after_state_text,
+                'min_confidence': self.min_confidence
+            }
+            
+            cached_result = self.cache.get("reference_locator", cache_key_data)
+            if cached_result is not None:
+                print(f"✓ Using cached result for ReferenceLocator")
+                return cached_result
+        
+        print(f"→ Processing new reference location with ReferenceLocator")
 
-        user_prompt = self._create_user_prompt(fragments)
+        # Prepare input fragments for LLM
+        user_prompt = self._create_user_prompt(
+            deleted_text=reconstructor_output.deleted_or_replaced_text,
+            intermediate_text=reconstructor_output.intermediate_after_state_text
+        )
 
         try:
-            # Use shared rate limiter across all components
-            rate_limiter.wait_if_needed("ReferenceLocator")
+            # Call Mistral API with retry logic for 429 errors
+            def make_api_call():
+                return self.client.chat.complete(
+                    model=MISTRAL_MODEL,
+                    temperature=0.0,  # Deterministic output
+                    messages=[
+                        {"role": "system", "content": REFERENCE_LOCATOR_SYSTEM_PROMPT},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    response_format={"type": "json_object"}
+                )
             
-            response = self.client.chat.complete(
-                model=MISTRAL_MODEL,
-                temperature=0.0,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": self.system_prompt
-                    },
-                    {
-                        "role": "user",
-                        "content": user_prompt
-                    }
-                ],
-                response_format={"type": "json_object"}
-            )
+            response = rate_limiter.execute_with_retry(make_api_call, "ReferenceLocator")
 
+            # Parse and validate response
             content = json.loads(response.choices[0].message.content)
-            self._validate_response(content)
+            self._validate_response_structure(content)
 
+            # Create LocatedReference objects
             located_refs = []
             for ref_data in content.get("located_references", []):
-                # Validation
-                if not self._validate_reference_positioning(ref_data, fragments):
-                    logger.warning(f"Invalid positioning for ref: {ref_data}")
-                    continue
+                if self._validate_reference_data(ref_data):
+                    located_ref = self._create_located_reference(ref_data)
+                    located_refs.append(located_ref)
+                else:
+                    logger.warning(f"Skipping invalid reference data: {ref_data}")
 
-                located_ref = self._create_located_reference(ref_data)
-                located_refs.append(located_ref)
-
-            # Filter by confidence threshold
-            return self._filter_by_confidence(located_refs, self.min_confidence)
+            # Filter by confidence
+            filtered_refs = self._filter_by_confidence(located_refs)
+            
+            # Remove exact duplicates while preserving cross-source variations
+            deduplicated_refs = self._deduplicate_references(filtered_refs)
+            
+            # Cache the successful result (if enabled)
+            if self.use_cache:
+                self.cache.set("reference_locator", cache_key_data, deduplicated_refs)
+                print(f"✓ Cached result for future use")
+            
+            return deduplicated_refs
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
-            raise RuntimeError(f"ReferenceLocator failed to parse API response: {e}") from e
+            raise RuntimeError(f"ReferenceLocator received invalid JSON from API: {e}") from e
         except Exception as e:
             logger.error(f"Reference location failed: {e}")
             raise RuntimeError(f"ReferenceLocator API call failed: {e}") from e
 
-    def _create_user_prompt(self, fragments: dict) -> str:
+    def _create_user_prompt(self, deleted_text: str, intermediate_text: str) -> str:
         """
         Create a user prompt with the text fragments.
-
+        
         Args:
-            fragments: Dictionary with DELETIONAL and DEFINITIONAL text fragments
-
+            deleted_text: Text that was deleted or replaced
+            intermediate_text: Text after the amendment
+            
         Returns:
-            Formatted user prompt string
+            JSON-formatted prompt string
         """
         return json.dumps({
-            "deleted_or_replaced_text": fragments["DELETIONAL"],
-            "intermediate_after_state_text": fragments["DEFINITIONAL"]
+            "deleted_or_replaced_text": deleted_text,
+            "intermediate_after_state_text": intermediate_text
         })
 
-    def _validate_response(self, content: dict) -> None:
+    def _validate_response_structure(self, content: dict) -> None:
         """
-        Validate that the response contains required structure.
-
+        Validate that the API response has the expected structure.
+        
         Args:
             content: Parsed JSON response from Mistral
-
+            
         Raises:
             ValueError: If response structure is invalid
         """
         if "located_references" not in content:
-            raise ValueError("Missing required field: located_references")
+            raise ValueError("API response missing required field: located_references")
 
         if not isinstance(content["located_references"], list):
             raise ValueError("located_references must be a list")
 
-    def _validate_reference_positioning(self, ref_data: dict, fragments: dict) -> bool:
+    def _validate_reference_data(self, ref_data: dict) -> bool:
         """
-        Validate that reference positioning is correct with flexible position correction.
-
+        Validate individual reference data from the LLM response.
+        
         Args:
-            ref_data: Reference data from LLM response
-            fragments: Text fragments to validate against
-
-        Returns:
-            True if positioning is valid, False otherwise
-        """
-        try:
-            # Required fields check
-            required_fields = ["reference_text", "start_position", "end_position", "source", "confidence"]
-            for field in required_fields:
-                if field not in ref_data:
-                    logger.warning(f"Missing required field: {field}")
-                    return False
-
-            reference_text = ref_data["reference_text"]
-            start_pos = ref_data["start_position"]
-            end_pos = ref_data["end_position"]
-            source = ref_data["source"]
-
-            # Basic validation
-            if start_pos < 0 or end_pos <= start_pos:
-                logger.warning(f"Invalid positions: start={start_pos}, end={end_pos}")
-                return False
-
-            # Source validation
-            if source not in ["DELETIONAL", "DEFINITIONAL"]:
-                logger.warning(f"Invalid source: {source}")
-                return False
-
-            # Confidence validation
-            confidence = ref_data["confidence"]
-            if not (0 <= confidence <= 1):
-                logger.warning(f"Invalid confidence: {confidence}")
-                return False
-
-            # Text existence and flexible position validation
-            fragment_text = fragments[source]
+            ref_data: Dictionary containing reference information
             
-            # Try exact position first
-            if end_pos <= len(fragment_text):
-                actual_text = fragment_text[start_pos:end_pos]
-                if actual_text == reference_text:
-                    return True
-
-            # If exact position doesn't work, try to find the reference text nearby
-            corrected_pos = self._find_reference_in_text(reference_text, fragment_text, start_pos)
-            if corrected_pos is not None:
-                # Update the positions in ref_data for downstream use
-                ref_data["start_position"] = corrected_pos
-                ref_data["end_position"] = corrected_pos + len(reference_text)
-                logger.info(f"Corrected position for '{reference_text}' from {start_pos} to {corrected_pos}")
-                return True
-
-            # If we can't find it anywhere, log the issue but don't fail completely
-            # Check if the reference exists anywhere in the text (loose validation)
-            if reference_text in fragment_text:
-                # Find the actual position
-                actual_pos = fragment_text.find(reference_text)
-                ref_data["start_position"] = actual_pos
-                ref_data["end_position"] = actual_pos + len(reference_text)
-                logger.info(f"Found '{reference_text}' at position {actual_pos} (LLM suggested {start_pos})")
-                return True
-
-            logger.warning(f"Reference text '{reference_text}' not found in {source} fragment")
-            return False
-
-        except Exception as e:
-            logger.warning(f"Error validating reference positioning: {e}")
-            return False
-
-    def _find_reference_in_text(self, reference_text: str, fragment_text: str, suggested_pos: int, search_window: int = 50) -> int:
-        """
-        Find reference text within a search window around the suggested position.
-
-        Args:
-            reference_text: The reference text to find
-            fragment_text: The text fragment to search in
-            suggested_pos: The LLM-suggested position
-            search_window: How many characters around suggested_pos to search
-
         Returns:
-            Corrected start position or None if not found
+            True if the reference data is valid, False otherwise
         """
-        # Define search bounds
-        start_search = max(0, suggested_pos - search_window)
-        end_search = min(len(fragment_text), suggested_pos + search_window + len(reference_text))
-        
-        # Search in the window
-        search_text = fragment_text[start_search:end_search]
-        local_pos = search_text.find(reference_text)
-        
-        if local_pos != -1:
-            return start_search + local_pos
-        
-        return None
+        # Check required fields
+        required_fields = ["reference_text", "source", "confidence"]
+        for field in required_fields:
+            if field not in ref_data:
+                logger.warning(f"Reference missing required field: {field}")
+                return False
+
+        # Validate source type
+        source = ref_data["source"]
+        if source not in ["DELETIONAL", "DEFINITIONAL"]:
+            logger.warning(f"Invalid source type: {source}")
+            return False
+
+        # Validate confidence range
+        confidence = ref_data["confidence"]
+        if not isinstance(confidence, (int, float)) or not (0 <= confidence <= 1):
+            logger.warning(f"Invalid confidence value: {confidence}")
+            return False
+
+        # Validate reference text is non-empty
+        reference_text = ref_data["reference_text"]
+        if not isinstance(reference_text, str) or not reference_text.strip():
+            logger.warning(f"Invalid reference text: {reference_text}")
+            return False
+
+        return True
 
     def _create_located_reference(self, ref_data: dict) -> LocatedReference:
         """
         Create a LocatedReference object from validated reference data.
-
+        
         Args:
-            ref_data: Validated reference data from LLM
-
+            ref_data: Validated reference data from LLM response
+            
         Returns:
             LocatedReference object
         """
         return LocatedReference(
-            reference_text=ref_data["reference_text"],
-            start_position=ref_data["start_position"],
-            end_position=ref_data["end_position"],
+            reference_text=ref_data["reference_text"].strip(),
             source=ReferenceSourceType(ref_data["source"]),
-            confidence=ref_data["confidence"]
+            confidence=float(ref_data["confidence"])
         )
 
-    def _filter_by_confidence(self, located_refs: List[LocatedReference], min_confidence: float) -> List[LocatedReference]:
+    def _filter_by_confidence(self, located_refs: List[LocatedReference]) -> List[LocatedReference]:
         """
         Filter references by minimum confidence threshold.
-
+        
         Args:
             located_refs: List of located references
-            min_confidence: Minimum confidence threshold
-
+            
         Returns:
-            Filtered list of references
+            Filtered list of references meeting confidence threshold
         """
-        filtered_refs = [ref for ref in located_refs if ref.confidence >= min_confidence]
+        filtered_refs = [
+            ref for ref in located_refs 
+            if ref.confidence >= self.min_confidence
+        ]
         
         if len(filtered_refs) < len(located_refs):
-            logger.info(f"Filtered {len(located_refs) - len(filtered_refs)} low-confidence references")
+            filtered_count = len(located_refs) - len(filtered_refs)
+            logger.info(f"Filtered {filtered_count} low-confidence references "
+                       f"(threshold: {self.min_confidence})")
 
-        return filtered_refs 
+        logger.info(f"Located {len(filtered_refs)} references: "
+                   f"{sum(1 for r in filtered_refs if r.source == ReferenceSourceType.DELETIONAL)} DELETIONAL, "
+                   f"{sum(1 for r in filtered_refs if r.source == ReferenceSourceType.DEFINITIONAL)} DEFINITIONAL")
+
+        return filtered_refs
+
+    def _deduplicate_references(self, located_refs: List[LocatedReference]) -> List[LocatedReference]:
+        """
+        Remove exact duplicates while preserving legitimate cross-source variations.
+        
+        DEDUPLICATION LOGIC:
+        - Remove exact duplicates: same reference_text + same source
+        - Keep cross-source duplicates: same reference_text but different source
+        - Preserve highest confidence when duplicates exist
+        
+        Args:
+            located_refs: List of located references potentially containing duplicates
+            
+        Returns:
+            Deduplicated list of references
+        """
+        if not located_refs:
+            return []
+        
+        # Group by (reference_text, source) tuple
+        ref_groups = {}
+        for ref in located_refs:
+            key = (ref.reference_text, ref.source)
+            if key not in ref_groups:
+                ref_groups[key] = []
+            ref_groups[key].append(ref)
+        
+        # Keep highest confidence reference from each group
+        deduplicated_refs = []
+        duplicates_removed = 0
+        
+        for key, refs in ref_groups.items():
+            if len(refs) > 1:
+                # Multiple references with same text+source - keep highest confidence
+                best_ref = max(refs, key=lambda r: r.confidence)
+                deduplicated_refs.append(best_ref)
+                duplicates_removed += len(refs) - 1
+                logger.debug(f"Deduplicated {len(refs)} instances of '{key[0]}' ({key[1].value}), "
+                           f"kept confidence {best_ref.confidence}")
+            else:
+                # Unique reference
+                deduplicated_refs.append(refs[0])
+        
+        if duplicates_removed > 0:
+            logger.info(f"Removed {duplicates_removed} exact duplicate references, "
+                       f"kept {len(deduplicated_refs)} unique references")
+        
+        return deduplicated_refs
+
+    def clear_cache(self) -> int:
+        """
+        Clear cached results for this component.
+        
+        Useful when iterating on prompts or when you want fresh results.
+        
+        Returns:
+            Number of cache entries cleared
+        """
+        return self.cache.invalidate("reference_locator") 

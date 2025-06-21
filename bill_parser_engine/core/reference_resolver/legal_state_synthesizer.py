@@ -57,23 +57,23 @@ class LegalStateSynthesizer:
             The system prompt with reference substitution examples
         """
         return """
-You are a legal text synthesizer. Given text fragments and their resolved references, substitute each reference with its resolved content to create fully interpretable legal states.
+Vous êtes un synthétiseur de textes juridiques. Étant donné des fragments de texte et leurs références résolues, substituez chaque référence par son contenu résolu pour créer des états juridiques pleinement interprétables.
 
-For each reference, replace the reference phrase with its resolved content while maintaining:
-- Grammatical correctness in French
-- Legal text style and readability  
-- Proper punctuation and formatting
-- Natural flow and coherence
+Pour chaque référence, remplacez la phrase de référence par son contenu résolu tout en maintenant :
+- La correction grammaticale en français
+- Le style et la lisibilité du texte juridique
+- La ponctuation et le formatage appropriés
+- Le flux naturel et la cohérence
 
-Return a JSON object with:
-- synthesized_text: the text with all references substituted (string)
-- synthesis_metadata: information about the substitution process (object)
+Retournez un objet JSON avec :
+- synthesized_text : le texte avec toutes les références substituées (chaîne)
+- synthesis_metadata : informations sur le processus de substitution (objet)
 
-EXAMPLE 1:
-Input text: "incompatible avec celui des activités mentionnées aux 1° ou 2° du II"
-Resolved references:
+EXEMPLE 1 :
+Texte d'entrée : "incompatible avec celui des activités mentionnées aux 1° ou 2° du II"
+Références résolues :
 - "aux 1° ou 2° du II" -> "la vente et la distribution de produits phytopharmaceutiques"
-Output:
+Sortie :
 {
   "synthesized_text": "incompatible avec celui des activités de vente et de distribution de produits phytopharmaceutiques",
   "synthesis_metadata": {
@@ -83,11 +83,11 @@ Output:
   }
 }
 
-EXAMPLE 2:
-Input text: "interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009"
-Resolved references:
+EXEMPLE 2 :
+Texte d'entrée : "interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009"
+Références résolues :
 - "du 11 de l'article 3 du règlement (CE) n° 1107/2009" -> "toute personne physique ou morale qui fabrique une substance active, un phytoprotecteur, un synergiste ou un produit phytopharmaceutique, ou qui fait fabriquer de telles substances ou de tels produits et les commercialise sous son nom"
-Output:
+Sortie :
 {
   "synthesized_text": "interdit aux personnes physiques ou morales qui fabriquent une substance active, un phytoprotecteur, un synergiste ou un produit phytopharmaceutique, ou qui font fabriquer de telles substances ou de tels produits et les commercialisent sous leur nom",
   "synthesis_metadata": {
@@ -97,11 +97,11 @@ Output:
   }
 }
 
-EXAMPLE 3 (Complex substitution):
-Input text: "les produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code"
-Resolved references:
+EXEMPLE 3 (Substitution complexe) :
+Texte d'entrée : "les produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code"
+Références résolues :
 - "à l'article L. 253-5 du présent code" -> "la liste des produits de biocontrôle dont l'usage est autorisé, établie par l'autorité administrative compétente et régulièrement mise à jour"
-Output:
+Sortie :
 {
   "synthesized_text": "les produits de biocontrôle figurant sur la liste des produits de biocontrôle dont l'usage est autorisé (établie par l'autorité administrative compétente et régulièrement mise à jour)",
   "synthesis_metadata": {
@@ -112,13 +112,13 @@ Output:
   }
 }
 
-Rules for substitution:
-- Replace reference phrases with their resolved content
-- Adjust articles and prepositions for French grammatical agreement
-- Use parentheses for long definitions to maintain readability
-- Preserve the legal meaning and structure
-- Handle nested substitutions if resolved content contains other references
-- Maintain proper capitalization and punctuation
+Règles de substitution :
+- Remplacez les phrases de référence par leur contenu résolu
+- Ajustez les articles et prépositions pour l'accord grammatical français
+- Utilisez des parenthèses pour les définitions longues afin de maintenir la lisibilité
+- Préservez le sens et la structure juridiques
+- Gérez les substitutions imbriquées si le contenu résolu contient d'autres références
+- Maintenez la capitalisation et la ponctuation appropriées
 """
 
     def synthesize(
@@ -223,28 +223,29 @@ Rules for substitution:
         user_prompt = self._build_substitution_prompt(
             text=base_text,
             substitutions=substitution_map,
-            instruction=f"For the {state_type}, create readable legal text by substituting references with their resolved content."
+            instruction=f"Pour le {state_type}, créez un texte juridique lisible en substituant les références par leur contenu résolu."
         )
 
         try:
-            # Use shared rate limiter across all components
-            rate_limiter.wait_if_needed("LegalStateSynthesizer")
+            # Use shared rate limiter with retry logic for 429 errors
+            def make_api_call():
+                return self.client.chat.complete(
+                    model=MISTRAL_MODEL,
+                    temperature=0.0,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": self.system_prompt
+                        },
+                        {
+                            "role": "user",
+                            "content": user_prompt
+                        }
+                    ],
+                    response_format={"type": "json_object"}
+                )
             
-            response = self.client.chat.complete(
-                model=MISTRAL_MODEL,
-                temperature=0.0,
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": self.system_prompt
-                    },
-                    {
-                        "role": "user",
-                        "content": user_prompt
-                    }
-                ],
-                response_format={"type": "json_object"}
-            )
+            response = rate_limiter.execute_with_retry(make_api_call, "LegalStateSynthesizer")
 
             content = json.loads(response.choices[0].message.content)
             self._validate_synthesis_response(content)

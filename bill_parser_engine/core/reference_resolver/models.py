@@ -4,7 +4,7 @@ Data models for the reference resolver.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 # --- Enums ---
@@ -78,23 +78,31 @@ class TargetArticle:
     operation_type: TargetOperationType
     code: Optional[str]
     article: Optional[str]
-    confidence: float
-    raw_text: Optional[str]
-    full_citation: Optional[str] = None
-    version: Optional[str] = None
 
 @dataclass
 class ReconstructorOutput:
-    """Output from the TextReconstructor, providing the 'before' and 'after' text fragments."""
+    """
+    Output from text reconstruction.
+    
+    Contains the deleted/replaced text and the final state after applying amendments.
+    """
     deleted_or_replaced_text: str
     intermediate_after_state_text: str
 
 @dataclass
 class LocatedReference:
-    """Represents a reference found in a text fragment, tagged by its source."""
+    """
+    Represents a reference found in a text fragment, tagged by its source.
+    
+    This simplified model focuses on what's actually needed downstream:
+    - The reference text for matching and substitution
+    - The source type for context-aware processing
+    - Confidence for quality filtering
+    
+    Position fields have been removed as they were error-prone and not used
+    meaningfully by downstream components.
+    """
     reference_text: str
-    start_position: int
-    end_position: int
     source: ReferenceSourceType
     confidence: float
 
@@ -157,13 +165,14 @@ class BillChunk:
     major_subdivision_label: Optional[str]
     major_subdivision_introductory_phrase: Optional[str]
     numbered_point_label: Optional[str]
+    numbered_point_introductory_phrase: Optional[str]
+    lettered_subdivision_label: Optional[str]
     hierarchy_path: List[str]
     chunk_id: str
     start_pos: int
     end_pos: int
-    # Backwards compatibility for existing BillSplitter
-    cross_references: List[str] = field(default_factory=list)
     target_article: Optional[TargetArticle] = None
+    inherited_target_article: Optional[TargetArticle] = None
 
 
 @dataclass
@@ -176,4 +185,53 @@ class ProcessedChunkResult:
     """
     chunk: BillChunk
     flattened_text: str = ""
-    resolved_references: list = field(default_factory=list) 
+    resolved_references: list = field(default_factory=list)
+
+
+# Clean Architecture Models
+
+class OperationType(Enum):
+    """Types of atomic amendment operations for clean architecture."""
+    REPLACE = "REPLACE"  # "les mots X sont remplacés par les mots Y"
+    DELETE = "DELETE"    # "sont supprimés", "est supprimé", "(Supprimé)"
+    INSERT = "INSERT"    # "après le mot X, il est inséré Y"
+    ADD = "ADD"          # "Il est ajouté un II ainsi rédigé"
+    REWRITE = "REWRITE"  # "est ainsi rédigée", "est remplacée par"
+    ABROGATE = "ABROGATE" # "sont abrogés", "est abrogé"
+
+
+@dataclass
+class AmendmentOperation:
+    """Single atomic amendment operation from InstructionDecomposer."""
+    operation_type: OperationType  # REPLACE, DELETE, INSERT, ADD, REWRITE, ABROGATE
+    target_text: Optional[str]     # Text to find/modify ("A" in example)
+    replacement_text: Optional[str] # New text ("B" in example, for REPLACE/INSERT/ADD/REWRITE)
+    position_hint: str             # Legal position specification ("au 2°")
+    sequence_order: int            # Order in compound operations (1, 2, 3...)
+    confidence_score: float        # Decomposition confidence (0-1)
+
+    def __post_init__(self):
+        """Validate operation data after initialization."""
+        if self.operation_type == OperationType.REPLACE and (not self.target_text or not self.replacement_text):
+            raise ValueError("REPLACE operation requires both target_text and replacement_text")
+        # Note: DELETE operations can have null target_text for simple "(Supprimé)" cases
+        elif self.operation_type in [OperationType.INSERT, OperationType.ADD, OperationType.REWRITE] and not self.replacement_text:
+            raise ValueError(f"{self.operation_type.value} operation requires replacement_text")
+        elif self.operation_type == OperationType.ABROGATE and not self.position_hint:
+            raise ValueError("ABROGATE operation requires position_hint")
+            
+        if not (0 <= self.confidence_score <= 1):
+            raise ValueError("Confidence score must be between 0 and 1")
+
+
+@dataclass
+class ReconstructionResult:
+    """Complete reconstruction result with detailed tracking."""
+    success: bool
+    final_text: str
+    operations_applied: List[AmendmentOperation]
+    operations_failed: List[Tuple[AmendmentOperation, str]]  # operation, error
+    original_text_length: int
+    final_text_length: int
+    processing_time_ms: int
+    validation_warnings: List[str] 

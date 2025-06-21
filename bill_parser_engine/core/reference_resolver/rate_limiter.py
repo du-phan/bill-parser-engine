@@ -7,7 +7,11 @@ and causing API rate limit errors.
 
 import time
 import threading
-from typing import Optional
+import random
+from typing import Optional, Callable, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SharedRateLimiter:
@@ -30,12 +34,12 @@ class SharedRateLimiter:
                     cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, min_delay_seconds: float = 2.0):
+    def __init__(self, min_delay_seconds: float = 3.5):
         """
         Initialize the rate limiter (only once due to singleton).
         
         Args:
-            min_delay_seconds: Minimum seconds between API calls
+            min_delay_seconds: Minimum seconds between API calls (increased from 2.0 to 3.5)
         """
         # Use a simple flag to ensure init runs only once
         if not hasattr(self, 'call_lock'):
@@ -72,6 +76,69 @@ class SharedRateLimiter:
         with self.call_lock:
             self.min_delay_seconds = new_delay_seconds
             print(f"📊 Rate limiter updated to {new_delay_seconds}s delay")
+
+    def execute_with_retry(self, api_call: Callable[[], Any], component_name: str = "Unknown", max_retries: int = 3) -> Any:
+        """
+        Execute an API call with exponential backoff retry logic for 429 errors.
+        
+        Args:
+            api_call: The API call function to execute
+            component_name: Name of the component making the call
+            max_retries: Maximum number of retry attempts
+            
+        Returns:
+            The result of the API call
+            
+        Raises:
+            The last exception if all retries fail
+        """
+        last_exception = None
+        
+        for attempt in range(max_retries + 1):  # +1 for initial attempt
+            try:
+                # Apply rate limiting before each attempt
+                self.wait_if_needed(component_name)
+                
+                # Execute the API call
+                return api_call()
+                
+            except Exception as e:
+                last_exception = e
+                
+                # Check if this is a 429 rate limit error
+                error_message = str(e).lower()
+                is_rate_limit_error = (
+                    "429" in error_message or 
+                    "too many requests" in error_message or
+                    "rate limit" in error_message or
+                    "service tier capacity exceeded" in error_message
+                )
+                
+                if is_rate_limit_error and attempt < max_retries:
+                    # Calculate exponential backoff delay with jitter
+                    base_delay = 5.0  # Start with 5 seconds
+                    exponential_delay = base_delay * (2 ** attempt)
+                    jitter = random.uniform(0.5, 1.5)  # Add 50% jitter
+                    retry_delay = exponential_delay * jitter
+                    
+                    logger.warning(f"{component_name}: Rate limit hit (attempt {attempt + 1}/{max_retries + 1}). "
+                                 f"Retrying in {retry_delay:.1f}s...")
+                    print(f"🚫 {component_name}: Rate limit exceeded. Retrying in {retry_delay:.1f}s...")
+                    
+                    time.sleep(retry_delay)
+                    
+                    # Also increase the global rate limit for subsequent calls
+                    new_delay = min(self.min_delay_seconds * 1.5, 10.0)  # Cap at 10 seconds
+                    if new_delay > self.min_delay_seconds:
+                        self.update_delay(new_delay)
+                        
+                else:
+                    # Either not a rate limit error, or we've exhausted retries
+                    break
+        
+        # If we get here, all retries failed
+        if last_exception:
+            raise last_exception
 
 
 # Global instance for easy access

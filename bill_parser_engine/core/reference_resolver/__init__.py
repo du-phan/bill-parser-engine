@@ -17,7 +17,7 @@ from mistralai import Mistral
 from bill_parser_engine.core.reference_resolver.bill_splitter import BillSplitter
 from bill_parser_engine.core.reference_resolver.target_identifier import TargetArticleIdentifier
 from bill_parser_engine.core.reference_resolver.original_text_retriever import OriginalTextRetriever
-from bill_parser_engine.core.reference_resolver.text_reconstructor import TextReconstructor
+# from bill_parser_engine.core.reference_resolver.text_reconstructor import TextReconstructor  # TODO: Replace with LegalAmendmentReconstructor
 from bill_parser_engine.core.reference_resolver.reference_locator import ReferenceLocator
 from bill_parser_engine.core.reference_resolver.reference_object_linker import ReferenceObjectLinker
 from bill_parser_engine.core.reference_resolver.resolution_orchestrator import ResolutionOrchestrator
@@ -37,7 +37,11 @@ from bill_parser_engine.core.reference_resolver.models import (
     LegalState,
     LegalAnalysisOutput,
     FlattenedText,
-    ProcessedChunkResult
+    ProcessedChunkResult,
+    # Clean Architecture Models
+    OperationType,
+    AmendmentOperation,
+    ReconstructionResult
 )
 
 logger = logging.getLogger(__name__)
@@ -69,7 +73,7 @@ class PipelineComponents:
     splitter: BillSplitter
     target_identifier: TargetArticleIdentifier
     text_retriever: OriginalTextRetriever
-    reconstructor: TextReconstructor
+    reconstructor: Optional[object]  # TextReconstructor  # TODO: Replace with LegalAmendmentReconstructor
     locator: ReferenceLocator
     linker: ReferenceObjectLinker
     orchestrator: ResolutionOrchestrator
@@ -105,7 +109,8 @@ def initialize_pipeline_components(client: Mistral, config: Optional[PipelineCon
         splitter = BillSplitter()
         target_identifier = TargetArticleIdentifier()
         text_retriever = OriginalTextRetriever()
-        reconstructor = TextReconstructor()
+        # reconstructor = TextReconstructor()  # TODO: Replace with LegalAmendmentReconstructor
+        reconstructor = None
         locator = ReferenceLocator()
         linker = ReferenceObjectLinker()
         
@@ -194,8 +199,13 @@ def process_single_chunk(context: ChunkProcessingContext, components: PipelineCo
         target_article = validate_stage_output(
             "TargetIdentification",
             components.target_identifier.identify(context.chunk),
-            lambda x: x.confidence > 0.05  # More lenient for rate-limited scenarios
+            lambda x: x.operation_type is not None  # Basic validation - operation_type should be set
         )
+
+        # Early exit for pure versioning metadata (OTHER operation type)
+        if target_article.operation_type == TargetOperationType.OTHER:
+            logger.info(f"Skipping chunk {context.index}: Pure versioning metadata detected")
+            return None
 
         # Early exit for low-confidence or missing targets
         if not target_article.article:

@@ -127,6 +127,53 @@ class SimpleCache:
         """Clear all cache entries."""
         self.invalidate()
 
+    def clear_by_prefix(self, component: str) -> int:
+        """
+        Clear cache entries for a specific component.
+        
+        Args:
+            component: Component name to clear cache for
+            
+        Returns:
+            Number of entries cleared
+        """
+        return self.invalidate(component)
+
+    def get_stats(self, component: str = None) -> dict:
+        """
+        Get cache statistics for component.
+        
+        Args:
+            component: Component name (optional)
+            
+        Returns:
+            Dictionary with cache statistics
+        """
+        if component:
+            pattern = f"{component}_*.pkl"
+        else:
+            pattern = "*.pkl"
+        
+        cache_files = list(self.cache_dir.glob(pattern))
+        
+        return {
+            "component": component or "all",
+            "entries_count": len(cache_files),
+            "total_size_bytes": sum(f.stat().st_size for f in cache_files if f.exists())
+        }
+
+    def get_stats_by_prefix(self, component: str) -> dict:
+        """
+        Get cache statistics for a specific component.
+        
+        Args:
+            component: Component name
+            
+        Returns:
+            Dictionary with cache statistics
+        """
+        return self.get_stats(component)
+
 
 # Global cache instance
 _global_cache: Optional[SimpleCache] = None
