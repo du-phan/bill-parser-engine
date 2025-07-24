@@ -21,7 +21,7 @@ from bill_parser_engine.core.reference_resolver.prompts import (
     RESULT_VALIDATOR_SYSTEM_PROMPT,
     RESULT_VALIDATOR_USER_PROMPT_TEMPLATE
 )
-from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
+from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter, call_mistral_with_messages
 
 logger = logging.getLogger(__name__)
 
@@ -93,9 +93,20 @@ class ResultValidator:
         logger.info("Validating legal coherence for %d operations", len(operations))
         
         # Check cache first
-        cache_key = f"result_validator_{hash((original_text, modified_text, str(operations)))}"
         if self.use_cache:
-            cached_result = self.cache.get("result_validator", cache_key)
+            cache_key_data = {
+                'original_text': original_text,
+                'modified_text': modified_text,
+                'operations': [
+                    {
+                        'type': op.operation_type.value,
+                        'target': op.target_text,
+                        'replacement': op.replacement_text,
+                        'position': op.position_hint
+                    } for op in operations
+                ]
+            }
+            cached_result = self.cache.get("result_validator", cache_key_data)
             if cached_result is not None:
                 logger.debug("Found cached validation result")
                 return self._deserialize_result(cached_result)
@@ -108,18 +119,17 @@ class ResultValidator:
             user_prompt = self._build_user_prompt(original_text, modified_text, operations)
             
             # Call LLM with rate limiting
-            def make_api_call():
-                return self.client.chat.complete(
-                    model="mistral-large-latest",
-                    temperature=0.1,  # Slightly creative for detailed analysis
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    response_format={"type": "json_object"}
-                )
-            
-            response = rate_limiter.execute_with_retry(make_api_call, "ResultValidator")
+            response = call_mistral_with_messages(
+                client=self.client,
+                rate_limiter=rate_limiter,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                component_name="ResultValidator",
+                temperature=0.1,  # Slightly creative for detailed analysis
+                response_format={"type": "json_object"}
+            )
             
             # Parse response
             response_content = response.choices[0].message.content
@@ -131,13 +141,13 @@ class ResultValidator:
             processing_time = int((time.time() - start_time) * 1000)
             result.processing_time_ms = processing_time
             
-            logger.info("Validation completed - Status: %s, Score: %.2f (processing time: %dms)", 
-                       result.validation_status, result.overall_score, processing_time)
+            logger.info("Validation completed - Status: %s, Score: %.2f", 
+                       result.validation_status, result.overall_score)
             
             # Cache result
             if self.use_cache:
                 serialized_result = self._serialize_result(result)
-                self.cache.set("result_validator", cache_key, serialized_result)
+                self.cache.set("result_validator", cache_key_data, serialized_result)
             
             return result
 

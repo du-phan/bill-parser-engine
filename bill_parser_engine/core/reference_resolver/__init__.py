@@ -17,11 +17,10 @@ from mistralai import Mistral
 from bill_parser_engine.core.reference_resolver.bill_splitter import BillSplitter
 from bill_parser_engine.core.reference_resolver.target_identifier import TargetArticleIdentifier
 from bill_parser_engine.core.reference_resolver.original_text_retriever import OriginalTextRetriever
-# from bill_parser_engine.core.reference_resolver.text_reconstructor import TextReconstructor  # TODO: Replace with LegalAmendmentReconstructor
 from bill_parser_engine.core.reference_resolver.reference_locator import ReferenceLocator
 from bill_parser_engine.core.reference_resolver.reference_object_linker import ReferenceObjectLinker
-from bill_parser_engine.core.reference_resolver.resolution_orchestrator import ResolutionOrchestrator
-from bill_parser_engine.core.reference_resolver.legal_state_synthesizer import LegalStateSynthesizer
+from bill_parser_engine.core.reference_resolver.reference_resolver import ReferenceResolver
+#from bill_parser_engine.core.reference_resolver.legal_state_synthesizer import LegalStateSynthesizer
 from bill_parser_engine.core.reference_resolver.models import (
     BillChunk,
     TargetArticle, 
@@ -76,8 +75,8 @@ class PipelineComponents:
     reconstructor: Optional[object]  # TextReconstructor  # TODO: Replace with LegalAmendmentReconstructor
     locator: ReferenceLocator
     linker: ReferenceObjectLinker
-    orchestrator: ResolutionOrchestrator
-    synthesizer: LegalStateSynthesizer
+    orchestrator: ReferenceResolver
+    #synthesizer: LegalStateSynthesizer
 
 
 @dataclass
@@ -115,14 +114,14 @@ def initialize_pipeline_components(client: Mistral, config: Optional[PipelineCon
         linker = ReferenceObjectLinker()
         
         # Initialize orchestrator with other components
-        orchestrator = ResolutionOrchestrator(
+        orchestrator = ReferenceResolver(
             text_retriever=text_retriever,
             reference_locator=locator,
             reference_linker=linker,
             max_depth=config.max_resolution_depth
         )
         
-        synthesizer = LegalStateSynthesizer()
+        #synthesizer = LegalStateSynthesizer()
         
         return PipelineComponents(
             splitter=splitter,
@@ -132,7 +131,7 @@ def initialize_pipeline_components(client: Mistral, config: Optional[PipelineCon
             locator=locator,
             linker=linker,
             orchestrator=orchestrator,
-            synthesizer=synthesizer
+            #synthesizer=synthesizer
         )
         
     except Exception as e:
@@ -238,7 +237,11 @@ def process_single_chunk(context: ChunkProcessingContext, components: PipelineCo
         logger.info(f"Chunk {context.index}: Found {len(located_references)} references")
 
         # Stage 5: Reference Object Linking
-        linked_references = components.linker.link_references(located_references, reconstructor_output)
+        linked_references = components.linker.link_references(
+            located_references, 
+            original_law_article=original_text,
+            intermediate_after_state_text=reconstructor_output.intermediate_after_state_text
+        )
         logger.info(f"Chunk {context.index}: Linked {len(linked_references)} references")
 
         # Stage 6: Resolution Orchestration
@@ -371,8 +374,8 @@ __all__ = [
     'TextReconstructor',
     'ReferenceLocator',
     'ReferenceObjectLinker',
-    'ResolutionOrchestrator',
-    'LegalStateSynthesizer',
+    'ReferenceResolver',
+    #'LegalStateSynthesizer',
     
     # Data Models
     'BillChunk',

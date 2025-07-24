@@ -1,14 +1,23 @@
 """
 LegalAmendmentReconstructor - Main orchestrator for legal amendment text reconstruction.
 
-This is the central component implementing the clean slate approach for legal amendment
-processing. It orchestrates the 3-step LLM-based architecture:
+This component orchestrates the 3-step LLM-based architecture:
 1. InstructionDecomposer - Parse compound instructions into atomic operations
 2. OperationApplier - Apply each operation sequentially using LLM intelligence
 3. ResultValidator - Validate final result for legal coherence and formatting
+
+The component extracts focused output fragments from the structured operations
+for downstream reference location processing.
+
+KEY FEATURES:
+- Uses the 3-step architecture for operation tracking
+- Extracts focused delta fragments from structured operations
+- Maintains audit trail and detailed logging
+- Provides ReconstructorOutput format for downstream processing
 """
 
 import logging
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -17,7 +26,9 @@ from typing import List, Optional, Tuple
 from bill_parser_engine.core.reference_resolver.models import (
     AmendmentOperation, 
     ReconstructionResult,
-    OperationType
+    OperationType,
+    ReconstructorOutput,
+    BillChunk
 )
 from bill_parser_engine.core.reference_resolver.instruction_decomposer import InstructionDecomposer
 from bill_parser_engine.core.reference_resolver.operation_applier import (
@@ -28,22 +39,24 @@ from bill_parser_engine.core.reference_resolver.result_validator import (
     ResultValidator, 
     ValidationResult
 )
-from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache
+from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache, get_mistral_cache
+from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
 
 logger = logging.getLogger(__name__)
 
 
 class LegalAmendmentReconstructor:
     """
-    Clean, purpose-built legal amendment processor using 3-step LLM architecture.
+    Legal amendment processor using 3-step LLM architecture.
     
-    This component provides a complete solution for French legal amendment processing:
-    - Robust handling of format differences between sources
-    - Complex position specification understanding
-    - All 6 operation types (REPLACE, DELETE, INSERT, ADD, REWRITE, ABROGATE)
-    - Comprehensive error handling and operation tracking
-    - Transparent audit trail with detailed result reporting
-    - Detailed logging to file for verification and debugging
+    This component processes French legal amendment instructions:
+    - Handles format differences between sources
+    - Understands position specifications
+    - Supports all operation types (REPLACE, DELETE, INSERT, ADD, REWRITE, ABROGATE)
+    - Provides error handling and operation tracking
+    - Maintains audit trail with detailed result reporting
+    - Logs detailed information for verification and debugging
+    - Caches final results (no component-level caching)
     """
 
     def __init__(self, api_key: Optional[str] = None, use_cache: bool = True, log_file_path: Optional[str] = None):
@@ -52,40 +65,37 @@ class LegalAmendmentReconstructor:
 
         Args:
             api_key: Mistral API key (defaults to MISTRAL_API_KEY environment variable)
-            use_cache: Whether to use caching across all components
+            use_cache: Whether to use centralized Mistral API caching
             log_file_path: Path to detailed log file (defaults to 'reconstruction_log.txt')
         """
-        # Initialize shared cache
-        self.cache = SimpleCache() if use_cache else None
+        # Store API key for component initialization
+        self.api_key = api_key or os.getenv("MISTRAL_API_KEY")
+        if not self.api_key:
+            raise ValueError("Mistral API key is required. Set MISTRAL_API_KEY environment variable or pass api_key parameter.")
         
-        # Initialize the 3-step pipeline components
-        self.decomposer = InstructionDecomposer(
-            api_key=api_key, 
-            cache=self.cache, 
-            use_cache=use_cache
-        )
-        self.applier = OperationApplier(
-            api_key=api_key, 
-            cache=self.cache, 
-            use_cache=use_cache
-        )
-        self.validator = ResultValidator(
-            api_key=api_key, 
-            cache=self.cache, 
-            use_cache=use_cache
-        )
-        
+        # Use centralized Mistral API cache
+        self.cache = get_mistral_cache() if use_cache else None
         self.use_cache = use_cache
         
-        # Setup detailed logging to file
-        self.log_file_path = Path(log_file_path) if log_file_path else Path("reconstruction_log.txt")
-        self._initialize_log_file()
+        # Initialize the 3-step pipeline components with shared centralized cache
+        self.decomposer = InstructionDecomposer(api_key=api_key, cache=self.cache, use_cache=use_cache)
+        self.applier = OperationApplier(api_key=api_key, cache=self.cache, use_cache=use_cache)
+        self.validator = ResultValidator(api_key=api_key, cache=self.cache, use_cache=use_cache)
         
-        logger.info("LegalAmendmentReconstructor initialized with caching: %s, log file: %s", 
-                   "enabled" if use_cache else "disabled", self.log_file_path)
+        # Store the last detailed reconstruction result for pipeline access
+        self.last_detailed_result: Optional[ReconstructionResult] = None
+        
+        # Setup detailed logging to file (lazy initialization)
+        self.log_file_path = Path(log_file_path) if log_file_path else Path("reconstruction_log.txt")
+        self._log_file_initialized = False
+        
+
 
     def _initialize_log_file(self):
-        """Initialize the detailed log file with header information."""
+        """Initialize the detailed log file with header information (lazy initialization)."""
+        if self._log_file_initialized:
+            return
+            
         try:
             with open(self.log_file_path, 'w', encoding='utf-8') as f:
                 f.write("=" * 100 + "\n")
@@ -94,6 +104,8 @@ class LegalAmendmentReconstructor:
                 f.write(f"Log initialized at: {datetime.now().isoformat()}\n")
                 f.write(f"Log file: {self.log_file_path.absolute()}\n")
                 f.write("=" * 100 + "\n\n")
+            self._log_file_initialized = True
+
         except Exception as e:
             logger.warning("Failed to initialize log file %s: %s", self.log_file_path, e)
 
@@ -121,6 +133,9 @@ class LegalAmendmentReconstructor:
             validation: Validation result (if available)
             step_by_step_states: List of text states after each operation (if available)
         """
+        # Initialize log file lazily when first needed
+        self._initialize_log_file()
+        
         try:
             with open(self.log_file_path, 'a', encoding='utf-8') as f:
                 # Header for this reconstruction
@@ -262,9 +277,12 @@ class LegalAmendmentReconstructor:
         amendment_instruction: str,
         target_article_reference: str,
         chunk_id: str = "unknown"
-    ) -> ReconstructionResult:
+    ) -> ReconstructorOutput:
         """
         Reconstruct legal text by applying amendment instructions using 3-step pipeline.
+        
+        Uses the 3-step architecture (InstructionDecomposer → OperationApplier → ResultValidator) 
+        and extracts focused output fragments from the structured operations.
 
         Args:
             original_law_article: The original legal article text
@@ -273,7 +291,10 @@ class LegalAmendmentReconstructor:
             chunk_id: Unique identifier for the chunk (for logging purposes)
 
         Returns:
-            ReconstructionResult with success status and reconstructed text
+            ReconstructorOutput with separated delta fragments:
+            - deleted_or_replaced_text: Text that was removed/replaced
+            - newly_inserted_text: Text that was added/inserted
+            - intermediate_after_state_text: Complete article after changes
 
         Raises:
             ValueError: If inputs are invalid
@@ -293,10 +314,40 @@ class LegalAmendmentReconstructor:
             # Use empty string as starting point for INSERT operations
             original_law_article = ""
         
-        logger.info(
-            "Starting amendment reconstruction for article %s - instruction: %.100s...",
-            target_article_reference, amendment_instruction
-        )
+
+        
+        # CACHING: Try to get cached result first (if enabled)
+        # Define cache key data for both cache and non-cache scenarios
+        cache_key_data = {
+            'original_text': original_law_article,
+            'amendment_instruction': amendment_instruction,
+            'target_article_reference': target_article_reference,
+            'chunk_id': chunk_id
+        }
+        
+        # TEMPORARILY DISABLE CACHE TO FORCE FRESH PROCESSING
+        # This ensures we get real results and can see the actual processing
+        if self.use_cache and self.cache:
+            logger.info("Cache temporarily disabled for chunk %s to force fresh processing", chunk_id)
+            # Uncomment the following lines to re-enable cache once we verify the processing works
+            # cached_result = self.cache.get("legal_amendment_reconstructor_focused", cache_key_data)
+            # if cached_result is not None:
+            #     logger.info("Cache HIT for chunk %s - creating detailed result", chunk_id)
+            #     # For cached results, we need to create a minimal detailed result
+            #     # since we don't have the full reconstruction details from the cache
+            #     cached_detailed_result = ReconstructionResult(
+            #         success=True,  # Assume success for cached results
+            #         final_text=cached_result.intermediate_after_state_text,
+            #         operations_applied=[],  # We don't have operation details from cache
+            #         operations_failed=[],
+            #         original_text_length=len(original_law_article),
+            #         final_text_length=len(cached_result.intermediate_after_state_text),
+            #         processing_time_ms=0,  # No processing time for cached results
+            #         validation_warnings=["Result retrieved from cache"]
+            #     )
+            #     self.last_detailed_result = cached_detailed_result
+            #     logger.info("Set last_detailed_result for cached chunk %s", chunk_id)
+            #     return cached_result
         
         start_time = time.time()
         operations_applied = []
@@ -308,12 +359,21 @@ class LegalAmendmentReconstructor:
         
         try:
             # STEP 1: Decompose compound instruction into atomic operations
-            logger.debug("Step 1: Decomposing amendment instruction")
+            logger.info("Step 1: Decomposing amendment instruction for chunk %s", chunk_id)
             operations = self.decomposer.parse_instruction(amendment_instruction)
             
             if not operations:
                 logger.warning("No operations extracted from instruction")
-                result = ReconstructionResult(
+                
+                # Return minimal focused output for failed decomposition
+                reconstructor_output = ReconstructorOutput(
+                    deleted_or_replaced_text="",
+                    newly_inserted_text="",
+                    intermediate_after_state_text=original_law_article
+                )
+                
+                # Create detailed result for logging purposes
+                detailed_result = ReconstructionResult(
                     success=False,
                     final_text=original_law_article,
                     operations_applied=[],
@@ -324,6 +384,9 @@ class LegalAmendmentReconstructor:
                     validation_warnings=["No operations found in instruction"]
                 )
                 
+                # Store detailed result for pipeline access
+                self.last_detailed_result = detailed_result
+
                 # Log the failed reconstruction
                 self.log_reconstruction_details(
                     chunk_id=chunk_id,
@@ -331,19 +394,24 @@ class LegalAmendmentReconstructor:
                     original_law_article=original_law_article,
                     amendment_instruction=amendment_instruction,
                     operations=operations,
-                    result=result,
+                    result=detailed_result,
                     validation=validation,
                     step_by_step_states=step_by_step_states
                 )
                 
-                return result
+                # Cache failed result (temporarily disabled)
+                if self.use_cache and self.cache:
+                    logger.info("Cache setting temporarily disabled for chunk %s", chunk_id)
+                    # self.cache.set("legal_amendment_reconstructor_focused", cache_key_data, reconstructor_output)
+                
+                return reconstructor_output
             
-            logger.info("Decomposed into %d atomic operations", len(operations))
+
             
             # STEP 2: Apply operations sequentially with individual error isolation
-            logger.debug("Step 2: Applying operations sequentially")
+            logger.info("Step 2: Applying %d operations sequentially for chunk %s", len(operations), chunk_id)
             for i, operation in enumerate(operations, 1):
-                logger.debug("Applying operation %d/%d: %s", i, len(operations), operation.operation_type.value)
+                logger.info("Applying operation %d/%d: %s for chunk %s", i, len(operations), operation.operation_type.value, chunk_id)
                 
                 try:
                     # Apply single operation
@@ -353,21 +421,21 @@ class LegalAmendmentReconstructor:
                         current_text = result_op.modified_text
                         operations_applied.append(operation)
                         step_by_step_states.append(current_text)  # Save state after this operation
-                        logger.debug("Operation %d succeeded (confidence: %.2f)", i, result_op.confidence)
+                        logger.info("Operation %d succeeded (confidence: %.2f) for chunk %s", i, result_op.confidence, chunk_id)
                     else:
                         operations_failed.append((operation, result_op.error_message or "Unknown error"))
                         step_by_step_states.append(current_text)  # Save unchanged state
-                        logger.warning("Operation %d failed: %s", i, result_op.error_message)
+                        logger.warning("Operation %d failed: %s for chunk %s", i, result_op.error_message, chunk_id)
                         # Continue with next operation instead of aborting
                         
                 except Exception as e:
-                    logger.error("Exception during operation %d: %s", i, e)
+                    logger.error("Exception during operation %d for chunk %s: %s", i, chunk_id, e)
                     operations_failed.append((operation, f"Exception during application: {e}"))
                     step_by_step_states.append(current_text)  # Save unchanged state
                     # Continue processing remaining operations
             
             # STEP 3: Validate final result
-            logger.debug("Step 3: Validating final result")
+            logger.info("Step 3: Validating final result for chunk %s", chunk_id)
             try:
                 validation = self.validator.validate_legal_coherence(
                     original_text=original_law_article,
@@ -375,7 +443,7 @@ class LegalAmendmentReconstructor:
                     operations=operations_applied
                 )
             except Exception as e:
-                logger.error("Validation failed: %s", e)
+                logger.error("Validation failed for chunk %s: %s", chunk_id, e)
                 # Create minimal validation result to avoid blocking the pipeline
                 validation = ValidationResult(
                     validation_status="ERRORS",
@@ -391,8 +459,25 @@ class LegalAmendmentReconstructor:
             processing_time = int((time.time() - start_time) * 1000)
             success = len(operations_failed) == 0 and validation.validation_status != "ERRORS"
 
-            # Construct comprehensive result
-            result = ReconstructionResult(
+            # Extract focused output fragments from the 3-step process
+            deleted_or_replaced_text = self._extract_deleted_or_replaced_text(operations_applied, original_law_article)
+            newly_inserted_text = self._extract_newly_inserted_text(operations_applied)
+
+            # Construct focused output result
+            reconstructor_output = ReconstructorOutput(
+                deleted_or_replaced_text=deleted_or_replaced_text,
+                newly_inserted_text=newly_inserted_text,
+                intermediate_after_state_text=current_text
+            )
+
+            # Log final status
+            logger.info(
+                "Reconstruction completed - Success: %s, Applied: %d/%d operations, Validation: %s",
+                success, len(operations_applied), len(operations), validation.validation_status
+            )
+
+            # Create detailed result for logging purposes
+            detailed_result = ReconstructionResult(
                 success=success,
                 final_text=current_text,
                 operations_applied=operations_applied,
@@ -403,13 +488,8 @@ class LegalAmendmentReconstructor:
                 validation_warnings=self._extract_validation_warnings(validation)
             )
 
-            # Log final status
-            logger.info(
-                "Reconstruction completed - Success: %s, Applied: %d/%d operations, "
-                "Validation: %s (processing time: %dms)",
-                success, len(operations_applied), len(operations), 
-                validation.validation_status, processing_time
-            )
+            # Store detailed result for pipeline access
+            self.last_detailed_result = detailed_result
 
             # Log detailed reconstruction information to file
             self.log_reconstruction_details(
@@ -418,19 +498,31 @@ class LegalAmendmentReconstructor:
                 original_law_article=original_law_article,
                 amendment_instruction=amendment_instruction,
                 operations=operations,
-                result=result,
+                result=detailed_result,
                 validation=validation,
                 step_by_step_states=step_by_step_states
             )
 
-            return result
+            # Cache result if enabled (temporarily disabled)
+            if self.use_cache and self.cache:
+                logger.info("Cache setting temporarily disabled for chunk %s", chunk_id)
+                # self.cache.set("legal_amendment_reconstructor_focused", cache_key_data, reconstructor_output)
+
+            return reconstructor_output
 
         except Exception as e:
             processing_time = int((time.time() - start_time) * 1000)
             logger.error("Critical failure during amendment reconstruction: %s", e)
             
-            # Return failure result with diagnostic information
-            result = ReconstructionResult(
+            # Return minimal focused output for critical failure
+            reconstructor_output = ReconstructorOutput(
+                deleted_or_replaced_text="",
+                newly_inserted_text="",
+                intermediate_after_state_text=original_law_article
+            )
+            
+            # Create detailed result for logging purposes
+            detailed_result = ReconstructionResult(
                 success=False,
                 final_text=original_law_article,  # Return original text on critical failure
                 operations_applied=operations_applied,  # Include any operations that succeeded
@@ -441,6 +533,9 @@ class LegalAmendmentReconstructor:
                 validation_warnings=[f"System error prevented full processing: {e}"]
             )
             
+            # Store detailed result for pipeline access
+            self.last_detailed_result = detailed_result
+
             # Log the failed reconstruction
             self.log_reconstruction_details(
                 chunk_id=chunk_id,
@@ -448,12 +543,73 @@ class LegalAmendmentReconstructor:
                 original_law_article=original_law_article,
                 amendment_instruction=amendment_instruction,
                 operations=operations,
-                result=result,
+                result=detailed_result,
                 validation=validation,
                 step_by_step_states=step_by_step_states
             )
             
-            return result
+            # Cache failed result (temporarily disabled)
+            if self.use_cache and self.cache:
+                logger.info("Cache setting temporarily disabled for chunk %s", chunk_id)
+                # self.cache.set("legal_amendment_reconstructor_focused", cache_key_data, reconstructor_output)
+            
+            return reconstructor_output
+
+    def _extract_deleted_or_replaced_text(
+        self, 
+        operations_applied: List[AmendmentOperation], 
+        original_text: str
+    ) -> str:
+        """
+        Extract the exact text that was deleted or replaced from applied operations.
+        
+        Args:
+            operations_applied: List of successfully applied operations
+            original_text: Original article text for context
+            
+        Returns:
+            Concatenated text that was deleted or replaced
+        """
+        deleted_fragments = []
+        
+        for operation in operations_applied:
+            if operation.operation_type in [OperationType.DELETE, OperationType.REPLACE, OperationType.REWRITE]:
+                if operation.target_text:
+                    deleted_fragments.append(operation.target_text)
+            elif operation.operation_type == OperationType.ABROGATE:
+                # For ABROGATE operations, the deleted text is typically the entire original content
+                # or a significant portion based on the position hint
+                if operation.target_text:
+                    deleted_fragments.append(operation.target_text)
+                elif not deleted_fragments and original_text:
+                    # If no specific target text, but we have original text, include it
+                    deleted_fragments.append(original_text)
+        
+        return " ".join(deleted_fragments).strip()
+
+    def _extract_newly_inserted_text(self, operations_applied: List[AmendmentOperation]) -> str:
+        """
+        Extract the exact text that was newly inserted from applied operations.
+        
+        Args:
+            operations_applied: List of successfully applied operations
+            
+        Returns:
+            Concatenated text that was newly inserted (empty string for pure deletions)
+        """
+        inserted_fragments = []
+        
+        for operation in operations_applied:
+            if operation.operation_type in [
+                OperationType.INSERT, 
+                OperationType.ADD, 
+                OperationType.REPLACE, 
+                OperationType.REWRITE
+            ]:
+                if operation.replacement_text:
+                    inserted_fragments.append(operation.replacement_text)
+        
+        return " ".join(inserted_fragments).strip()
 
     def _extract_validation_warnings(self, validation: ValidationResult) -> List[str]:
         """Extract and consolidate validation warnings from the validation result."""
@@ -483,14 +639,14 @@ class LegalAmendmentReconstructor:
 
     def set_log_file_path(self, log_file_path: str):
         """
-        Set a new log file path and reinitialize the log file.
+        Set a new log file path and mark for lazy initialization.
         
         Args:
             log_file_path: New path for the detailed log file
         """
         self.log_file_path = Path(log_file_path)
-        self._initialize_log_file()
-        logger.info("Log file path updated to: %s", self.log_file_path)
+        self._log_file_initialized = False  # Reset initialization flag for new path
+
 
     def get_log_file_path(self) -> str:
         """
@@ -503,40 +659,33 @@ class LegalAmendmentReconstructor:
 
     def clear_all_caches(self) -> dict:
         """
-        Clear all caches across the 3-step pipeline.
+        Clear all cached Mistral API results.
 
         Returns:
-            Dictionary with cache clearing statistics for each component
+            Dictionary with cache clearing statistics
         """
-        if not self.use_cache:
+        if not self.use_cache or not self.cache:
             return {"message": "Caching is disabled"}
         
-        stats = {
-            "decomposer_cleared": self.decomposer.clear_cache(),
-            "applier_cleared": self.applier.clear_cache(),
-            "validator_cleared": self.validator.clear_cache()
+        # Clear all Mistral API cache entries
+        cleared_count = self.cache.clear()
+        
+        return {
+            "mistral_api_cache_cleared": cleared_count,
+            "message": f"Cleared {cleared_count} Mistral API cache entries"
         }
-        
-        total_cleared = sum(stats.values())
-        logger.info("Cleared %d total cache entries across all components", total_cleared)
-        
-        return stats
 
     def get_cache_stats(self) -> dict:
         """
-        Get comprehensive cache statistics for all components.
+        Get cache statistics for all Mistral API calls.
 
         Returns:
-            Dictionary with detailed cache statistics for the entire pipeline
+            Dictionary with cache statistics
         """
-        if not self.use_cache:
+        if not self.use_cache or not self.cache:
             return {"message": "Caching is disabled"}
         
-        return {
-            "decomposer": self.decomposer.get_cache_stats(),
-            "applier": self.applier.get_cache_stats(),
-            "validator": self.validator.get_cache_stats()
-        }
+        return self.cache.get_stats()
 
     def test_components(self) -> dict:
         """
@@ -547,7 +696,7 @@ class LegalAmendmentReconstructor:
         Returns:
             Dictionary with component test results
         """
-        logger.info("Testing LegalAmendmentReconstructor components")
+
         
         # Test data
         test_instruction = "les mots : « test » sont remplacés par les mots : « nouveau test »"
@@ -618,6 +767,50 @@ class LegalAmendmentReconstructor:
             "message": "All components healthy" if all_success else "Some components have issues"
         }
         
-        logger.info("Component testing completed - Overall health: %s", all_success)
+
         
-        return results 
+        return results
+
+    def reconstruct_text(
+        self,
+        original_law_article: str,
+        amendment_chunk: BillChunk
+    ) -> ReconstructorOutput:
+        """
+        Reconstruct legal text from a BillChunk and return focused output format.
+
+        Takes a BillChunk as input and returns the ReconstructorOutput format 
+        with separated text fragments.
+
+        Args:
+            original_law_article: The original legal article text
+            amendment_chunk: BillChunk containing the amendment instruction
+
+        Returns:
+            ReconstructorOutput with separated deleted/replaced text, newly inserted text,
+            and full intermediate state text
+
+        Raises:
+            ValueError: If inputs are invalid
+            RuntimeError: If critical system components fail
+        """
+        # Extract target article reference from the chunk
+        if amendment_chunk.target_article:
+            if amendment_chunk.target_article.code and amendment_chunk.target_article.article:
+                target_article_reference = f"{amendment_chunk.target_article.code}::{amendment_chunk.target_article.article}"
+            elif amendment_chunk.target_article.article:
+                target_article_reference = amendment_chunk.target_article.article
+            else:
+                target_article_reference = "unknown"
+        else:
+            target_article_reference = "unknown"
+        
+        # Use the 3-step architecture to generate focused output
+        return self.reconstruct_amendment(
+            original_law_article=original_law_article,
+            amendment_instruction=amendment_chunk.text,
+            target_article_reference=target_article_reference,
+            chunk_id=amendment_chunk.chunk_id
+        )
+
+ 

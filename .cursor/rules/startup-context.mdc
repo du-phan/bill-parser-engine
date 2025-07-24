@@ -3,3 +3,33 @@ description:
 globs:
 alwaysApply: false
 ---
+# Startup Context Rule
+
+At the start of every conversation or new chat session, always begin by carefully reading these foundational documents to understand the project context:
+
+## Core Specification
+Read [specs/normative_reference_resolver_detailed_spec.md](mdc:specs/normative_reference_resolver_detailed_spec.md) thoroughly to understand:
+- The overall system architecture and pipeline design
+- The "Lawyer's Mental Model" guiding principle
+- French legislative bill hierarchy structure
+- All 8 core component specifications and their interactions
+- The complete pipeline demonstration with real examples
+- Implementation strategies (LLM-based vs rule-based components)
+
+## Implementation Code
+Explore the implementation in [bill_parser_engine/](mdc:bill_parser_engine/) to understand:
+- Current implementation status of each component
+- Code structure and patterns used
+- Existing models and data structures
+- Integration points between components
+- Testing patterns and validation approaches
+
+## Key Context Points
+After reading these files, you should understand:
+1. **The Pipeline Flow**: BillSplitter → TargetArticleIdentifier → OriginalTextRetriever → TextReconstructor → ReferenceLocator → ReferenceObjectLinker → ResolutionOrchestrator → LegalStateSynthesizer
+2. **The Mental Model**: The system replicates how lawyers analyze legislative amendments - mechanically applying changes first, then resolving references in context
+3. **Reference Types**: DELETIONAL (from deleted text) vs DEFINITIONAL (from new text) and their different resolution contexts
+4. **Implementation Strategy**: Mix of rule-based parsing and LLM-powered semantic analysis
+5. **Current Status**: Which components are implemented vs planned
+
+This context is essential for providing accurate assistance with development, debugging, testing, or extending the normative reference resolver system.

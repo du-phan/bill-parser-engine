@@ -18,7 +18,7 @@ from mistralai import Mistral
 from bill_parser_engine.core.reference_resolver.models import BillChunk, TargetArticle, TargetOperationType
 from bill_parser_engine.core.reference_resolver.config import MISTRAL_MODEL
 from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache, get_cache
-from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
+from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter, call_mistral_with_messages
 from bill_parser_engine.core.reference_resolver.prompts import TARGET_ARTICLE_IDENTIFIER_SYSTEM_PROMPT
 
 
@@ -89,24 +89,23 @@ class TargetArticleIdentifier:
 
         try:
             # Use shared rate limiter with retry logic for 429 errors
-            def make_api_call():
-                return self.client.chat.complete(
-                    model=MISTRAL_MODEL,
-                    temperature=0.0,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": TARGET_ARTICLE_IDENTIFIER_SYSTEM_PROMPT
-                        },
-                        {
-                            "role": "user", 
-                            "content": user_prompt
-                        }
-                    ],
-                    response_format={"type": "json_object"}
-                )
-            
-            response = rate_limiter.execute_with_retry(make_api_call, "TargetArticleIdentifier")
+            response = call_mistral_with_messages(
+                client=self.client,
+                rate_limiter=rate_limiter,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": TARGET_ARTICLE_IDENTIFIER_SYSTEM_PROMPT
+                    },
+                    {
+                        "role": "user", 
+                        "content": user_prompt
+                    }
+                ],
+                component_name="TargetArticleIdentifier",
+                temperature=0.0,
+                response_format={"type": "json_object"}
+            )
             
             content = json.loads(response.choices[0].message.content)
             target_article = self._create_target_article(content)

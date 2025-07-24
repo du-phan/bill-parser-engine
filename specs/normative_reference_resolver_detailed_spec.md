@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The Normative Reference Resolver is a key component of the bill-parser-engine that processes legislative text, identifies normative references, resolves them recursively, and produces a fully interpretable, self-contained version of the text. The system leverages LLM agents for core processing tasks while maintaining a robust architecture for handling recursive references and ensuring performance.
+The Normative Reference Resolver is a key component of the bill-parser-engine that processes legislative text, identifies normative references, and resolves them through question-guided content extraction to produce a fully interpretable, self-contained version of the text. The system leverages LLM agents for core processing tasks while maintaining a robust architecture that focuses on targeted resolution rather than complex orchestration.
 
 ### 1.1 French Legislative Bill Hierarchy Structure
 
@@ -62,8 +62,8 @@ A lawyer's workflow, and the corresponding pipeline steps, would be:
 4. **Link References to Objects** (`ReferenceObjectLinker`):
    - For each DELETIONAL reference, use the original law as context to find the object (e.g., "activités").
    - For each DEFINITIONAL reference, use the new phrase as context to find the object (e.g., "producteurs", "la liste", etc.).
-5. **Resolve References** (`ResolutionOrchestrator`):
-   - Recursively fetch the content of each reference as needed.
+5. **Resolve References** (`ReferenceResolver`):
+   - Use question-guided extraction to fetch the specific content that answers questions about each referenced object.
 6. **Synthesize Final States** (`LegalStateSynthesizer`):
    - Substitute the resolved content into the original and new texts to produce the fully interpretable `BeforeState` and `AfterState`.
 
@@ -71,37 +71,36 @@ This example illustrates how the pipeline mirrors the lawyer's real-world workfl
 
 ## 2. System Architecture & Pipeline
 
-The system is designed as a multi-stage pipeline where a legislative bill is progressively enriched with metadata until a fully resolved, self-contained version of the text is produced. The `ResolutionOrchestrator` acts as the central stateful component, managing the recursive resolution process and leveraging other specialized, stateless components as tools.
+The system is designed as a multi-stage pipeline where a legislative bill is progressively enriched with metadata until a fully resolved, self-contained version of the text is produced. The `ReferenceResolver` performs focused, question-guided content extraction to provide precisely the information needed for accurate legal state synthesis.
 
 ### 2.1 Visual Pipeline
 
 ```mermaid
 graph TD
-    subgraph "Main Pipeline"
+    subgraph "Bill Processing Pipeline"
         InputText[Legislative Text] --> BillSplitter;
         BillSplitter --> TargetArticleIdentifier;
         TargetArticleIdentifier --> OriginalTextRetriever;
         OriginalTextRetriever --> TextReconstructor;
         TextReconstructor --> ReferenceLocator;
         ReferenceLocator --> ReferenceObjectLinker;
-        ReferenceObjectLinker --> ResolutionOrchestrator;
-        ResolutionOrchestrator --> LegalStateSynthesizer;
+        ReferenceObjectLinker --> ReferenceResolver;
+        ReferenceResolver --> LegalStateSynthesizer;
         LegalStateSynthesizer --> LegalAnalysisOutput{Legal Analysis Output};
     end
 
-    subgraph "Orchestrator Loop (for each Definitional & Deletional Reference)"
-        ResolutionOrchestrator -- "1. Assess" --> RelevanceAssessor;
-        RelevanceAssessor -- "Essential" --> ReferenceClassifier;
-        ReferenceClassifier -- "2. Classify" --> TextRetriever;
-        TextRetriever -- "3. Retrieve" --> RetrievedContent{Retrieved Text};
-        RetrievedContent -- "4. Locate Sub-References" --> RecursiveLocator[ReferenceLocator];
-        RecursiveLocator -- "5. Link Sub-References" --> RecursiveLinker[ReferenceObjectLinker];
-        RecursiveLinker -- "New Definitional Refs" --> ResolutionOrchestrator;
+    subgraph "ReferenceResolver Process"
+        ReferenceResolver -- "1. Content Retrieval" --> ContentRetrieval{Retrieve Source Content};
+        ContentRetrieval -- "DELETIONAL: Extract from Original" --> DELContent[Original Article Content];
+        ContentRetrieval -- "DEFINITIONAL: Fetch External" --> DEFContent[External Legal Content];
+        DELContent --> QuestionGuidedExtraction[Question-Guided Extraction];
+        DEFContent --> QuestionGuidedExtraction;
+        QuestionGuidedExtraction -- "2. Extract Answer" --> TargetedContent{Focused Content};
     end
 
     %% Styling
     classDef component fill:#f9f,stroke:#333,stroke-width:2px;
-    class BillSplitter,TargetArticleIdentifier,OriginalTextRetriever,TextReconstructor,ReferenceLocator,ReferenceObjectLinker,ResolutionOrchestrator,LegalStateSynthesizer,RelevanceAssessor,ReferenceClassifier,TextRetriever,RecursiveLocator,RecursiveLinker component;
+    class BillSplitter,TargetArticleIdentifier,OriginalTextRetriever,TextReconstructor,ReferenceLocator,ReferenceObjectLinker,ReferenceResolver,LegalStateSynthesizer component;
 ```
 
 ### 2.2 Processing Steps
@@ -113,7 +112,7 @@ graph TD
 5.  **Text Reconstruction (NEW)**: A new, rule-based `TextReconstructor` mechanically applies the amendment to the original text. It outputs two clean strings: the exact `DeletedOrReplacedText` and the `IntermediateAfterStateText` (the full text after the change, but before reference resolution).
 6.  **Reference Locating**: The `ReferenceLocator` scans _only_ the `DeletedOrReplacedText` and `IntermediateAfterStateText` to find all reference strings, tagging them as `DELETIONAL` or `DEFINITIONAL`. This completely replaces the need for a separate `ReferenceFunctionalAnalysis` step.
 7.  **Reference-Object Linking**: The `ReferenceObjectLinker` takes each located reference and uses the appropriate context (original text for `DELETIONAL`, intermediate "after" text for `DEFINITIONAL`) to link it to its grammatical object.
-8.  **Resolution Orchestration**: `ResolutionOrchestrator` recursively resolves all essential linked references.
+8.  **Question-Guided Resolution**: `ReferenceResolver` uses targeted extraction to resolve linked references based on specific questions about referenced objects.
 9.  **Legal State Synthesis**: `LegalStateSynthesizer` performs the final substitution, populating the original and intermediate texts with their resolved content to produce the final `BeforeState` and `AfterState`.
 10. **Output**: The `LegalAnalysisOutput` provides the two fully resolved legal states for comparison.
 
@@ -672,34 +671,65 @@ linker_tool = [
 
 **Testing and Validation**: This component, specifically, will be tested against the grammatical edge cases we identified (nested clauses, long-distance agreement, etc.).
 
-### 3.7 ResolutionOrchestrator
+### 3.7 ReferenceResolver
 
-**Component**: `ResolutionOrchestrator`
+**Component**: `ReferenceResolver`
 
-**Implementation**: Stateful orchestration component with internal LLM agents for relevance assessment and classification.
+**Implementation**: LLM-based question-guided content extraction using Mistral API.
 
-**Responsibility**: This is the stateful, central component that manages the entire recursive resolution process. It uses other components as stateless tools to process a queue of linked references, determine their relevance, handle recursion, and gracefully manage errors.
+**Responsibility**: To resolve linked references through targeted content extraction. This component performs a focused two-step process: (1) retrieve the full content that the reference points to using different strategies for DELETIONAL vs DEFINITIONAL references, and (2) extract the specific part that answers the resolution question about the referenced object.
 
 **Inputs**:
 
-- `linked_references` (list): The output from `ReferenceObjectLinker`, containing both DELETIONAL and DEFINITIONAL linked references.
+- `linked_references` (list): The output from `ReferenceObjectLinker`, containing both DELETIONAL and DEFINITIONAL linked references with their `resolution_question` fields.
+- `original_article` (string): The full text of the original law article (for DELETIONAL reference extraction).
 
 **Outputs**:
 
 - A `ResolutionResult` object containing:
-  - `resolved_deletional_references` (list): Fully resolved DELETIONAL references with their retrieved content.
-  - `resolved_definitional_references` (list): Fully resolved DEFINITIONAL references with their retrieved content.
-  - `resolution_tree` (nested object): Hierarchical structure showing the recursive resolution process.
-  - `unresolved_references` (list): References that could not be resolved due to errors or irrelevance.
+  - `resolved_deletional_references` (list): DELETIONAL references with focused content extracted from the original article.
+  - `resolved_definitional_references` (list): DEFINITIONAL references with focused content extracted from external sources.
+  - `resolution_metadata` (object): Processing information and any warnings.
+  - `unresolved_references` (list): References that could not be resolved due to errors.
 
-**Core Algorithm**:
+**Two-Step Process**:
 
-1.  **Initialization**: Receives the two lists of linked references (`DELETIONAL` and `DEFINITIONAL`). It pushes all of them onto a `resolution_stack`.
-2.  **Processing Loop**: While the `resolution_stack` is not empty, pop a linked reference.
-3.  **Relevance Assessment**: Use the internal `RelevanceAssessor` agent to determine if resolving the reference is essential.
-4.  **Resolution Step**: For essential references, call `ReferenceClassifier` and `TextRetriever`.
-5.  **Recursive Delegation**: On newly retrieved text, call `ReferenceLocator` and `ReferenceObjectLinker` to find and link any sub-references. Push new `DEFINITIONAL` sub-references onto the stack.
-6.  **Finalization**: Return the complete list of resolved references and their content, separated by their original types (DELETIONAL vs DEFINITIONAL).
+1.  **Content Retrieval**:
+
+    - **DELETIONAL references**: Extract content from the provided `original_article` text using pattern matching and context analysis.
+    - **DEFINITIONAL references**: Fetch external content using the existing `OriginalTextRetriever` component.
+
+2.  **Question-Guided Extraction**:
+    - Use the `resolution_question` field from each `LinkedReference` to extract only the relevant answer from the retrieved content.
+    - Example: For question "What is the definition of 'producteurs' according to paragraph 11 of article 3?", extract only the specific definition paragraph, not the entire regulation.
+
+**Example Processing**:
+
+```python
+# Input LinkedReference
+{
+  "reference_text": "du 11 de l'article 3 du règlement (CE) n° 1107/2009",
+  "object": "producteurs",
+  "resolution_question": "What is the definition of 'producteurs' according to paragraph 11 of article 3?"
+}
+
+# Step 1: Retrieve full EU Regulation 1107/2009, Article 3
+# Step 2: Extract only paragraph 11 content answering the question
+# Result: "toute personne physique ou morale qui fabrique..."
+```
+
+**API Strategy**:
+
+- Use Mistral Chat API in **JSON Mode** for the question-guided extraction step.
+- The LLM receives the full retrieved content and the specific question, then extracts only the relevant answer.
+- Different prompt strategies for DELETIONAL (pattern matching in structured legal text) vs DEFINITIONAL (definition extraction from regulations).
+
+**Benefits of Question-Guided Approach**:
+
+- **Accuracy**: Synthesis receives precisely relevant content instead of entire articles.
+- **Efficiency**: Dramatically reduced token usage in downstream components.
+- **Maintainability**: Clear separation between content retrieval and answer extraction.
+- **Scalability**: Works with complex regulations without overwhelming the synthesis step.
 
 ### 3.8 LegalStateSynthesizer
 
@@ -711,7 +741,7 @@ linker_tool = [
 
 **Inputs**:
 
-- `resolution_result` (ResolutionResult object): The complete output from `ResolutionOrchestrator`, containing resolved DELETIONAL and DEFINITIONAL references.
+- `resolution_result` (ResolutionResult object): The complete output from `ReferenceResolver`, containing resolved DELETIONAL and DEFINITIONAL references with focused, question-specific content.
 - `deleted_or_replaced_text` (string): The original text fragment that was deleted/replaced (from `TextReconstructor`).
 - `intermediate_after_state_text` (string): The text after amendment but before reference resolution (from `TextReconstructor`).
 
@@ -960,6 +990,7 @@ VI. – L'exercice de l'activité de conseil à l'utilisation des produits phyto
     "source": "DELETIONAL",
     "object": "activités",
     "agreement_analysis": "Feminine plural agreement with 'activités' mentioned before the reference",
+    "resolution_question": "What activities are mentioned in points 1° and 2° of section II?",
     "confidence": 0.95
   },
   {
@@ -967,6 +998,7 @@ VI. – L'exercice de l'activité de conseil à l'utilisation des produits phyto
     "source": "DEFINITIONAL",
     "object": "producteurs",
     "agreement_analysis": "Defines the sense/meaning of 'producteurs' mentioned earlier",
+    "resolution_question": "What is the definition of 'producteurs' according to paragraph 11 of article 3?",
     "confidence": 0.98
   },
   {
@@ -974,26 +1006,30 @@ VI. – L'exercice de l'activité de conseil à l'utilisation des produits phyto
     "source": "DEFINITIONAL",
     "object": "la liste",
     "agreement_analysis": "Feminine singular agreement with 'la liste' mentioned before",
+    "resolution_question": "What list is mentioned in article L. 253-5?",
     "confidence": 0.97
   }
 ]
 ```
 
-#### Step 7: ResolutionOrchestrator
+#### Step 7: ReferenceResolver
 
-**Input**: The linked references from Step 6.
+**Input**: The linked references from Step 6 (each containing a `resolution_question`).
 
 **Process**:
 
-1. **Relevance Assessment**: Determines that EU regulation references are essential for understanding "producteurs" definition, and that L. 253-5 is essential for understanding the biocontrol product list.
+1. **Content Retrieval**: Retrieves source content using different strategies:
 
-2. **Text Retrieval**: Fetches:
+   - **DELETIONAL references** ("aux 1° ou 2° du II", "au IV"): Extract from the original Article L. 254-1 text
+   - **DEFINITIONAL references**: Fetch external content using OriginalTextRetriever:
+     - Article 3, paragraph 11 of EU Regulation 1107/2009
+     - Article L. 253-5 of the rural code
+     - Articles 23 and 47 of EU Regulation 1107/2009
 
-   - Article 3, paragraph 11 of EU Regulation 1107/2009
-   - Article L. 253-5 of the rural code
-   - Articles 23 and 47 of EU Regulation 1107/2009
-
-3. **Recursive Resolution**: Finds no additional references needing resolution in the retrieved texts.
+2. **Question-Guided Extraction**: For each reference, use the `resolution_question` to extract only the relevant answer:
+   - Question: "What activities are mentioned in points 1° and 2° of section II?" → Extract specific activity definitions
+   - Question: "What is the definition of 'producteurs' according to paragraph 11 of article 3?" → Extract only the definition paragraph
+   - Question: "What list is mentioned in article L. 253-5?" → Extract the biocontrol product list description
 
 **Output**:
 
@@ -1033,10 +1069,11 @@ VI. – L'exercice de l'activité de conseil à l'utilisation des produits phyto
       "resolved_content": "un produit phytopharmaceutique qui ne contient que des substances actives à faible risque et qui présente un risque particulièrement faible"
     }
   ],
-  "resolution_tree": {
-    "depth": 1,
+  "resolution_metadata": {
     "total_references_resolved": 6,
-    "recursive_resolution_needed": false
+    "deletional_references_count": 2,
+    "definitional_references_count": 4,
+    "question_guided_extraction_used": true
   },
   "unresolved_references": []
 }
@@ -1076,25 +1113,25 @@ VI. – L'exercice de l'activité de conseil à l'utilisation des produits phyto
 
 2. **Context Preservation**: The DELETIONAL/DEFINITIONAL tagging successfully ensures references are resolved using the correct context (original law vs. amended text).
 
-3. **Recursive Handling**: The orchestrator demonstrates capability to handle complex nested references while maintaining traceability.
+3. **Question-Guided Resolution**: The resolver demonstrates efficient targeted extraction, providing only the relevant content needed to understand each referenced object.
 
 4. **Realistic Output Quality**: The final synthesis produces genuinely interpretable legal text that preserves the legal meaning while substituting all references.
 
 5. **Comprehensive Resolution**: The example demonstrates resolution of 6 different types of references (internal code references, EU regulation references, definition references) in a single amendment.
 
-6. **Reference Pattern Handling**: References like "au 3° du II de l'article L. 254-1" and "du 11 de l'article 3 du règlement (CE) n° 1107/2009" are **precise and structured**—the pipeline handles these correctly through recursive resolution. Even "du même règlement" references are resolvable with proper context tracking.
+6. **Reference Pattern Handling**: References like "au 3° du II de l'article L. 254-1" and "du 11 de l'article 3 du règlement (CE) n° 1107/2009" are **precise and structured**—the pipeline handles these correctly through question-guided resolution. Even "du même règlement" references are resolvable with proper context tracking.
 
 #### ⚠️ Remaining Challenges Identified:
 
 1. **Text Readability Management**: The synthesized "after_state" is very long and complex (300+ words for a single sentence). **Impact**: High - affects usability. **Mitigation**: Readability optimization will be handled by a dedicated downstream module, applied after the LegalStateSynthesizer produces fully resolved (reference-free) legal states. This allows for advanced formatting and summarization without impacting legal fidelity.
 
-2. **Performance Optimization**: With 6+ LLM calls per amendment (not due to reference complexity, but volume), processing time could be substantial. **Impact**: Medium - affects user experience. **Mitigation**: Implement static document caching (EU regulations, base codes), LLM response caching, and batching in the orchestrator.
+2. **Performance Optimization**: With 6+ LLM calls per amendment (not due to reference complexity, but volume), processing time could be substantial. **Impact**: Medium - affects user experience. **Mitigation**: Implement static document caching (EU regulations, base codes), LLM response caching, and batching in the resolver.
 
 3. **Error Propagation Risk**: Early misidentification in TargetArticleIdentifier or TextReconstructor could cascade through the entire pipeline. **Impact**: High - affects accuracy. **Mitigation**: Add confidence thresholds and validation at each step, with graceful degradation.
 
 #### 🔍 New Insights from Realistic Example:
 
-1. **Reference Complexity is Manageable**: Analysis of real legislative text shows that most references are **precise and structured** (e.g., "au 3° du II de l'article L. 254-1"), not ambiguous. The pipeline's recursive resolution architecture handles these effectively.
+1. **Reference Complexity is Manageable**: Analysis of real legislative text shows that most references are **precise and structured** (e.g., "au 3° du II de l'article L. 254-1"), not ambiguous. The pipeline's question-guided resolution approach handles these effectively without complex orchestration.
 
 2. **Synthesis Complexity is the Real Challenge**: The final synthesis step is more challenging than reference resolution - substituting 6 references while maintaining readability requires sophisticated language processing.
 

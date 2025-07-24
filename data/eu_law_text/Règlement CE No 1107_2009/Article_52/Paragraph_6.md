@@ -1,0 +1,3 @@
+# Article 52 - Paragraph_6
+
+6. Le permis de commerce parallèle est valable pendant la durée de l'autorisation du produit de référence. Si le titulaire de l'autorisation du produit de référence demande le retrait de l'autorisation en application de l'article 45, paragraphe 1, et si les exigences de l'article 29 sont toujours remplies, la validité du permis de commerce parallèle expire à la date à laquelle l'autorisation du produit de référence arriverait normalement à échéance.

@@ -1,21 +1,24 @@
 """
-OriginalTextRetriever: Fetch current legal text for target articles using pylegifrance API.
+OriginalTextRetriever: Fetch current legal text for target articles using multiple sources.
 
 This component retrieves the current legal text of target articles identified by 
 TargetArticleIdentifier. This is critical because reference objects may only be visible 
 in the original law, not in the amendment text.
 
 Features:
-- Primary: pylegifrance API with proper error handling
+- Primary: pylegifrance API with proper error handling (for French codes)
+- EU Legal Texts: Local files from /data/eu_law_text/ with LLM extraction
 - Hierarchical fallback: L. 118-1-2 → try L. 118-1 and extract subsection 2 using LLM
 - Caching: Uses standardized cache_manager.py for efficiency
 - INSERT handling: Return empty string for INSERT operations
 """
 
 import os
+import re
 import logging
 import json
-from typing import Tuple, Dict, Optional
+from typing import Tuple, Dict, Optional, List
+from pathlib import Path
 
 from pylegifrance import recherche_code
 from pylegifrance.models.constants import CodeNom
@@ -27,43 +30,52 @@ except ImportError:
 
 from .models import TargetArticle, TargetOperationType
 from .cache_manager import SimpleCache, get_cache
+from .rate_limiter import RateLimiter, get_rate_limiter, call_mistral_with_messages
+from .prompts import (
+    EU_LEGAL_TEXT_SUBSECTION_EXTRACTION_SYSTEM_PROMPT,
+    FRENCH_LEGAL_TEXT_SUBSECTION_EXTRACTION_SYSTEM_PROMPT
+)
 
 logger = logging.getLogger(__name__)
 
 
 class OriginalTextRetriever:
     """
-    Fetches the current/existing text of target articles identified by TargetArticleIdentifier.
+    Fetches the current/existing text of target articles from multiple sources:
+    1. French legal codes via pylegifrance API
+    2. EU legal texts from local files (/data/eu_law_text/)
     
     This is critical because reference objects may only be visible in the original law,
     not in the amendment text. Without this context, the ReferenceObjectLinker cannot
     properly identify what concepts/objects the references in deleted text refer to.
     
-    Features hierarchical fallback: if L. 118-1-2 is not found, tries L. 118-1 and then
-    uses LLM to extract the specific subsection 2 from the parent article text.
+    Features hierarchical fallback and LLM-based extraction for both sources.
     """
     
-    def __init__(self, cache: Optional[SimpleCache] = None, use_cache: bool = True):
+    def __init__(self, cache: Optional[SimpleCache] = None, use_cache: bool = True, 
+                 rate_limiter: Optional[RateLimiter] = None):
         """
         Initialize the retriever with caching configuration.
         
         Args:
             cache: Cache instance for storing intermediate results (uses global if None)
             use_cache: Whether to use caching (useful to disable when iterating)
+            rate_limiter: Rate limiter for LLM calls (uses global if None)
         """
         self.cache = cache or get_cache()
         self.use_cache = use_cache
+        self.rate_limiter = rate_limiter or get_rate_limiter()
         
-        # Initialize Mistral client for hierarchical fallback
+        # Initialize Mistral client for LLM extraction
         api_key = os.getenv('MISTRAL_API_KEY')
         if api_key and Mistral:
             self.mistral_client = Mistral(api_key=api_key)
         else:
             self.mistral_client = None
             if not api_key:
-                logger.warning("MISTRAL_API_KEY not found - hierarchical fallback with LLM will be disabled")
+                logger.warning("MISTRAL_API_KEY not found - LLM extraction will be disabled")
             if not Mistral:
-                logger.warning("mistralai package not available - hierarchical fallback with LLM will be disabled")
+                logger.warning("mistralai package not available - LLM extraction will be disabled")
         
         # Code name mapping for pylegifrance
         self.code_name_mapping = {
@@ -87,21 +99,34 @@ class OriginalTextRetriever:
             "code de procédure civile": CodeNom.CPRCIV,
             "code de procédure pénale": CodeNom.CPP,
         }
+        
+        # EU legal text directory mapping
+        self.eu_text_base_path = Path("data/eu_law_text")
+        self.eu_regulation_patterns = {
+            r"règlement\s*\(ce\)\s*n[°o]\s*1107/2009": "Règlement CE No 1107_2009",
+            # Add more regulations as needed
+        }
+        self.eu_directive_patterns = {
+            r"directive\s*2009/128/ce": "Directive 2009_128_CE",
+            r"directive\s*2010/75/ue": "Directive 2010_75_UE", 
+            r"directive\s*2011/92/ue": "Directive 2011_92_UE",
+            # Add more directives as needed
+        }
     
     def fetch_article_text(self, code: str, article: str) -> Tuple[str, Dict]:
         """
         Fetch the full text of a target article with proper segmentation.
         
-        Implements hierarchical fallback: if L. 118-1-2 is not found,
-        tries L. 118-1 and then uses LLM to extract subsection 2.
+        Automatically detects source type (French code vs EU legal text) and uses
+        appropriate retrieval method. Implements hierarchical fallback and LLM extraction.
         
         Args:
-            code: The legal code name (e.g., "code rural et de la pêche maritime")
-            article: The article identifier (e.g., "L. 254-1", "L. 118-1-2")
+            code: The legal code/regulation name (e.g., "code rural", "règlement (CE) n° 1107/2009")
+            article: The article identifier (e.g., "L. 254-1", "article 3", "11 de l'article 3")
             
         Returns:
             Tuple of (article_text, retrieval_metadata)
-            - article_text: Full text with hierarchy (I, II, 1°, 2°, etc.) or empty string
+            - article_text: Full text with hierarchy or specific excerpt
             - retrieval_metadata: Contains retrieval status, source, and any error information
         """
         if not code or not article:
@@ -111,7 +136,8 @@ class OriginalTextRetriever:
         if self.use_cache:
             cache_key_data = {
                 'code': code,
-                'article': article
+                'article': article,
+                'method': 'fetch_article_text'
             }
             
             cached_result = self.cache.get("original_text_retriever", cache_key_data)
@@ -121,19 +147,300 @@ class OriginalTextRetriever:
         
         logger.info(f"→ Fetching article {article} from {code}")
         
+        # Detect if this is an EU legal text reference
+        if self._is_eu_legal_reference(code):
+            result_text, metadata = self._fetch_eu_legal_text(code, article)
+        else:
+            # Use pylegifrance for French codes
+            result_text, metadata = self._fetch_french_code_text(code, article)
+        
+        # Cache successful results (if enabled)
+        if self.use_cache and metadata.get("success", False):
+            cache_key_data = {
+                'code': code,
+                'article': article,
+                'method': 'fetch_article_text'
+            }
+            self.cache.set("original_text_retriever", cache_key_data, result_text)
+            logger.info(f"✓ Cached article {article} for future use")
+        
+        return result_text, metadata
+    
+    def fetch_article_for_target(self, target_article: TargetArticle) -> Tuple[str, Dict]:
+        """
+        Convenience method to fetch article text using a TargetArticle object.
+        
+        Args:
+            target_article: TargetArticle object from TargetArticleIdentifier
+            
+        Returns:
+            Tuple of (article_text, retrieval_metadata)
+        """
+        # Handle INSERT operations - return empty text
+        if target_article.operation_type == TargetOperationType.INSERT:
+            logger.info(f"INSERT operation for {target_article.article} - returning empty text")
+            return "", {"source": "insert_operation", "success": True, "note": "Empty text for INSERT operation"}
+        
+        if not target_article.code or not target_article.article:
+            return "", {"source": "none", "success": False, "error": "Missing code or article in TargetArticle"}
+        
+        return self.fetch_article_text(target_article.code, target_article.article)
+    
+    def _is_eu_legal_reference(self, code: str) -> bool:
+        """
+        Check if a code reference refers to EU legal text.
+        
+        Args:
+            code: The legal code name
+            
+        Returns:
+            True if this is an EU regulation or directive
+        """
+        code_lower = code.lower().strip()
+        
+        # Check regulation patterns
+        for pattern in self.eu_regulation_patterns:
+            if re.search(pattern, code_lower, re.IGNORECASE):
+                return True
+        
+        # Check directive patterns  
+        for pattern in self.eu_directive_patterns:
+            if re.search(pattern, code_lower, re.IGNORECASE):
+                return True
+                
+        return False
+    
+    def _get_eu_directory_name(self, code: str) -> Optional[str]:
+        """
+        Get the directory name for an EU legal text reference.
+        
+        Args:
+            code: The legal code name
+            
+        Returns:
+            Directory name or None if not found
+        """
+        code_lower = code.lower().strip()
+        
+        # Check regulation patterns
+        for pattern, directory in self.eu_regulation_patterns.items():
+            if re.search(pattern, code_lower, re.IGNORECASE):
+                return directory
+        
+        # Check directive patterns
+        for pattern, directory in self.eu_directive_patterns.items():
+            if re.search(pattern, code_lower, re.IGNORECASE):
+                return directory
+                
+        return None
+    
+    def _fetch_eu_legal_text(self, code: str, article: str) -> Tuple[str, Dict]:
+        """
+        Fetch EU legal text from local files.
+        
+        Args:
+            code: EU regulation/directive reference
+            article: Article reference (e.g., "article 3", "11 de l'article 3")
+            
+        Returns:
+            Tuple of (article_text, retrieval_metadata)
+        """
+        directory_name = self._get_eu_directory_name(code)
+        if not directory_name:
+            return "", {"source": "eu_legal_text", "success": False, "error": f"Unknown EU legal text: {code}"}
+        
+        eu_dir_path = self.eu_text_base_path / directory_name
+        if not eu_dir_path.exists():
+            return "", {"source": "eu_legal_text", "success": False, "error": f"EU directory not found: {eu_dir_path}"}
+        
+        # Parse article reference
+        article_info = self._parse_eu_article_reference(article)
+        if not article_info:
+            return "", {"source": "eu_legal_text", "success": False, "error": f"Cannot parse article reference: {article}"}
+        
+        # Find and read the article file
+        article_content = self._read_eu_article_file(eu_dir_path, article_info)
+        if not article_content:
+            return "", {"source": "eu_legal_text", "success": False, "error": f"Article file not found: {article_info}"}
+        
+        # Extract specific content if needed
+        if article_info.get("specific_part"):
+            extracted_content = self._extract_eu_article_part(article_content, article_info, article)
+            if extracted_content:
+                logger.info(f"✓ Retrieved EU article {article} with specific part extraction")
+                return extracted_content, {
+                    "source": "eu_legal_text", 
+                    "success": True,
+                    "directory": directory_name,
+                    "article_info": article_info,
+                    "extraction_method": "llm"
+                }
+            else:
+                logger.warning(f"Failed to extract specific part from EU article {article}")
+                # Fall back to full article content
+        
+        logger.info(f"✓ Retrieved EU article {article} (full content)")
+        return article_content, {
+            "source": "eu_legal_text", 
+            "success": True,
+            "directory": directory_name,
+            "article_info": article_info,
+            "extraction_method": "full"
+        }
+    
+    def _parse_eu_article_reference(self, article: str) -> Optional[Dict]:
+        """
+        Parse EU article reference into components.
+        
+        Args:
+            article: Article reference (e.g., "article 3", "11 de l'article 3", "article 47")
+            
+        Returns:
+            Dict with article info or None if cannot parse
+        """
+        article_lower = article.lower().strip()
+        
+        # Pattern: "11 de l'article 3" -> article 3, point 11
+        match = re.search(r"(\d+)\s+de\s+l['\"]?article\s+(\d+)", article_lower)
+        if match:
+            point_num = match.group(1)
+            article_num = match.group(2)
+            return {
+                "article_number": article_num,
+                "specific_part": point_num,
+                "part_type": "point"
+            }
+        
+        # Pattern: "article 3" -> article 3, full content
+        match = re.search(r"article\s+(\d+)", article_lower)
+        if match:
+            article_num = match.group(1)
+            return {
+                "article_number": article_num,
+                "specific_part": None,
+                "part_type": None
+            }
+        
+        # Pattern: just number "3" -> article 3
+        if article.strip().isdigit():
+            return {
+                "article_number": article.strip(),
+                "specific_part": None,
+                "part_type": None
+            }
+        
+        return None
+    
+    def _read_eu_article_file(self, eu_dir_path: Path, article_info: Dict) -> Optional[str]:
+        """
+        Read the EU article file content.
+        
+        Args:
+            eu_dir_path: Path to EU legal text directory
+            article_info: Parsed article information
+            
+        Returns:
+            Article content or None if not found
+        """
+        article_num = article_info["article_number"]
+        
+        # Try article directory with overview.md first
+        article_dir = eu_dir_path / f"Article_{article_num}"
+        if article_dir.exists():
+            overview_file = article_dir / "overview.md"
+            if overview_file.exists():
+                try:
+                    return overview_file.read_text(encoding='utf-8')
+                except Exception as e:
+                    logger.warning(f"Error reading {overview_file}: {e}")
+        
+        # Try direct article file
+        article_file = eu_dir_path / f"Article_{article_num}.md"
+        if article_file.exists():
+            try:
+                return article_file.read_text(encoding='utf-8')
+            except Exception as e:
+                logger.warning(f"Error reading {article_file}: {e}")
+        
+        # Try alternative naming (lowercase)
+        article_file = eu_dir_path / f"article_{article_num}.md"
+        if article_file.exists():
+            try:
+                return article_file.read_text(encoding='utf-8')
+            except Exception as e:
+                logger.warning(f"Error reading {article_file}: {e}")
+        
+        return None
+    
+    def _extract_eu_article_part(self, article_content: str, article_info: Dict, original_ref: str) -> Optional[str]:
+        """
+        Use LLM to extract a specific part from EU article content.
+        
+        Args:
+            article_content: Full article content
+            article_info: Parsed article information
+            original_ref: Original article reference
+            
+        Returns:
+            Extracted content or None if extraction failed
+        """
+        if not self.mistral_client:
+            logger.warning("Mistral client not available for EU article part extraction")
+            return None
+        
+        specific_part = article_info["specific_part"]
+        part_type = article_info["part_type"]
+        
+        system_prompt = EU_LEGAL_TEXT_SUBSECTION_EXTRACTION_SYSTEM_PROMPT
+
+        user_message = f"""Extrayez la partie "{specific_part}" ({part_type}) de ce texte d'article juridique européen :
+
+Référence originale recherchée : {original_ref}
+Texte de l'article :
+{article_content}
+
+Trouvez et extrayez le contenu complet de la partie "{specific_part}"."""
+
+        try:
+            response = call_mistral_with_messages(
+                client=self.mistral_client,
+                rate_limiter=self.rate_limiter,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                component_name="OriginalTextRetriever-EU",
+                temperature=0.0,
+                response_format={"type": "json_object"}
+            )
+            result = json.loads(response.choices[0].message.content)
+            
+            if result.get("found", False) and result.get("content"):
+                logger.info(f"✓ LLM extracted EU article part {specific_part}: {result.get('explanation', '')}")
+                return result["content"]
+            else:
+                logger.warning(f"LLM could not find EU article part {specific_part}: {result.get('explanation', 'Unknown reason')}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"LLM EU article part extraction failed: {e}")
+            return None
+    
+    def _fetch_french_code_text(self, code: str, article: str) -> Tuple[str, Dict]:
+        """
+        Fetch French legal code text using pylegifrance API with hierarchical fallback.
+        
+        Args:
+            code: French legal code name
+            article: Article identifier
+            
+        Returns:
+            Tuple of (article_text, retrieval_metadata)
+        """
         # Try pylegifrance API for the full article first
         try:
             content = self._call_pylegifrance_api(code, article)
             if content:
-                # Cache the successful result (if enabled)
-                if self.use_cache:
-                    cache_key_data = {
-                        'code': code,
-                        'article': article
-                    }
-                    self.cache.set("original_text_retriever", cache_key_data, content)
-                    logger.info(f"✓ Cached article {article} for future use")
-                
                 logger.info(f"✓ Retrieved article {article} from pylegifrance")
                 return content, {"source": "pylegifrance", "success": True}
         except Exception as e:
@@ -153,15 +460,6 @@ class OriginalTextRetriever:
                     # Use LLM to extract the specific subsection
                     subsection_content = self._extract_subsection_with_llm(parent_content, subsection, article)
                     if subsection_content:
-                        # Cache the successful result (if enabled)
-                        if self.use_cache:
-                            cache_key_data = {
-                                'code': code,
-                                'article': article
-                            }
-                            self.cache.set("original_text_retriever", cache_key_data, subsection_content)
-                            logger.info(f"✓ Cached hierarchical result for {article}")
-                        
                         logger.info(f"✓ Retrieved {article} via hierarchical fallback")
                         return subsection_content, {
                             "source": "hierarchical_fallback", 
@@ -187,27 +485,7 @@ class OriginalTextRetriever:
         # All methods failed
         logger.error(f"Could not retrieve article {article} from {code}")
         return "", {"source": "none", "success": False, "error": "All retrieval methods failed"}
-    
-    def fetch_article_for_target(self, target_article: TargetArticle) -> Tuple[str, Dict]:
-        """
-        Convenience method to fetch article text using a TargetArticle object.
-        
-        Args:
-            target_article: TargetArticle object from TargetArticleIdentifier
-            
-        Returns:
-            Tuple of (article_text, retrieval_metadata)
-        """
-        # Handle INSERT operations - return empty text
-        if target_article.operation_type == TargetOperationType.INSERT:
-            logger.info(f"INSERT operation for {target_article.article} - returning empty text")
-            return "", {"source": "insert_operation", "success": True, "note": "Empty text for INSERT operation"}
-        
-        if not target_article.code or not target_article.article:
-            return "", {"source": "none", "success": False, "error": "Missing code or article in TargetArticle"}
-        
-        return self.fetch_article_text(target_article.code, target_article.article)
-    
+
     def _should_try_hierarchical_fallback(self, article: str) -> bool:
         """
         Check if an article should have hierarchical fallback attempted.
@@ -260,27 +538,7 @@ class OriginalTextRetriever:
             logger.warning("Mistral client not available for subsection extraction")
             return None
         
-        system_prompt = f"""Vous êtes un spécialiste de l'extraction de textes juridiques. Étant donné un texte d'article juridique français et un identifiant de sous-section, extrayez le contenu spécifique de la sous-section.
-
-Votre tâche :
-1. Trouvez la sous-section identifiée par "{subsection}" dans le texte juridique fourni
-2. Extrayez le contenu complet de cette sous-section
-3. Retournez uniquement le contenu de cette sous-section spécifique
-
-L'identifiant de sous-section "{subsection}" peut apparaître comme :
-- Un numéro autonome : "{subsection}"
-- Avec le symbole degré : "{subsection}°"
-- Dans un format de liste numérotée
-- Comme partie d'une structure hiérarchique
-
-Retournez un objet JSON avec :
-- "found": booléen (true si la sous-section a été trouvée)
-- "content": chaîne (le contenu extrait de la sous-section, ou chaîne vide si non trouvée)
-- "explanation": chaîne (brève explication de ce qui a été trouvé ou pourquoi cela a échoué)
-
-Exemple :
-Si vous cherchez la sous-section "2" dans un texte contenant "1° Premier élément... 2° Contenu du deuxième élément ici... 3° Troisième élément...", 
-retournez {{"found": true, "content": "2° Contenu du deuxième élément ici", "explanation": "Sous-section 2 trouvée comme point numéroté"}}"""
+        system_prompt = FRENCH_LEGAL_TEXT_SUBSECTION_EXTRACTION_SYSTEM_PROMPT
 
         user_message = f"""Extrayez la sous-section "{subsection}" de ce texte d'article juridique :
 
@@ -291,16 +549,17 @@ Texte de l'article parent :
 Trouvez et extrayez le contenu complet de la sous-section "{subsection}"."""
 
         try:
-            response = self.mistral_client.chat.complete(
-                model="mistral-large-latest",
-                temperature=0.0,
+            response = call_mistral_with_messages(
+                client=self.mistral_client,
+                rate_limiter=self.rate_limiter,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
+                component_name="OriginalTextRetriever-French",
+                temperature=0.0,
                 response_format={"type": "json_object"}
             )
-            
             result = json.loads(response.choices[0].message.content)
             
             if result.get("found", False) and result.get("content"):

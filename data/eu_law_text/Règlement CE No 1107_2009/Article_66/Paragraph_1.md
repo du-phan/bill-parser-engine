@@ -1,0 +1,3 @@
+# Article 66 - Paragraph_1
+
+1. Les produits phytopharmaceutiques non autorisés ne font pas l'objet de publicité. Toute publicité pour un produit phytopharmaceutique doit être accompagnée des phrases «Utilisez les produits phytopharmaceutiques avec précaution. Avant toute utilisation, lisez l'étiquette et les informations concernant le produit». Ces phrases sont aisément lisibles et doivent se distinguer clairement de l'ensemble de la publicité. Les mots «produits phytopharmaceutiques» peuvent être remplacés par une description plus précise du type de produit, tel que fongicide, insecticide ou herbicide.

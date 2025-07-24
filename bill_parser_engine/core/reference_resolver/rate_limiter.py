@@ -8,8 +8,17 @@ and causing API rate limit errors.
 import time
 import threading
 import random
-from typing import Optional, Callable, Any
+import json
+from typing import Optional, Callable, Any, Dict, List
 import logging
+
+try:
+    from mistralai import Mistral
+except ImportError:
+    Mistral = None
+
+# Mistral model configuration
+MISTRAL_MODEL = "magistral-medium-2506"
 
 logger = logging.getLogger(__name__)
 
@@ -142,4 +151,129 @@ class SharedRateLimiter:
 
 
 # Global instance for easy access
-rate_limiter = SharedRateLimiter() 
+rate_limiter = SharedRateLimiter()
+
+# Alias for backward compatibility
+RateLimiter = SharedRateLimiter
+
+def get_rate_limiter() -> SharedRateLimiter:
+    """
+    Get the global shared rate limiter instance.
+    
+    Returns:
+        The global SharedRateLimiter instance
+    """
+    return rate_limiter
+
+
+def call_mistral_json_model(
+    client: Mistral,
+    rate_limiter: SharedRateLimiter,
+    system_prompt: str,
+    user_payload: Dict[str, Any],
+    component_name: str,
+    temperature: float = 0.0,
+) -> Optional[Dict[str, Any]]:
+    """
+    Calls the Mistral API with a JSON response format, handling boilerplate.
+
+    Args:
+        client: The Mistral instance.
+        rate_limiter: The shared rate limiter.
+        system_prompt: The system prompt for the LLM.
+        user_payload: A dictionary to be JSON-stringified for the user message.
+        component_name: The name of the calling component (for logging).
+        temperature: The temperature for the API call.
+
+    Returns:
+        The parsed JSON dictionary from the response, or None on failure.
+    """
+    if not client:
+        logger.error("Mistral client not initialized. Cannot make API call.")
+        return None
+
+    try:
+        user_message = json.dumps(user_payload)
+
+        def llm_call():
+            return client.chat.complete(
+                model=MISTRAL_MODEL,
+                temperature=temperature,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message},
+                ],
+                response_format={"type": "json_object"},
+            )
+
+        response = rate_limiter.execute_with_retry(llm_call, component_name)
+
+        if response and response.choices:
+            content = response.choices[0].message.content
+            return json.loads(content)
+
+    except Exception as e:
+        logger.error(
+            f"Error during LLM call for component '{component_name}': {e}",
+            exc_info=True,
+        )
+
+    return None
+
+
+def call_mistral_with_messages(
+    client: Mistral,
+    rate_limiter: SharedRateLimiter,
+    messages: List[Dict[str, str]],
+    component_name: str,
+    temperature: float = 0.0,
+    response_format: Optional[Dict[str, str]] = None,
+    tools: Optional[List[Dict]] = None,
+    tool_choice: Optional[str] = None,
+) -> Optional[Any]:
+    """
+    Calls the Mistral API with a list of messages, handling boilerplate and rate limiting.
+
+    Args:
+        client: The Mistral instance.
+        rate_limiter: The shared rate limiter.
+        messages: List of message dictionaries with 'role' and 'content' keys.
+        component_name: The name of the calling component (for logging).
+        temperature: The temperature for the API call.
+        response_format: Optional response format specification.
+        tools: Optional tools schema for function calling.
+        tool_choice: Optional tool choice specification.
+
+    Returns:
+        The raw Mistral response, or None on failure.
+    """
+    if not client:
+        logger.error("Mistral client not initialized. Cannot make API call.")
+        return None
+
+    try:
+        def llm_call():
+            kwargs = {
+                "model": MISTRAL_MODEL,
+                "temperature": temperature,
+                "messages": messages,
+            }
+            
+            if response_format:
+                kwargs["response_format"] = response_format
+            if tools:
+                kwargs["tools"] = tools
+            if tool_choice:
+                kwargs["tool_choice"] = tool_choice
+                
+            return client.chat.complete(**kwargs)
+
+        return rate_limiter.execute_with_retry(llm_call, component_name)
+
+    except Exception as e:
+        logger.error(
+            f"Error during LLM call for component '{component_name}': {e}",
+            exc_info=True,
+        )
+
+    return None 

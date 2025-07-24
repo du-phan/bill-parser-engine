@@ -16,7 +16,7 @@ from mistralai import Mistral
 from bill_parser_engine.core.reference_resolver.models import AmendmentOperation, OperationType
 from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache
 from bill_parser_engine.core.reference_resolver.prompts import INSTRUCTION_DECOMPOSER_SYSTEM_PROMPT
-from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
+from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter, call_mistral_with_messages
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +69,9 @@ class InstructionDecomposer:
         logger.info("Parsing amendment instruction: %.200s...", amendment_instruction)
         
         # Check cache first
-        cache_key = f"instruction_decomposer_{hash(amendment_instruction)}"
         if self.use_cache:
-            cached_result = self.cache.get("instruction_decomposer", cache_key)
+            cache_key_data = {'amendment_instruction': amendment_instruction}
+            cached_result = self.cache.get("instruction_decomposer", cache_key_data)
             if cached_result is not None:
                 logger.debug("Found cached decomposition result")
                 return self._deserialize_operations(cached_result)
@@ -83,18 +83,17 @@ class InstructionDecomposer:
             system_prompt = self._build_system_prompt()
             user_message = self._build_user_message(amendment_instruction)
             
-            def make_api_call():
-                return self.client.chat.complete(
-                    model="mistral-large-latest",
-                    temperature=0.0,  # Deterministic parsing
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_message}
-                    ],
-                    response_format={"type": "json_object"}
-                )
-            
-            response = rate_limiter.execute_with_retry(make_api_call, "InstructionDecomposer")
+            response = call_mistral_with_messages(
+                client=self.client,
+                rate_limiter=rate_limiter,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                component_name="InstructionDecomposer",
+                temperature=0.0,  # Deterministic parsing
+                response_format={"type": "json_object"}
+            )
             
             # Parse response
             response_content = response.choices[0].message.content
@@ -104,12 +103,12 @@ class InstructionDecomposer:
             operations = self._parse_response(result_data, amendment_instruction)
             
             processing_time = int((time.time() - start_time) * 1000)
-            logger.info("Decomposed into %d operations (processing time: %dms)", len(operations), processing_time)
+            logger.info("Decomposed into %d operations", len(operations))
             
             # Cache result
             if self.use_cache:
                 serialized_operations = self._serialize_operations(operations)
-                self.cache.set("instruction_decomposer", cache_key, serialized_operations)
+                self.cache.set("instruction_decomposer", cache_key_data, serialized_operations)
             
             return operations
 

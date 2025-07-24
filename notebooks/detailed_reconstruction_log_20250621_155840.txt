@@ -1,0 +1,3012 @@
+================================================================================
+COMPREHENSIVE PIPELINE CHUNK TRACES
+================================================================================
+Generated at: 2025-06-21T16:09:52.081161
+Total chunks traced: 21
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::1°
+--------------------------------------------------------------------------------
+Text Preview: 1° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 1°
+Initialized: 2025-06-21T15:58:40.655568
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655582
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "1°"
+    ],
+    "start_pos": 566,
+    "end_pos": 581,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.666714
+  Success: True
+  Processing Duration Seconds: 0.001252889633178711
+  Input Params: {
+    "chunk_text": "1° (Supprimé)",
+    "chunk_text_length": 13,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "1°"
+    ],
+    "inherited_target_article": null
+}
+  Output Result: {
+    "operation_type": "OTHER",
+    "code": null,
+    "article": null,
+    "full_citation": null
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::2°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) (nouveau) Au 3° du II, les mots : « prévu aux articles L. 254-6-2 et L. 254-6-3 » sont remplacés ...
+Text Length: 170 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 2° > a)
+Initialized: 2025-06-21T15:58:40.655587
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655593
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) (nouveau) Au 3° du II, les mots : « prévu aux articles L. 254-6-2 et L. 254-6-3 » sont remplacés par les mots : « à l'utilisation des produits phytopharmaceutiques » ;",
+    "chunk_text_length": 170,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 254-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "a)"
+    ],
+    "start_pos": 624,
+    "end_pos": 800,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.667639
+  Success: True
+  Processing Duration Seconds: 0.0009052753448486328
+  Input Params: {
+    "chunk_text": "a) (nouveau) Au 3° du II, les mots : « prévu aux articles L. 254-6-2 et L. 254-6-3 » sont remplacés par les mots : « à l'utilisation des produits phytopharmaceutiques » ;",
+    "chunk_text_length": 170,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "a)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.727397
+  Success: True
+  Processing Duration Seconds: 0.0012738704681396484
+  Input Params: {
+    "chunk_text": "a) (nouveau) Au 3° du II, les mots : « prévu aux articles L. 254-6-2 et L. 254-6-3 » sont remplacés par les mots : « à l'utilisation des produits phytopharmaceutiques » ;",
+    "chunk_text_length": 170,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "a)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1",
+    "original_text_length": 3185,
+    "original_text_preview": "I.-Les produits phytopharmaceutiques mentionnés au présent chapitre sont ceux définis au 1 de l'arti..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Les produits phytopharmaceutiques mentionnés au présent chapitre sont ceux définis au 1 de l'article 2 du règlement (CE) n° 1107/2009. II.-Est subordonné à la détention d'un agrément l'exercice des activités suivantes : 1° La mise en vente, la vente ou la distribution à titre gratuit des produits phytopharmaceutiques aux utilisateurs de ces produits ou aux personnes physiques ou morales agissant pour leur compte, y compris les groupements d'achats ; 2° L'application, en qualité de prestataire de services, des produits phytopharmaceutiques, sauf si elle est effectuée dans le cadre de contrats d'entraide à titre gratuit au sens de l'article L. 325-1 ou par un exploitant agricole titulaire du certificat mentionné au II de l'article L. 254-3 sur des exploitations dont la surface agricole utile est inférieure ou égale à la surface définie en application du premier alinéa du V de l'article L. 732-39 , ou si les produits appliqués sont des produits de biocontrôle définis à l'article L. 253-6 et ne faisant pas l'objet d'une classification mentionnée à l'article L. 253-4 ou si ces produits sont des produits à faible risque au sens de l'article 47 du règlement (CE) n° 1107/2009 du 21 octobre 2009 ou s'ils sont uniquement composés de substances de base au sens de l'article 23 du même règlement. 3° Le conseil à l'utilisation des produits phytopharmaceutiques, lorsque cette activité s'exerce à titre professionnel. III.-Lorsque l'agrément est délivré à une personne morale, il l'est pour l'activité de l'ensemble de ses établissements ainsi que, si elle en fait la demande, pour l'activité d'établissements d'autres personnes morales au sein desquelles elle détient une participation financière, ou au bénéfice desquelles elle gère des services communs. Pour l'application du présent chapitre l'ensemble des établissements pour lesquels une entreprise sollicite un agrément sont regardés comme ses établissements. IV.-Les personnes qui mettent des produits phytopharmaceutiques sur le marché autres que celles exerçant les activités mentionnées au 1° du II justifient de l'obtention d'un certificat attestant qu'elles ont acquis les connaissances appropriées à leurs rôle et responsabilités ou de l'emploi d'une personne détenant ce certificat. V.-Les détenteurs de l'agrément mentionné au II, les personnes mentionnées au IV du présent article et les personnes physiques mentionnées au II de l'article L. 254-3 doivent concourir, dans le cadre de leurs activités, à la réalisation des objectifs du plan d'action national prévu à l'article L. 253-6, notamment par la mise en œuvre de la lutte intégrée contre les ennemis des cultures. VI.-L'exercice de l'activité de conseil mentionnée au 3° du II est incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV. Toutefois, cette incompatibilité ne fait pas obstacle à ce que les personnes exerçant les activités mentionnées au 1° du II délivrent les informations énumérées au premier alinéa de l'article L. 254-7, ni à ce qu'elles promeuvent, mettent en place ou facilitent la mise en œuvre des actions tendant à la réduction de l'utilisation de produits phytopharmaceutiques prévues à l'article L. 254-10-1 .",
+    "final_text_length": 3191,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 1
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.773629
+  Success: True
+  Processing Duration Seconds: 0.0013909339904785156
+  Located References Count: 1
+  Deletional References Count: 1
+  Definitional References Count: 0
+  Focused Scanning Performance: {
+    "delta_characters_processed": 92,
+    "full_article_characters": 3191,
+    "performance_gain_multiplier": 34.68478260869565,
+    "efficiency_improvement_percent": 3368.478260869565
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:42.633533
+  Success: True
+  Processing Duration Seconds: 1.7875890731811523
+  Input Located References Count: 1
+  Output Linked References Count: 1
+  Deletional References Count: 1
+  Definitional References Count: 0
+  Context Switching Info: {
+    "original_law_article_length": 3185,
+    "intermediate_after_state_text_length": 3191,
+    "article_key": "code rural et de la pêche maritime::L. 254-1"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::2°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le VI est ainsi modifié : à la fin de la première phrase, les mots : « incompatible avec celui de...
+Text Length: 748 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 2° > b)
+Initialized: 2025-06-21T15:58:40.655596
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655600
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le VI est ainsi modifié : à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique » ; la seconde phrase est supprimée ;",
+    "chunk_text_length": 748,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 254-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "b)"
+    ],
+    "start_pos": 800,
+    "end_pos": 1568,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.668176
+  Success: True
+  Processing Duration Seconds: 0.0005178451538085938
+  Input Params: {
+    "chunk_text": "b) Le VI est ainsi modifié : à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique » ; la seconde phrase est supprimée ;",
+    "chunk_text_length": 748,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "b)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.728447
+  Success: True
+  Processing Duration Seconds: 0.00101470947265625
+  Input Params: {
+    "chunk_text": "b) Le VI est ainsi modifié : à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique » ; la seconde phrase est supprimée ;",
+    "chunk_text_length": 748,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "b)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1",
+    "original_text_length": 3185,
+    "original_text_preview": "I.-Les produits phytopharmaceutiques mentionnés au présent chapitre sont ceux définis au 1 de l'arti..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Les produits phytopharmaceutiques mentionnés au présent chapitre sont ceux définis au 1 de l'article 2 du règlement (CE) n° 1107/2009. II.-Est subordonné à la détention d'un agrément l'exercice des activités suivantes : 1° La mise en vente, la vente ou la distribution à titre gratuit des produits phytopharmaceutiques aux utilisateurs de ces produits ou aux personnes physiques ou morales agissant pour leur compte, y compris les groupements d'achats ; 2° L'application, en qualité de prestataire de services, des produits phytopharmaceutiques, sauf si elle est effectuée dans le cadre de contrats d'entraide à titre gratuit au sens de l'article L. 325-1 ou par un exploitant agricole titulaire du certificat mentionné au II de l'article L. 254-3 sur des exploitations dont la surface agricole utile est inférieure ou égale à la surface définie en application du premier alinéa du V de l'article L. 732-39 , ou si les produits appliqués sont des produits de biocontrôle définis à l'article L. 253-6 et ne faisant pas l'objet d'une classification mentionnée à l'article L. 253-4 ou si ces produits sont des produits à faible risque au sens de l'article 47 du règlement (CE) n° 1107/2009 du 21 octobre 2009 ou s'ils sont uniquement composés de substances de base au sens de l'article 23 du même règlement. 3° Le conseil prévu aux articles L. 254-6-2 et L. 254-6-3, lorsque cette activité s'exerce à titre professionnel. III.-Lorsque l'agrément est délivré à une personne morale, il l'est pour l'activité de l'ensemble de ses établissements ainsi que, si elle en fait la demande, pour l'activité d'établissements d'autres personnes morales au sein desquelles elle détient une participation financière, ou au bénéfice desquelles elle gère des services communs. Pour l'application du présent chapitre l'ensemble des établissements pour lesquels une entreprise sollicite un agrément sont regardés comme ses établissements. IV.-Les personnes qui mettent des produits phytopharmaceutiques sur le marché autres que celles exerçant les activités mentionnées au 1° du II justifient de l'obtention d'un certificat attestant qu'elles ont acquis les connaissances appropriées à leurs rôle et responsabilités ou de l'emploi d'une personne détenant ce certificat. V.-Les détenteurs de l'agrément mentionné au II, les personnes mentionnées au IV du présent article et les personnes physiques mentionnées au II de l'article L. 254-3 doivent concourir, dans le cadre de leurs activités, à la réalisation des objectifs du plan d'action national prévu à l'article L. 253-6, notamment par la mise en œuvre de la lutte intégrée contre les ennemis des cultures. VI.-L'exercice de l'activité de conseil mentionnée au 3° du II est interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique.",
+    "final_text_length": 3234,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 1
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.774861
+  Success: True
+  Processing Duration Seconds: 0.0007600784301757812
+  Located References Count: 8
+  Deletional References Count: 4
+  Definitional References Count: 4
+  Focused Scanning Performance: {
+    "delta_characters_processed": 1000,
+    "full_article_characters": 3234,
+    "performance_gain_multiplier": 3.234,
+    "efficiency_improvement_percent": 223.4
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:59:31.787792
+  Success: True
+  Processing Duration Seconds: 49.15373396873474
+  Input Located References Count: 8
+  Output Linked References Count: 8
+  Deletional References Count: 4
+  Definitional References Count: 4
+  Context Switching Info: {
+    "original_law_article_length": 3185,
+    "intermediate_after_state_text_length": 3234,
+    "article_key": "code rural et de la pêche maritime::L. 254-1"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3°
+--------------------------------------------------------------------------------
+Text Preview: 3° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3°
+Initialized: 2025-06-21T15:58:40.655602
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655606
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "3° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3°"
+    ],
+    "start_pos": 1570,
+    "end_pos": 1585,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.668216
+  Success: True
+  Processing Duration Seconds: 2.4080276489257812e-05
+  Input Params: {
+    "chunk_text": "3° (Supprimé)",
+    "chunk_text_length": 13,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3°"
+    ],
+    "inherited_target_article": null
+}
+  Output Result: {
+    "operation_type": "OTHER",
+    "code": null,
+    "article": null,
+    "full_citation": null
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° bis::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le I est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV...
+Text Length: 874 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° bis > a)
+Initialized: 2025-06-21T15:58:40.655608
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655612
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le I est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ; au 3°, les mots : « mentionnée, d'une part, au 3° du II de l'article L. 254-1 et, d'autre part, aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « , d'une part, mentionnée au 3° du II de l'article L. 254-1 et, d'autre part, de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 874,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "a)"
+    ],
+    "start_pos": 1644,
+    "end_pos": 2548,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.668718
+  Success: True
+  Processing Duration Seconds: 0.0004909038543701172
+  Input Params: {
+    "chunk_text": "a) Le I est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ; au 3°, les mots : « mentionnée, d'une part, au 3° du II de l'article L. 254-1 et, d'autre part, aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « , d'une part, mentionnée au 3° du II de l'article L. 254-1 et, d'autre part, de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 874,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "a)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.729289
+  Success: True
+  Processing Duration Seconds: 0.0008151531219482422
+  Input Params: {
+    "chunk_text": "a) Le I est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ; au 3°, les mots : « mentionnée, d'une part, au 3° du II de l'article L. 254-1 et, d'autre part, aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « , d'une part, mentionnée au 3° du II de l'article L. 254-1 et, d'autre part, de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 874,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "a)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1-1",
+    "original_text_length": 1464,
+    "original_text_preview": "I.-Ne peut excéder 10 % : 1° La part du capital d'une personne morale exerçant une activité mentionn..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Ne peut excéder 10 % : 1° La part du capital d'une personne morale exerçant une activité mentionnée au 3° du II de l'article L. 254-1 détenue, directement ou indirectement, par une personne exerçant une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 ; 2° La part du capital d'une personne morale exerçant une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 détenue, directement ou indirectement, par une personne exerçant une activité mentionnée au 3° du II de l'article L. 254-1 ; 3° La part détenue, directement ou indirectement, dans le capital des personnes morales exerçant une activité , d'une part, mentionnée au 3° du II de l'article L. 254-1 et, d'autre part, de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009, par un actionnaire ou associé commun, sans que celui-ci puisse être actionnaire majoritaire ou de référence. II.-Ne peut excéder 32 % : 1° La part cumulée du capital d'une personne morale exerçant une activité mentionnée au 3° du II de l'article L. 254-1 détenue, directement ou indirectement, par des personnes exerçant une activité mentionnée aux 1° ou 2° du même II ou au IV du même article ; 2° La part cumulée du capital d'une personne morale exerçant une activité mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 détenue, directement ou indirectement, par des personnes exerçant une activité mentionnée au 3° de ce II. III.-Les seuils mentionnés aux I et II s'appliquent également aux droits de vote.",
+    "final_text_length": 1536,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.775951
+  Success: True
+  Processing Duration Seconds: 0.0007836818695068359
+  Located References Count: 7
+  Deletional References Count: 4
+  Definitional References Count: 3
+  Focused Scanning Performance: {
+    "delta_characters_processed": 586,
+    "full_article_characters": 1536,
+    "performance_gain_multiplier": 2.621160409556314,
+    "efficiency_improvement_percent": 162.11604095563138
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:59:56.361919
+  Success: True
+  Processing Duration Seconds: 24.57360577583313
+  Input Located References Count: 7
+  Output Linked References Count: 7
+  Deletional References Count: 4
+  Definitional References Count: 3
+  Context Switching Info: {
+    "original_law_article_length": 1464,
+    "intermediate_after_state_text_length": 1536,
+    "article_key": "code rural et de la pêche maritime::L. 254-1-1"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° bis::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le II est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au I...
+Text Length: 522 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° bis > b)
+Initialized: 2025-06-21T15:58:40.655624
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655634
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le II est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 522,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "b)"
+    ],
+    "start_pos": 2548,
+    "end_pos": 3090,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.669039
+  Success: True
+  Processing Duration Seconds: 0.00030612945556640625
+  Input Params: {
+    "chunk_text": "b) Le II est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 522,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "b)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.730025
+  Success: True
+  Processing Duration Seconds: 0.0007150173187255859
+  Input Params: {
+    "chunk_text": "b) Le II est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 522,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "b)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1-1",
+    "original_text_length": 1464,
+    "original_text_preview": "I.-Ne peut excéder 10 % : 1° La part du capital d'une personne morale exerçant une activité mentionn..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Ne peut excéder 10 % : 1° La part du capital d'une personne morale exerçant une activité mentionnée au 3° du II de l'article L. 254-1 détenue, directement ou indirectement, par une personne exerçant une activité mentionnée aux 1° ou 2° du même II ou au IV du même article ; 2° La part du capital d'une personne morale exerçant une activité mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 détenue, directement ou indirectement, par une personne exerçant une activité mentionnée au 3° de ce II ; 3° La part détenue, directement ou indirectement, dans le capital des personnes morales exerçant une activité mentionnée, d'une part, au 3° du II de l'article L. 254-1 et, d'autre part, aux 1° ou 2° du même II ou au IV du même article, par un actionnaire ou associé commun, sans que celui-ci puisse être actionnaire majoritaire ou de référence. II.-Ne peut excéder 32 % : 1° La part cumulée du capital d'une personne morale exerçant une activité mentionnée au 3° du II de l'article L. 254-1 détenue, directement ou indirectement, par des personnes exerçant une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 ; 2° La part cumulée du capital d'une personne morale exerçant une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 détenue, directement ou indirectement, par des personnes exerçant une activité mentionnée au 3° du II de l'article L. 254-1. III.-Les seuils mentionnés aux I et II s'appliquent également aux droits de vote.",
+    "final_text_length": 1510,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.777185
+  Success: True
+  Processing Duration Seconds: 0.0009610652923583984
+  Located References Count: 7
+  Deletional References Count: 5
+  Definitional References Count: 2
+  Focused Scanning Performance: {
+    "delta_characters_processed": 308,
+    "full_article_characters": 1510,
+    "performance_gain_multiplier": 4.902597402597403,
+    "efficiency_improvement_percent": 390.2597402597403
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:00:16.742646
+  Success: True
+  Processing Duration Seconds: 20.379822731018066
+  Input Located References Count: 7
+  Output Linked References Count: 7
+  Deletional References Count: 5
+  Definitional References Count: 2
+  Context Switching Info: {
+    "original_law_article_length": 1464,
+    "intermediate_after_state_text_length": 1510,
+    "article_key": "code rural et de la pêche maritime::L. 254-1-1"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° ter::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le premier alinéa est ainsi modifié : les mots : « mentionnée aux 1° ou 2° du même II ou au IV du...
+Text Length: 489 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° ter > a)
+Initialized: 2025-06-21T15:58:40.655636
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655640
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; les mots : « mentionnée aux 1° ou 2° de ce II ou à ce IV de ce même article » sont remplacés par les mots : « de producteur au sens du même 11 » ; à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 489,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-2 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "a)"
+    ],
+    "start_pos": 3151,
+    "end_pos": 3670,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.669433
+  Success: True
+  Processing Duration Seconds: 0.0003788471221923828
+  Input Params: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; les mots : « mentionnée aux 1° ou 2° de ce II ou à ce IV de ce même article » sont remplacés par les mots : « de producteur au sens du même 11 » ; à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 489,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "a)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1-2",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1-2"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.730944
+  Success: True
+  Processing Duration Seconds: 0.0008950233459472656
+  Input Params: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; les mots : « mentionnée aux 1° ou 2° de ce II ou à ce IV de ce même article » sont remplacés par les mots : « de producteur au sens du même 11 » ; à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 489,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "a)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1-2",
+    "original_text_length": 1224,
+    "original_text_preview": "Un membre d'un organe de surveillance, d'administration et de direction d'une personne morale exerça..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "Un membre d'un organe de surveillance, d'administration et de direction d'une personne morale exerçant une activité mentionnée au 3° du II de l'article L. 254-1 ne peut être membre d'un de ces mêmes organes d'une personne morale exerçant une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 et un membre d'un organe de surveillance, d'administration et de direction d'une personne morale exerçant une activité de producteur au sens du même 11 du II de l'article L. 254-1 ne peut être membre d'un de ces mêmes organes d'une personne morale exerçant une activité mentionnée au 3° du II de l'article L. 254-1. Toutefois, une personne membre d'un organe de surveillance, d'administration ou de direction d'une personne morale exerçant une activité mentionnée aux 1° ou 2° du II de l'article L. 254-1 peut détenir, dans un établissement mentionné à l' article L. 510-1 bénéficiant d'un agrément pour les activités mentionnées au 3° du II de l'article L. 254-1, un mandat de président, de membre du bureau ou de membre du conseil d'administration de Chambres d'agriculture France. Cette personne ne participe ni aux travaux ni aux délibérations concernant l'activité de conseil à l'utilisation de produits phytopharmaceutiques.",
+    "final_text_length": 1274,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.778279
+  Success: True
+  Processing Duration Seconds: 0.0007948875427246094
+  Located References Count: 8
+  Deletional References Count: 5
+  Definitional References Count: 3
+  Focused Scanning Performance: {
+    "delta_characters_processed": 288,
+    "full_article_characters": 1274,
+    "performance_gain_multiplier": 4.423611111111111,
+    "efficiency_improvement_percent": 342.3611111111111
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:01:18.286292
+  Success: True
+  Processing Duration Seconds: 61.54258990287781
+  Input Located References Count: 8
+  Output Linked References Count: 8
+  Deletional References Count: 5
+  Definitional References Count: 3
+  Context Switching Info: {
+    "original_law_article_length": 1224,
+    "intermediate_after_state_text_length": 1274,
+    "article_key": "code rural et de la pêche maritime::L. 254-1-2"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° ter::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le second alinéa est supprimé ;
+Text Length: 34 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° ter > b)
+Initialized: 2025-06-21T15:58:40.655643
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655646
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le second alinéa est supprimé ;",
+    "chunk_text_length": 34,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-2 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "b)"
+    ],
+    "start_pos": 3670,
+    "end_pos": 3708,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.669776
+  Success: True
+  Processing Duration Seconds: 0.0003311634063720703
+  Input Params: {
+    "chunk_text": "b) Le second alinéa est supprimé ;",
+    "chunk_text_length": 34,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "b)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1-2",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1-2"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.731659
+  Success: True
+  Processing Duration Seconds: 0.0006892681121826172
+  Input Params: {
+    "chunk_text": "b) Le second alinéa est supprimé ;",
+    "chunk_text_length": 34,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "b)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1-2",
+    "original_text_length": 1224,
+    "original_text_preview": "Un membre d'un organe de surveillance, d'administration et de direction d'une personne morale exerça..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "Un membre d'un organe de surveillance, d'administration et de direction d'une personne morale exerçant une activité mentionnée au 3° du II de l'article L. 254-1 ne peut être membre d'un de ces mêmes organes d'une personne morale exerçant une activité mentionnée aux 1° ou 2° du même II ou au IV du même article et un membre d'un organe de surveillance, d'administration et de direction d'une personne morale exerçant une activité mentionnée aux 1° ou 2° de ce II ou à ce IV de ce même article ne peut être membre d'un de ces mêmes organes d'une personne morale exerçant une activité mentionnée au 3° de ce II.",
+    "final_text_length": 609,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.779327
+  Success: True
+  Processing Duration Seconds: 0.0007631778717041016
+  Located References Count: 3
+  Deletional References Count: 3
+  Definitional References Count: 0
+  Focused Scanning Performance: {
+    "delta_characters_processed": 614,
+    "full_article_characters": 609,
+    "performance_gain_multiplier": 0.99185667752443,
+    "efficiency_improvement_percent": 0
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:01:28.828308
+  Success: True
+  Processing Duration Seconds: 10.54116702079773
+  Input Located References Count: 3
+  Output Linked References Count: 3
+  Deletional References Count: 3
+  Definitional References Count: 0
+  Context Switching Info: {
+    "original_law_article_length": 1224,
+    "intermediate_after_state_text_length": 609,
+    "article_key": "code rural et de la pêche maritime::L. 254-1-2"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° quater::a)
+--------------------------------------------------------------------------------
+Text Preview: a) À la fin du I, les mots : « mentionnée aux 1° ou 2° du même II ou au IV de ce même article » sont...
+Text Length: 224 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° quater > a)
+Initialized: 2025-06-21T15:58:40.655648
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655652
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) À la fin du I, les mots : « mentionnée aux 1° ou 2° du même II ou au IV de ce même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ;",
+    "chunk_text_length": 224,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° quater",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-3 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "a)"
+    ],
+    "start_pos": 3772,
+    "end_pos": 4002,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.670076
+  Success: True
+  Processing Duration Seconds: 0.00029015541076660156
+  Input Params: {
+    "chunk_text": "a) À la fin du I, les mots : « mentionnée aux 1° ou 2° du même II ou au IV de ce même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ;",
+    "chunk_text_length": 224,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "a)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1-3",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1-3"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.732328
+  Success: True
+  Processing Duration Seconds: 0.0006470680236816406
+  Input Params: {
+    "chunk_text": "a) À la fin du I, les mots : « mentionnée aux 1° ou 2° du même II ou au IV de ce même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ;",
+    "chunk_text_length": 224,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "a)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1-3",
+    "original_text_length": 416,
+    "original_text_preview": "I.-Une personne physique exerçant une activité mentionnée au 3° du II de l'article L. 254-1 ne peut ..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Une personne physique exerçant une activité mentionnée au 3° du II de l'article L. 254-1 ne peut être également employée par une personne exerçant une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009. II.-L'activité mentionnée au 3° du II de l'article L. 254-1 ne peut pas être rémunérée par des personnes exerçant les activités mentionnées aux 1° ou 2° du même II ou au IV du même article.",
+    "final_text_length": 446,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.780224
+  Success: True
+  Processing Duration Seconds: 0.0006499290466308594
+  Located References Count: 2
+  Deletional References Count: 1
+  Definitional References Count: 1
+  Focused Scanning Performance: {
+    "delta_characters_processed": 154,
+    "full_article_characters": 446,
+    "performance_gain_multiplier": 2.896103896103896,
+    "efficiency_improvement_percent": 189.6103896103896
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:01:35.702924
+  Success: True
+  Processing Duration Seconds: 6.874149799346924
+  Input Located References Count: 2
+  Output Linked References Count: 2
+  Deletional References Count: 1
+  Definitional References Count: 1
+  Context Switching Info: {
+    "original_law_article_length": 416,
+    "intermediate_after_state_text_length": 446,
+    "article_key": "code rural et de la pêche maritime::L. 254-1-3"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° quater::b)
+--------------------------------------------------------------------------------
+Text Preview: b) À la fin du II, les mots : « les activités mentionnées aux 1° ou 2° du même II ou au IV du même a...
+Text Length: 231 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° quater > b)
+Initialized: 2025-06-21T15:58:40.655654
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655657
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) À la fin du II, les mots : « les activités mentionnées aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 231,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° quater",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-3 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "b)"
+    ],
+    "start_pos": 4002,
+    "end_pos": 4237,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.670356
+  Success: True
+  Processing Duration Seconds: 0.000270843505859375
+  Input Params: {
+    "chunk_text": "b) À la fin du II, les mots : « les activités mentionnées aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 231,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "b)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-1-3",
+    "full_citation": "code rural et de la pêche maritime::L. 254-1-3"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.733145
+  Success: True
+  Processing Duration Seconds: 0.0007548332214355469
+  Input Params: {
+    "chunk_text": "b) À la fin du II, les mots : « les activités mentionnées aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 231,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "b)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-1-3",
+    "original_text_length": 416,
+    "original_text_preview": "I.-Une personne physique exerçant une activité mentionnée au 3° du II de l'article L. 254-1 ne peut ..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Une personne physique exerçant une activité mentionnée au 3° du II de l'article L. 254-1 ne peut être également employée par une personne exerçant une activité mentionnée aux 1° ou 2° du même II ou au IV de ce même article. II.-L'activité mentionnée au 3° du II de l'article L. 254-1 ne peut pas être rémunérée par des personnes exerçant une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009.",
+    "final_text_length": 428,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.781164
+  Success: True
+  Processing Duration Seconds: 0.0006411075592041016
+  Located References Count: 3
+  Deletional References Count: 2
+  Definitional References Count: 1
+  Focused Scanning Performance: {
+    "delta_characters_processed": 160,
+    "full_article_characters": 428,
+    "performance_gain_multiplier": 2.675,
+    "efficiency_improvement_percent": 167.49999999999997
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:02:20.336203
+  Success: True
+  Processing Duration Seconds: 44.632858991622925
+  Input Located References Count: 3
+  Output Linked References Count: 3
+  Deletional References Count: 2
+  Definitional References Count: 1
+  Context Switching Info: {
+    "original_law_article_length": 416,
+    "intermediate_after_state_text_length": 428,
+    "article_key": "code rural et de la pêche maritime::L. 254-1-3"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::4°
+--------------------------------------------------------------------------------
+Text Preview: 4° Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 2...
+Text Length: 176 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 4°
+Initialized: 2025-06-21T15:58:40.655659
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655662
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "4° Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 254-1 » sont remplacés par les mots : « au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 176,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "4°",
+    "numbered_point_introductory_phrase": "Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 254-1 » sont remplacés par les mots : « au 1° du II de l'article L. 254-1 » ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "4°"
+    ],
+    "start_pos": 4239,
+    "end_pos": 4417,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.670648
+  Success: True
+  Processing Duration Seconds: 0.0002830028533935547
+  Input Params: {
+    "chunk_text": "4° Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 254-1 » sont remplacés par les mots : « au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 176,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "4°"
+    ],
+    "inherited_target_article": null
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-2",
+    "full_citation": "code rural et de la pêche maritime::L. 254-2"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.734254
+  Success: True
+  Processing Duration Seconds: 0.0010769367218017578
+  Input Params: {
+    "chunk_text": "4° Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 254-1 » sont remplacés par les mots : « au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 176,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "4°"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-2"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-2",
+    "original_text_length": 1744,
+    "original_text_preview": "I.-L'agrément est délivré par l'autorité administrative à toute personne physique ou morale qui en f..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-L'agrément est délivré par l'autorité administrative à toute personne physique ou morale qui en fait la demande et qui justifie : 1° De la souscription d'une police d'assurance couvrant sa responsabilité civile professionnelle ; 2° De la certification par un organisme tiers, reconnu par l'autorité administrative, qu'elle exerce son activité dans des conditions garantissant la protection de la santé publique et de l'environnement ainsi que la bonne information de l'utilisateur et qu'elle respecte les dispositions des articles L. 254-1-1 à L. 254-1-3 ; 3° De la conclusion avec un organisme tiers, reconnu par l'autorité administrative, d'un contrat prévoyant le suivi nécessaire au maintien de la certification. Pour les personnes agréées au titre des activités mentionnées au 1° du II de l'article L. 254-1 , la certification mentionnée au 2° garantit qu'elles ont mis en œuvre les moyens nécessaires pour satisfaire aux obligations mentionnées à l'article L. 254-10-1 . Pour les personnes agréées au titre des activités mentionnées au 3° du II de l'article L. 254-1, la certification mentionnée au 2° garantit leur contribution effective, dans les conditions prévues à l'article L. 254-6-4, aux objectifs du plan mentionné à l'article L. 253-6 et au dispositif des certificats d'économie des produits phytopharmaceutiques prévu à l'article L. 254-10. II.-Les personnes qui débutent leur activité sollicitent un agrément provisoire pour son exercice. Cet agrément provisoire est délivré par l'autorité administrative, pour une durée de six mois non renouvelable, si le demandeur justifie du respect des conditions prévues aux 1° et 3° du I et de l'obtention de l'avis favorable d'un organisme tiers tel que mentionné au 2° du I.",
+    "final_text_length": 1737,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 1
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.782168
+  Success: True
+  Processing Duration Seconds: 0.0006830692291259766
+  Located References Count: 2
+  Deletional References Count: 1
+  Definitional References Count: 1
+  Focused Scanning Performance: {
+    "delta_characters_processed": 73,
+    "full_article_characters": 1737,
+    "performance_gain_multiplier": 23.794520547945204,
+    "efficiency_improvement_percent": 2279.4520547945203
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:02:26.890947
+  Success: True
+  Processing Duration Seconds: 6.554069995880127
+  Input Located References Count: 2
+  Output Linked References Count: 2
+  Deletional References Count: 1
+  Definitional References Count: 1
+  Context Switching Info: {
+    "original_law_article_length": 1744,
+    "intermediate_after_state_text_length": 1737,
+    "article_key": "code rural et de la pêche maritime::L. 254-2"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5°
+--------------------------------------------------------------------------------
+Text Preview: 5° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5°
+Initialized: 2025-06-21T15:58:40.655664
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655668
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "5° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5°"
+    ],
+    "start_pos": 4417,
+    "end_pos": 4432,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.670672
+  Success: True
+  Processing Duration Seconds: 1.5974044799804688e-05
+  Input Params: {
+    "chunk_text": "5° (Supprimé)",
+    "chunk_text_length": 13,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5°"
+    ],
+    "inherited_target_article": null
+}
+  Output Result: {
+    "operation_type": "OTHER",
+    "code": null,
+    "article": null,
+    "full_citation": null
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5° bis
+--------------------------------------------------------------------------------
+Text Preview: 5° bis (nouveau) Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;
+Text Length: 69 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5° bis
+Initialized: 2025-06-21T15:58:40.655670
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655673
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "5° bis (nouveau) Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;",
+    "chunk_text_length": 69,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5° bis",
+    "numbered_point_introductory_phrase": "Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° bis"
+    ],
+    "start_pos": 4432,
+    "end_pos": 4503,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-2"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.670948
+  Success: True
+  Processing Duration Seconds: 0.0002701282501220703
+  Input Params: {
+    "chunk_text": "5° bis (nouveau) Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;",
+    "chunk_text_length": 69,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° bis"
+    ],
+    "inherited_target_article": {
+        "operation_type": "ABROGATE",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-2"
+    }
+}
+  Output Result: {
+    "operation_type": "ABROGATE",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-6-2",
+    "full_citation": "code rural et de la pêche maritime::L. 254-6-2"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.735064
+  Success: True
+  Processing Duration Seconds: 0.0007889270782470703
+  Input Params: {
+    "chunk_text": "5° bis (nouveau) Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;",
+    "chunk_text_length": 69,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° bis"
+    ],
+    "target_article": {
+        "operation_type": "ABROGATE",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-2"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-6-2",
+    "original_text_length": 3321,
+    "original_text_preview": "I.-Le conseil stratégique à l'utilisation de produits phytopharmaceutiques a pour objet de fournir a..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Le conseil stratégique à l'utilisation de produits phytopharmaceutiques a pour objet de fournir aux décideurs des entreprises utilisatrices de produits phytopharmaceutiques non soumises à l'un des agréments prévus à l'article L. 254-1, les éléments leur permettant de définir une stratégie pour la protection des végétaux ou pour tout autre usage prévu au 1 de l'article 2 du règlement (CE) n° 1107/2009 du Parlement européen et du Conseil du 21 octobre 2009 pouvant nécessiter le recours à des produits phytopharmaceutiques. Il est fondé sur un diagnostic comportant une analyse des spécificités pédoclimatiques, sanitaires et environnementales des espaces concernés. Pour les exploitations agricoles, ce diagnostic prend également en compte l'organisation et la situation économique de l'exploitation et comporte une analyse des moyens humains et matériels disponibles, ainsi que des cultures et des précédents culturaux et de l'évolution des pratiques phytosanitaires. Le diagnostic est périodiquement actualisé. Chacune de ses versions est conservée par l'utilisateur et par la personne agréée qui l'a établi pendant une durée fixée par décret dans la limite de dix ans. II.-Le conseil stratégique à l'utilisation de produits phytopharmaceutiques est formalisé par écrit. Il est conservé par l'utilisateur et par la personne agréée qui l'a délivré pendant une durée fixée par décret dans la limite de dix ans. Dans toute entreprise utilisatrice de produits phytopharmaceutiques non soumise à l'un des agréments prévus à l'article L. 254-1, toute personne qui décide des traitements phytopharmaceutiques doit être en mesure de justifier s'être fait délivrer des conseils stratégiques selon une périodicité définie par voie réglementaire, dans la limite maximale de trois ans entre deux conseils. Cette justification est exigée pour le renouvellement du certificat mentionné au II de l'article L. 254-3 dans des conditions fixées par décret. Le contenu du conseil stratégique est allégé et le délai entre deux conseils augmenté, dans des conditions définies par voie réglementaire, pour les utilisateurs professionnels dont les surfaces susceptibles d'être traitées par des produits phytopharmaceutiques sont de dimensions réduites, inférieures à des plafonds déterminés en fonction de la nature des cultures pour les exploitants agricoles et des usages pour les autres utilisateurs. III.-La délivrance du conseil n'est pas requise : 1° Lorsque l'entreprise n'utilise que des produits de biocontrôle figurant sur la liste prévue à l'article L. 253-5, des produits composés uniquement de substances de base ou des produits à faible risque au sens du règlement (CE) n° 1107/2009 du Parlement européen et du Conseil du 21 octobre 2009 et les produits nécessaires aux traitements prescrits pour lutter contre les organismes figurant sur la liste établie en application de l'article L. 251-3 ; 2° Lorsque l'exploitation agricole au bénéfice de laquelle sont utilisés des produits phytopharmaceutiques est engagée, pour la totalité des surfaces d'exploitation, dans une démarche ou une pratique ayant des incidences favorables sur la réduction de l'usage et des impacts des produits phytopharmaceutiques et figurant sur une liste établie par arrêté conjoint des ministres chargés de l'agriculture et de l'environnement.",
+    "final_text_length": 3318,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.783364
+  Success: True
+  Processing Duration Seconds: 0.0009047985076904297
+  Located References Count: 1
+  Deletional References Count: 1
+  Definitional References Count: 0
+  Focused Scanning Performance: {
+    "delta_characters_processed": 50,
+    "full_article_characters": 3318,
+    "performance_gain_multiplier": 66.36,
+    "efficiency_improvement_percent": 6536.0
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:02:29.538220
+  Success: True
+  Processing Duration Seconds: 2.6468539237976074
+  Input Located References Count: 1
+  Output Linked References Count: 1
+  Deletional References Count: 1
+  Definitional References Count: 0
+  Context Switching Info: {
+    "original_law_article_length": 3321,
+    "intermediate_after_state_text_length": 3318,
+    "article_key": "code rural et de la pêche maritime::L. 254-6-2"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5° ter::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le premier alinéa est ainsi modifié : la première phrase est remplacée par quatre phrases ainsi r...
+Text Length: 950 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5° ter > a)
+Initialized: 2025-06-21T15:58:40.655676
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655821
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : la première phrase est remplacée par quatre phrases ainsi rédigées : « I. – Le conseil mentionné au 3° du II de l'article L. 254-1 couvre toute recommandation d'utilisation de produits phytopharmaceutiques. Il est formalisé par écrit. La prestation est effectuée à titre onéreux. Il s'inscrit dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253-6. » ; à la deuxième phrase, les mots : « ils privilégient » sont remplacés par les mots : « il privilégie » et les mots : « ils recommandent » sont remplacés par les mots : « il recommande » ; au début de la troisième phrase, les mots : « Ils promeuvent » sont remplacés par les mots : « Il promeut » ; au début de la dernière phrase, les mots : « Ils tiennent » sont remplacés par les mots : « Il tient » ;",
+    "chunk_text_length": 950,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-6-4 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "a)"
+    ],
+    "start_pos": 4562,
+    "end_pos": 5550,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.671176
+  Success: True
+  Processing Duration Seconds: 0.00021910667419433594
+  Input Params: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : la première phrase est remplacée par quatre phrases ainsi rédigées : « I. – Le conseil mentionné au 3° du II de l'article L. 254-1 couvre toute recommandation d'utilisation de produits phytopharmaceutiques. Il est formalisé par écrit. La prestation est effectuée à titre onéreux. Il s'inscrit dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253-6. » ; à la deuxième phrase, les mots : « ils privilégient » sont remplacés par les mots : « il privilégie » et les mots : « ils recommandent » sont remplacés par les mots : « il recommande » ; au début de la troisième phrase, les mots : « Ils promeuvent » sont remplacés par les mots : « Il promeut » ; au début de la dernière phrase, les mots : « Ils tiennent » sont remplacés par les mots : « Il tient » ;",
+    "chunk_text_length": 950,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "a)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-6-4",
+    "full_citation": "code rural et de la pêche maritime::L. 254-6-4"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.735736
+  Success: True
+  Processing Duration Seconds: 0.0006518363952636719
+  Input Params: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : la première phrase est remplacée par quatre phrases ainsi rédigées : « I. – Le conseil mentionné au 3° du II de l'article L. 254-1 couvre toute recommandation d'utilisation de produits phytopharmaceutiques. Il est formalisé par écrit. La prestation est effectuée à titre onéreux. Il s'inscrit dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253-6. » ; à la deuxième phrase, les mots : « ils privilégient » sont remplacés par les mots : « il privilégie » et les mots : « ils recommandent » sont remplacés par les mots : « il recommande » ; au début de la troisième phrase, les mots : « Ils promeuvent » sont remplacés par les mots : « Il promeut » ; au début de la dernière phrase, les mots : « Ils tiennent » sont remplacés par les mots : « Il tient » ;",
+    "chunk_text_length": 950,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "a)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-6-4",
+    "original_text_length": 1221,
+    "original_text_preview": "Les conseils mentionnés aux articles L. 254-6-2 et L. 254-6-3 s'inscrivent dans un objectif de réduc..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I. – Le conseil mentionné au 3° du II de l'article L. 254-1 couvre toute recommandation d'utilisation de produits phytopharmaceutiques. Il est formalisé par écrit. La prestation est effectuée à titre onéreux. Il s'inscrit dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253-6. A ce titre, il privilégie des méthodes alternatives. Si nécessaire, il recommande les produits phytopharmaceutiques adaptés. Il promeut les actions mentionnées à l'article L. 254-10-1. Il tient compte des enjeux environnementaux présents dans l'aire d'activité de l'utilisateur professionnel et des modalités de leur préservation en cas d'utilisation de produits phytopharmaceutiques.",
+    "final_text_length": 817,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.784381
+  Success: True
+  Processing Duration Seconds: 0.0007348060607910156
+  Located References Count: 6
+  Deletional References Count: 3
+  Definitional References Count: 3
+  Focused Scanning Performance: {
+    "delta_characters_processed": 1503,
+    "full_article_characters": 817,
+    "performance_gain_multiplier": 0.543579507651364,
+    "efficiency_improvement_percent": 0
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:02:53.415807
+  Success: True
+  Processing Duration Seconds: 23.877095937728882
+  Input Located References Count: 6
+  Output Linked References Count: 6
+  Deletional References Count: 3
+  Definitional References Count: 3
+  Context Switching Info: {
+    "original_law_article_length": 1221,
+    "intermediate_after_state_text_length": 817,
+    "article_key": "code rural et de la pêche maritime::L. 254-6-4"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5° ter::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Il est ajouté un II ainsi rédigé : « II. – Le conseil stratégique à l'utilisation de produits phy...
+Text Length: 639 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5° ter > b)
+Initialized: 2025-06-21T15:58:40.655829
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655835
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Il est ajouté un II ainsi rédigé : « II. – Le conseil stratégique à l'utilisation de produits phytopharmaceutiques établit un plan d'action pluriannuel pour la protection des cultures de l'exploitation agricole qui s'inscrit dans les objectifs du plan d'action national mentionné à l'article L. 253-6. Il est fondé sur un diagnostic prenant en compte les spécificités de l'exploitation. Les exigences concernant la prévention des conflits d'intérêts pour la délivrance du conseil stratégique par le détenteur d'un agrément au titre des activités mentionnées au 1° du II de l'article L. 254-1 sont déterminées par voie réglementaire. » ;",
+    "chunk_text_length": 639,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-6-4 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "b)"
+    ],
+    "start_pos": 5550,
+    "end_pos": 6199,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.671488
+  Success: True
+  Processing Duration Seconds: 0.0003027915954589844
+  Input Params: {
+    "chunk_text": "b) Il est ajouté un II ainsi rédigé : « II. – Le conseil stratégique à l'utilisation de produits phytopharmaceutiques établit un plan d'action pluriannuel pour la protection des cultures de l'exploitation agricole qui s'inscrit dans les objectifs du plan d'action national mentionné à l'article L. 253-6. Il est fondé sur un diagnostic prenant en compte les spécificités de l'exploitation. Les exigences concernant la prévention des conflits d'intérêts pour la délivrance du conseil stratégique par le détenteur d'un agrément au titre des activités mentionnées au 1° du II de l'article L. 254-1 sont déterminées par voie réglementaire. » ;",
+    "chunk_text_length": 639,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "b)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-6-4",
+    "full_citation": "code rural et de la pêche maritime::L. 254-6-4"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.736587
+  Success: True
+  Processing Duration Seconds: 0.0008311271667480469
+  Input Params: {
+    "chunk_text": "b) Il est ajouté un II ainsi rédigé : « II. – Le conseil stratégique à l'utilisation de produits phytopharmaceutiques établit un plan d'action pluriannuel pour la protection des cultures de l'exploitation agricole qui s'inscrit dans les objectifs du plan d'action national mentionné à l'article L. 253-6. Il est fondé sur un diagnostic prenant en compte les spécificités de l'exploitation. Les exigences concernant la prévention des conflits d'intérêts pour la délivrance du conseil stratégique par le détenteur d'un agrément au titre des activités mentionnées au 1° du II de l'article L. 254-1 sont déterminées par voie réglementaire. » ;",
+    "chunk_text_length": 639,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "b)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-6-4",
+    "original_text_length": 1221,
+    "original_text_preview": "Les conseils mentionnés aux articles L. 254-6-2 et L. 254-6-3 s'inscrivent dans un objectif de réduc..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "Les conseils mentionnés aux articles L. 254-6-2 et L. 254-6-3 s'inscrivent dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respectent les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253-6 . A ce titre, ils privilégient des méthodes alternatives. Si nécessaire, ils recommandent les produits phytopharmaceutiques adaptés. Ils promeuvent les actions mentionnées à l'article L. 254-10-1 . Ils tiennent compte des enjeux environnementaux présents dans l'aire d'activité de l'utilisateur professionnel et des modalités de leur préservation en cas d'utilisation de produits phytopharmaceutiques. Constituent des méthodes alternatives au sens et pour l'application de l'alinéa précédent : 1° Les méthodes non chimiques au sens de l'article 3 du règlement (CE) n° 1107/2009 du Parlement européen et du Conseil du 21 octobre 2009 ; 2° L'utilisation des produits de biocontrôle figurant sur la liste prévue à l'article L. 253-5 ou de produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 du 21 octobre 2009 ou de produits à faible risque au sens de l'article 47 du même règlement. II. – Le conseil stratégique à l'utilisation de produits phytopharmaceutiques établit un plan d'action pluriannuel pour la protection des cultures de l'exploitation agricole qui s'inscrit dans les objectifs du plan d'action national mentionné à l'article L. 253-6. Il est fondé sur un diagnostic prenant en compte les spécificités de l'exploitation. Les exigences concernant la prévention des conflits d'intérêts pour la délivrance du conseil stratégique par le détenteur d'un agrément au titre des activités mentionnées au 1° du II de l'article L. 254-1 sont déterminées par voie réglementaire.",
+    "final_text_length": 1817,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.785392
+  Success: True
+  Processing Duration Seconds: 0.0007278919219970703
+  Located References Count: 2
+  Deletional References Count: 0
+  Definitional References Count: 2
+  Focused Scanning Performance: {
+    "delta_characters_processed": 595,
+    "full_article_characters": 1817,
+    "performance_gain_multiplier": 3.053781512605042,
+    "efficiency_improvement_percent": 205.37815126050418
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:03:27.720794
+  Success: True
+  Processing Duration Seconds: 34.30416941642761
+  Input Located References Count: 2
+  Output Linked References Count: 2
+  Deletional References Count: 0
+  Definitional References Count: 2
+  Context Switching Info: {
+    "original_law_article_length": 1221,
+    "intermediate_after_state_text_length": 1817,
+    "article_key": "code rural et de la pêche maritime::L. 254-6-4"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) (nouveau) Au premier alinéa, les mots : « , et notamment la désignation de l'autorité administrat...
+Text Length: 289 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° > a)
+Initialized: 2025-06-21T15:58:40.655838
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655842
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) (nouveau) Au premier alinéa, les mots : « , et notamment la désignation de l'autorité administrative, les conditions de délivrance, de renouvellement, de suspension, de modulation et de retrait des agréments, des certificats ainsi que des habilitations des organismes » sont supprimés ;",
+    "chunk_text_length": 289,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6°",
+    "numbered_point_introductory_phrase": "L'article L. 254-7-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "a)"
+    ],
+    "start_pos": 6246,
+    "end_pos": 6541,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.671763
+  Success: True
+  Processing Duration Seconds: 0.0002658367156982422
+  Input Params: {
+    "chunk_text": "a) (nouveau) Au premier alinéa, les mots : « , et notamment la désignation de l'autorité administrative, les conditions de délivrance, de renouvellement, de suspension, de modulation et de retrait des agréments, des certificats ainsi que des habilitations des organismes » sont supprimés ;",
+    "chunk_text_length": 289,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "a)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-7-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-7-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.737229
+  Success: True
+  Processing Duration Seconds: 0.000621795654296875
+  Input Params: {
+    "chunk_text": "a) (nouveau) Au premier alinéa, les mots : « , et notamment la désignation de l'autorité administrative, les conditions de délivrance, de renouvellement, de suspension, de modulation et de retrait des agréments, des certificats ainsi que des habilitations des organismes » sont supprimés ;",
+    "chunk_text_length": 289,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "a)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-7-1",
+    "original_text_length": 1148,
+    "original_text_preview": "Les modalités d'application de la présente section, et notamment la désignation de l'autorité admini..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "Les modalités d'application de la présente section sont déterminées par décret en Conseil d'Etat. Ce décret prévoit les modalités particulières de cession des produits phytopharmaceutiques aux utilisateurs non professionnels. Il définit également les conditions dans lesquelles les microdistributeurs peuvent être dispensés de tout ou partie des obligations mentionnées aux 2° et 3° du I de l'article L. 254-2 et à l'article L. 254-3 , dans le seul cadre de ventes de produits destinés à un usage non professionnel ou lorsque celles-ci concernent uniquement soit des préparations naturelles peu préoccupantes constituées exclusivement d'une ou plusieurs substances de base, soit des produits à faible risque. Il précise le contenu du conseil mentionné à l'article L. 254-6-2 et en détermine la fréquence, ainsi que le délai dans lequel le diagnostic mentionné au deuxième alinéa du I de ce même article doit être actualisé.",
+    "final_text_length": 923,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.786844
+  Success: True
+  Processing Duration Seconds: 0.001196146011352539
+  Located References Count: 0
+  Deletional References Count: 0
+  Definitional References Count: 0
+  Focused Scanning Performance: {
+    "delta_characters_processed": 225,
+    "full_article_characters": 923,
+    "performance_gain_multiplier": 4.102222222222222,
+    "efficiency_improvement_percent": 310.22222222222223
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:03:27.721670
+  Success: False
+  Error: N/A
+  Error Type: N/A
+  Processing Duration Seconds: 3.0994415283203125e-06
+  Skip Reason: No reconstruction result or located references available
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le second alinéa est ainsi modifié : à la première phrase, après le mot : « prévoit », il est ins...
+Text Length: 268 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° > b)
+Initialized: 2025-06-21T15:58:40.655844
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655847
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le second alinéa est ainsi modifié : à la première phrase, après le mot : « prévoit », il est inséré le mot : « notamment » ; la dernière phrase est ainsi rédigée : « Il précise les modalités de délivrance du conseil mentionné au 3° du II de l'article L. 254-1. » ;",
+    "chunk_text_length": 268,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6°",
+    "numbered_point_introductory_phrase": "L'article L. 254-7-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "b)"
+    ],
+    "start_pos": 6541,
+    "end_pos": 6829,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.672035
+  Success: True
+  Processing Duration Seconds: 0.00026416778564453125
+  Input Params: {
+    "chunk_text": "b) Le second alinéa est ainsi modifié : à la première phrase, après le mot : « prévoit », il est inséré le mot : « notamment » ; la dernière phrase est ainsi rédigée : « Il précise les modalités de délivrance du conseil mentionné au 3° du II de l'article L. 254-1. » ;",
+    "chunk_text_length": 268,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "b)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-7-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-7-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.737871
+  Success: True
+  Processing Duration Seconds: 0.0006167888641357422
+  Input Params: {
+    "chunk_text": "b) Le second alinéa est ainsi modifié : à la première phrase, après le mot : « prévoit », il est inséré le mot : « notamment » ; la dernière phrase est ainsi rédigée : « Il précise les modalités de délivrance du conseil mentionné au 3° du II de l'article L. 254-1. » ;",
+    "chunk_text_length": 268,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "b)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-7-1",
+    "original_text_length": 1148,
+    "original_text_preview": "Les modalités d'application de la présente section, et notamment la désignation de l'autorité admini..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "Les modalités d'application de la présente section, et notamment la désignation de l'autorité administrative, les conditions de délivrance, de renouvellement, de suspension, de modulation et de retrait des agréments, des certificats ainsi que des habilitations des organismes sont déterminées par décret en Conseil d'Etat. Ce décret prévoit notamment les modalités particulières de cession des produits phytopharmaceutiques aux utilisateurs non professionnels. Il définit également les conditions dans lesquelles les microdistributeurs peuvent être dispensés de tout ou partie des obligations mentionnées aux 2° et 3° du I de l'article L. 254-2 et à l'article L. 254-3 , dans le seul cadre de ventes de produits destinés à un usage non professionnel ou lorsque celles-ci concernent uniquement soit des préparations naturelles peu préoccupantes constituées exclusivement d'une ou plusieurs substances de base, soit des produits à faible risque. Il précise les modalités de délivrance du conseil mentionné au 3° du II de l'article L. 254-1.",
+    "final_text_length": 1038,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.788963
+  Success: True
+  Processing Duration Seconds: 0.0016939640045166016
+  Located References Count: 3
+  Deletional References Count: 2
+  Definitional References Count: 1
+  Focused Scanning Performance: {
+    "delta_characters_processed": 336,
+    "full_article_characters": 1038,
+    "performance_gain_multiplier": 3.0892857142857144,
+    "efficiency_improvement_percent": 208.92857142857144
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:03:39.393490
+  Success: True
+  Processing Duration Seconds: 11.671778678894043
+  Input Located References Count: 3
+  Output Linked References Count: 3
+  Deletional References Count: 2
+  Definitional References Count: 1
+  Context Switching Info: {
+    "original_law_article_length": 1148,
+    "intermediate_after_state_text_length": 1038,
+    "article_key": "code rural et de la pêche maritime::L. 254-7-1"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6° bis::a)
+--------------------------------------------------------------------------------
+Text Preview: a) À la fin de la première phrase du premier alinéa du I, les mots : « auprès desquelles la redevanc...
+Text Length: 317 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° bis > a)
+Initialized: 2025-06-21T15:58:40.655849
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655852
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) À la fin de la première phrase du premier alinéa du I, les mots : « auprès desquelles la redevance pour pollutions diffuses est exigible, mentionnées au IV de l'article L. 213-10-8 du code de l'environnement » sont remplacés par les mots : « exerçant les activités mentionnées au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 317,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "a)"
+    ],
+    "start_pos": 6891,
+    "end_pos": 7214,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.672325
+  Success: True
+  Processing Duration Seconds: 0.0002830028533935547
+  Input Params: {
+    "chunk_text": "a) À la fin de la première phrase du premier alinéa du I, les mots : « auprès desquelles la redevance pour pollutions diffuses est exigible, mentionnées au IV de l'article L. 213-10-8 du code de l'environnement » sont remplacés par les mots : « exerçant les activités mentionnées au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 317,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "a)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-10-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-10-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.738668
+  Success: True
+  Processing Duration Seconds: 0.0007741451263427734
+  Input Params: {
+    "chunk_text": "a) À la fin de la première phrase du premier alinéa du I, les mots : « auprès desquelles la redevance pour pollutions diffuses est exigible, mentionnées au IV de l'article L. 213-10-8 du code de l'environnement » sont remplacés par les mots : « exerçant les activités mentionnées au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 317,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "a)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-10-1",
+    "original_text_length": 1472,
+    "original_text_preview": "I.-Sont soumises à des obligations de réalisation d'actions tendant à la réduction de l'utilisation ..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Sont soumises à des obligations de réalisation d'actions tendant à la réduction de l'utilisation de produits phytopharmaceutiques les personnes exerçant les activités mentionnées au 1° du II de l'article L. 254-1. Ces personnes sont dénommées les « obligés ». L'obligé est tenu de mettre en place des actions visant à la réalisation d'économies de produits phytopharmaceutiques ou de faciliter la mise en œuvre de telles actions. II.-L'autorité administrative notifie à chaque obligé pour les périodes du 1er janvier 2020 au 31 décembre 2020 et du 1er janvier 2021 au 31 décembre 2021, puis, à compter du 1er janvier 2022, pour chaque période successive d'une durée fixée par décret en Conseil d'État, dans la limite de quatre ans, l'obligation de réalisation d'actions qui lui incombe en vertu de la présente section compte tenu des quantités de produits phytopharmaceutiques qu'il a déclarées en application des articles L. 213-10-8 et L. 213-11 du code de l'environnement. Cette obligation est proportionnelle aux quantités de chaque substance active contenues dans ces produits phytopharmaceutiques, pondérées, dans des conditions fixées par décret en Conseil d'État, par des coefficients liés soit aux caractéristiques d'emploi de ces produits, soit aux dangers des substances actives qu'ils contiennent. Elle est exprimée en nombre de certificats d'économie de produits phytopharmaceutiques.",
+    "final_text_length": 1400,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.804948
+  Success: True
+  Processing Duration Seconds: 0.015525102615356445
+  Located References Count: 2
+  Deletional References Count: 1
+  Definitional References Count: 1
+  Focused Scanning Performance: {
+    "delta_characters_processed": 207,
+    "full_article_characters": 1400,
+    "performance_gain_multiplier": 6.763285024154589,
+    "efficiency_improvement_percent": 576.328502415459
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:03:48.003376
+  Success: True
+  Processing Duration Seconds: 8.60906195640564
+  Input Located References Count: 2
+  Output Linked References Count: 2
+  Deletional References Count: 1
+  Definitional References Count: 1
+  Context Switching Info: {
+    "original_law_article_length": 1472,
+    "intermediate_after_state_text_length": 1400,
+    "article_key": "code rural et de la pêche maritime::L. 254-10-1"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6° bis::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Au début du premier alinéa du II, les mots : « L'autorité administrative notifie à chaque obligé ...
+Text Length: 466 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° bis > b)
+Initialized: 2025-06-21T15:58:40.655855
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655857
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Au début du premier alinéa du II, les mots : « L'autorité administrative notifie à chaque obligé pour les périodes du 1ᵉʳ janvier 2020 au 31 décembre 2020 et du 1ᵉʳ janvier 2021 au 31 décembre 2021, puis, à compter du 1ᵉʳ janvier 2022, pour chaque période successive d'une durée fixée par décret en Conseil d'État, dans la limite de quatre ans » sont remplacés par les mots : « L'autorité administrative notifie à chaque obligé, pour chaque période successive » ;",
+    "chunk_text_length": 466,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "b)"
+    ],
+    "start_pos": 7214,
+    "end_pos": 7684,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.672628
+  Success: True
+  Processing Duration Seconds: 0.0002949237823486328
+  Input Params: {
+    "chunk_text": "b) Au début du premier alinéa du II, les mots : « L'autorité administrative notifie à chaque obligé pour les périodes du 1ᵉʳ janvier 2020 au 31 décembre 2020 et du 1ᵉʳ janvier 2021 au 31 décembre 2021, puis, à compter du 1ᵉʳ janvier 2022, pour chaque période successive d'une durée fixée par décret en Conseil d'État, dans la limite de quatre ans » sont remplacés par les mots : « L'autorité administrative notifie à chaque obligé, pour chaque période successive » ;",
+    "chunk_text_length": 466,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "b)"
+    ],
+    "inherited_target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    }
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-10-1",
+    "full_citation": "code rural et de la pêche maritime::L. 254-10-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.739298
+  Success: True
+  Processing Duration Seconds: 0.0006117820739746094
+  Input Params: {
+    "chunk_text": "b) Au début du premier alinéa du II, les mots : « L'autorité administrative notifie à chaque obligé pour les périodes du 1ᵉʳ janvier 2020 au 31 décembre 2020 et du 1ᵉʳ janvier 2021 au 31 décembre 2021, puis, à compter du 1ᵉʳ janvier 2022, pour chaque période successive d'une durée fixée par décret en Conseil d'État, dans la limite de quatre ans » sont remplacés par les mots : « L'autorité administrative notifie à chaque obligé, pour chaque période successive » ;",
+    "chunk_text_length": 466,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "b)"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-10-1",
+    "original_text_length": 1472,
+    "original_text_preview": "I.-Sont soumises à des obligations de réalisation d'actions tendant à la réduction de l'utilisation ..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Sont soumises à des obligations de réalisation d'actions tendant à la réduction de l'utilisation de produits phytopharmaceutiques les personnes auprès desquelles la redevance pour pollutions diffuses est exigible, mentionnées au IV de l'article L. 213-10-8 du code de l'environnement . Ces personnes sont dénommées les « obligés ». L'obligé est tenu de mettre en place des actions visant à la réalisation d'économies de produits phytopharmaceutiques ou de faciliter la mise en œuvre de telles actions. II.-L'autorité administrative notifie à chaque obligé, pour chaque période successive, l'obligation de réalisation d'actions qui lui incombe en vertu de la présente section compte tenu des quantités de produits phytopharmaceutiques qu'il a déclarées en application des articles L. 213-10-8 et L. 213-11 du code de l'environnement. Cette obligation est proportionnelle aux quantités de chaque substance active contenues dans ces produits phytopharmaceutiques, pondérées, dans des conditions fixées par décret en Conseil d'État, par des coefficients liés soit aux caractéristiques d'emploi de ces produits, soit aux dangers des substances actives qu'ils contiennent. Elle est exprimée en nombre de certificats d'économie de produits phytopharmaceutiques.",
+    "final_text_length": 1257,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.818644
+  Success: True
+  Processing Duration Seconds: 0.01099395751953125
+  Located References Count: 1
+  Deletional References Count: 1
+  Definitional References Count: 0
+  Focused Scanning Performance: {
+    "delta_characters_processed": 377,
+    "full_article_characters": 1257,
+    "performance_gain_multiplier": 3.3342175066313,
+    "efficiency_improvement_percent": 233.42175066312998
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:03:50.149304
+  Success: True
+  Processing Duration Seconds: 2.145150899887085
+  Input Located References Count: 1
+  Output Linked References Count: 1
+  Deletional References Count: 1
+  Definitional References Count: 0
+  Context Switching Info: {
+    "original_law_article_length": 1472,
+    "intermediate_after_state_text_length": 1257,
+    "article_key": "code rural et de la pêche maritime::L. 254-10-1"
+}
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true,
+    "high_confidence_threshold": 0.9
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6° ter
+--------------------------------------------------------------------------------
+Text Preview: 6° ter (nouveau) Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé ...
+Text Length: 128 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° ter
+Initialized: 2025-06-21T15:58:40.655860
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655863
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "6° ter (nouveau) Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé par le nombre : « 50 000 » ;",
+    "chunk_text_length": 128,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6° ter",
+    "numbered_point_introductory_phrase": "Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé par le nombre : « 50 000 » ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° ter"
+    ],
+    "start_pos": 7686,
+    "end_pos": 7816,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.672915
+  Success: True
+  Processing Duration Seconds: 0.00027871131896972656
+  Input Params: {
+    "chunk_text": "6° ter (nouveau) Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé par le nombre : « 50 000 » ;",
+    "chunk_text_length": 128,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° ter"
+    ],
+    "inherited_target_article": null
+}
+  Output Result: {
+    "operation_type": "MODIFY",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 254-12",
+    "full_citation": "code rural et de la pêche maritime::L. 254-12"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.739920
+  Success: True
+  Processing Duration Seconds: 0.0006020069122314453
+  Input Params: {
+    "chunk_text": "6° ter (nouveau) Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé par le nombre : « 50 000 » ;",
+    "chunk_text_length": 128,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° ter"
+    ],
+    "target_article": {
+        "operation_type": "MODIFY",
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-12"
+    },
+    "target_article_reference": "code rural et de la pêche maritime::L. 254-12",
+    "original_text_length": 1074,
+    "original_text_preview": "I.-Est puni d'un emprisonnement de six mois et d'une amende de 15 000 € : 1° Le fait d'exercer l'une..."
+}
+  Output Result: {
+    "success": true,
+    "final_text": "I.-Est puni d'un emprisonnement de six mois et d'une amende de 50 000 € : 1° Le fait d'exercer l'une des activités visées à l'article L. 254-1 sans justifier de la détention de l'agrément ; 2° Le fait, pour le détenteur de l'agrément, d'exercer l'une des activités visées à l'article L. 254-1 sans satisfaire aux conditions exigées par l'article L. 254-2 ou par l'article L. 254-5 . II.-Les personnes physiques coupables de l'une des infractions mentionnées au présent article encourent également la peine complémentaire d'affichage et de diffusion de la décision dans les conditions prévues par l'article 131-35 du code pénal. Les personnes morales déclarées coupables pénalement dans les conditions prévues à l'article 121-2 du même code des infractions définies au présent article encourent, outre l'amende suivant les modalités prévues à l'article 131-38 du code pénal, la peine prévue au 9° de l'article 131-39 du même code. III.-Lorsqu'elles sont commises en bande organisée, les infractions prévues au I sont punies de sept ans d'emprisonnement et 150 000 € d'amende.",
+    "final_text_length": 1074,
+    "operations_applied": 0,
+    "operations_failed": 0,
+    "validation_warnings": [],
+    "processing_time_ms": 0
+}
+  Component Metadata: {
+    "component_name": "LegalAmendmentReconstructor",
+    "cache_used": true,
+    "log_file_path": "/Users/duphan/Projects/bill-parser-engine/notebooks/detailed_reconstruction_log_20250621_155840.txt"
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.823389
+  Success: True
+  Processing Duration Seconds: 0.0010271072387695312
+  Located References Count: 0
+  Deletional References Count: 0
+  Definitional References Count: 0
+  Focused Scanning Performance: {
+    "delta_characters_processed": 12,
+    "full_article_characters": 1074,
+    "performance_gain_multiplier": 89.5,
+    "efficiency_improvement_percent": 8850.0
+}
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true,
+    "min_confidence_threshold": 0.5
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:03:50.150038
+  Success: False
+  Error: N/A
+  Error Type: N/A
+  Processing Duration Seconds: 5.0067901611328125e-06
+  Skip Reason: No reconstruction result or located references available
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::7°
+--------------------------------------------------------------------------------
+Text Preview: 7° (nouveau) Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :
+
+    ...
+Text Length: 879 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 7°
+Initialized: 2025-06-21T15:58:40.655866
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.655869
+  Success: True
+  Processing Duration Seconds: 0.0001567091260637556
+  Input Params: {
+    "legislative_text_length": 8696,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "7° (nouveau) Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :\n\n    « TITRE PRÉLIMINAIRE\n\n    « DU CONSEIL STRATÉGIQUE GLOBAL\n\n    « Art. L. 500-1. – I. – Les exploitants agricoles peuvent bénéficier d'un conseil stratégique global, formalisé par écrit, fourni par des conseillers compétents en agronomie, en protection des végétaux, en utilisation efficace, économe et durable des ressources ou en stratégie de valorisation et de filière, afin d'améliorer la viabilité économique, environnementale et sociale de leur exploitation.\n\n    « Le conseil stratégique à l'utilisation de produits phytopharmaceutiques mentionné à l'article L. 254-6-4 constitue un volet de ce conseil stratégique global.\n\n    « II. – Un décret définit les exigences relatives à l'exercice de la fonction de conseiller mentionnée au I, notamment en matière de formation. »",
+    "chunk_text_length": 879,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "7°",
+    "numbered_point_introductory_phrase": "Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "7°"
+    ],
+    "start_pos": 7816,
+    "end_pos": 8696,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 21
+}
+
+  STEP 2 TARGET IDENTIFICATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.673118
+  Success: True
+  Processing Duration Seconds: 0.00019598007202148438
+  Input Params: {
+    "chunk_text": "7° (nouveau) Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :\n\n    « TITRE PRÉLIMINAIRE\n\n    « DU CONSEIL STRATÉGIQUE GLOBAL\n\n    « Art. L. 500-1. – I. – Les exploitants agricoles peuvent bénéficier d'un conseil stratégique global, formalisé par écrit, fourni par des conseillers compétents en agronomie, en protection des végétaux, en utilisation efficace, économe et durable des ressources ou en stratégie de valorisation et de filière, afin d'améliorer la viabilité économique, environnementale et sociale de leur exploitation.\n\n    « Le conseil stratégique à l'utilisation de produits phytopharmaceutiques mentionné à l'article L. 254-6-4 constitue un volet de ce conseil stratégique global.\n\n    « II. – Un décret définit les exigences relatives à l'exercice de la fonction de conseiller mentionnée au I, notamment en matière de formation. »",
+    "chunk_text_length": 879,
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_introductory_phrase": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "7°"
+    ],
+    "inherited_target_article": null
+}
+  Output Result: {
+    "operation_type": "INSERT",
+    "code": "code rural et de la pêche maritime",
+    "article": "L. 500-1",
+    "full_citation": "code rural et de la pêche maritime::L. 500-1"
+}
+  Component Metadata: {
+    "component_name": "TargetArticleIdentifier",
+    "cache_used": true
+}
+
+  STEP 4 TEXT RECONSTRUCTION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.740325
+  Success: False
+  Error: Original text cannot be empty
+  Error Type: ValueError
+  Additional Context: {
+    "processing_duration_seconds": 6.198883056640625e-06,
+    "input_params": {
+        "chunk_text": "7° (nouveau) Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :\n\n    « TITRE PRÉLIMINAIRE\n\n    « DU CONSEIL STRATÉGIQUE GLOBAL\n\n    « Art. L. 500-1. – I. – Les exploitants agricoles peuvent bénéficier d'un conseil stratégique global, formalisé par écrit, fourni par des conseillers compétents en agronomie, en protection des végétaux, en utilisation efficace, économe et durable des ressources ou en stratégie de valorisation et de filière, afin d'améliorer la viabilité économique, environnementale et sociale de leur exploitation.\n\n    « Le conseil stratégique à l'utilisation de produits phytopharmaceutiques mentionné à l'article L. 254-6-4 constitue un volet de ce conseil stratégique global.\n\n    « II. – Un décret définit les exigences relatives à l'exercice de la fonction de conseiller mentionnée au I, notamment en matière de formation. »",
+        "chunk_text_length": 879,
+        "hierarchy_path": [
+            "# TITRE Iᴱᴿ",
+            "Article 1ᵉʳ",
+            "7°"
+        ],
+        "target_article": {
+            "operation_type": "INSERT",
+            "code": "code rural et de la pêche maritime",
+            "article": "L. 500-1"
+        },
+        "original_text_available": false
+    },
+    "component_metadata": {
+        "component_name": "LegalAmendmentReconstructor",
+        "cache_used": true
+    }
+}
+
+  STEP 5 REFERENCE LOCATION
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T15:58:40.823771
+  Success: False
+  Error: N/A
+  Error Type: N/A
+  Processing Duration Seconds: 3.0994415283203125e-06
+  Skip Reason: No reconstruction result available
+  Component Metadata: {
+    "component_name": "ReferenceLocator",
+    "focused_scanning_enabled": true
+}
+
+  STEP 6 REFERENCE LINKING
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T16:03:50.150059
+  Success: False
+  Error: N/A
+  Error Type: N/A
+  Processing Duration Seconds: 0.0
+  Skip Reason: No reconstruction result or located references available
+  Component Metadata: {
+    "component_name": "ReferenceObjectLinker",
+    "context_switching_enabled": true
+}
+
+================================================================================
+

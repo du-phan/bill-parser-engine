@@ -43,7 +43,7 @@ from bill_parser_engine.core.reference_resolver.prompts import (
     REFERENCE_OBJECT_LINKER_EVALUATOR_SYSTEM_PROMPT,
 )
 from bill_parser_engine.core.reference_resolver.cache_manager import get_cache
-from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
+from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter, call_mistral_with_messages
 
 logger = logging.getLogger(__name__)
 
@@ -102,34 +102,38 @@ class ReferenceObjectLinker:
 
     def _create_tool_schema(self) -> List[dict]:
         """
-        Create the function calling tool schema for grammatical analysis.
+        Create the function calling tool schema for grammatical analysis and question generation.
         
         Returns:
-            The tool schema for the link_reference_to_object function
+            The tool schema for the link_reference_and_generate_question function
         """
         return [
             {
                 "type": "function",
                 "function": {
-                    "name": "link_reference_to_object",
-                    "description": "Analyze French grammatical structure to link a legal reference to its object",
+                    "name": "link_reference_and_generate_question",
+                    "description": "Analyze French grammatical structure to link a legal reference to its object AND generate a precise resolution question",
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "object": {
                                 "type": "string",
-                                "description": "Complete noun phrase that the reference modifies (e.g., 'activités', 'producteurs', 'la liste')"
+                                "description": "Complete noun phrase that the reference modifies (e.g., 'conseil', 'producteurs', 'la liste')"
                             },
                             "agreement_analysis": {
                                 "type": "string",
-                                "description": "Grammatical reasoning (e.g., 'Masculine plural agreement with activités mentioned 3 words before')"
+                                "description": "Grammatical reasoning explaining the object identification"
                             },
                             "confidence": {
                                 "type": "number",
-                                "description": "Confidence 0-1, lower for ambiguous cases or distant grammatical relationships"
+                                "description": "Confidence 0-1 for the object identification"
+                            },
+                            "resolution_question": {
+                                "type": "string",
+                                "description": "Precise French question asking what the reference legally defines/establishes concerning the identified object"
                             }
                         },
-                        "required": ["object", "agreement_analysis", "confidence"]
+                        "required": ["object", "agreement_analysis", "confidence", "resolution_question"]
                     }
                 }
             }
@@ -220,19 +224,27 @@ class ReferenceObjectLinker:
     def link_references(
         self, 
         located_references: List[LocatedReference], 
-        reconstructor_output: ReconstructorOutput,
-        original_law_article: str
+        original_law_article: str,
+        intermediate_after_state_text: str
     ) -> List[LinkedReference]:
         """
         Link located references to their grammatical objects using French grammar analysis.
+        
+        FOCUSED REFERENCE RESOLUTION APPROACH:
+        This method implements smart context-switching based on reference source type:
+        - DELETIONAL references use original_law_article context (what was removed)
+        - DEFINITIONAL references use intermediate_after_state_text context (what was added)
+        
+        This ensures grammatical objects are found in the correct textual environment
+        for accurate legal analysis.
 
         Args:
             located_references: List of references found by ReferenceLocator
-            reconstructor_output: Output from TextReconstructor with context texts
             original_law_article: The full original law article text for DELETIONAL reference context
+            intermediate_after_state_text: The full article text after amendment for DEFINITIONAL reference context
 
         Returns:
-            List of LinkedReference objects with grammatical objects identified
+            List of LinkedReference objects with grammatical objects identified and resolution questions generated
 
         Raises:
             ValueError: If input validation fails
@@ -240,19 +252,19 @@ class ReferenceObjectLinker:
         # Input validation
         if not isinstance(located_references, list):
             raise ValueError("located_references must be a list")
-        
-        if not isinstance(reconstructor_output, ReconstructorOutput):
-            raise ValueError("reconstructor_output must be a ReconstructorOutput object")
             
         if not isinstance(original_law_article, str):
             raise ValueError("original_law_article must be a string")
+            
+        if not isinstance(intermediate_after_state_text, str):
+            raise ValueError("intermediate_after_state_text must be a string")
 
         linked_references = []
 
         for ref in located_references:
             try:
                 # Context switching based on reference source
-                context_text = self._select_context(ref.source, reconstructor_output, original_law_article)
+                context_text = self._select_context(ref.source, original_law_article, intermediate_after_state_text)
                 
                 # Skip if no context available
                 if not context_text.strip():
@@ -274,25 +286,24 @@ class ReferenceObjectLinker:
                     user_prompt = self._build_grammatical_analysis_prompt(ref, context_text)
 
                     # Use shared rate limiter with retry logic for 429 errors
-                    def make_api_call():
-                        return self.client.chat.complete(
-                            model=MISTRAL_MODEL,
-                            temperature=0.0,
-                            messages=[
-                                {
-                                    "role": "system",
-                                    "content": self.system_prompt
-                                },
-                                {
-                                    "role": "user",
-                                    "content": user_prompt
-                                }
-                            ],
-                            tools=self.tool_schema,
-                            tool_choice="any"
-                        )
-                    
-                    response = rate_limiter.execute_with_retry(make_api_call, "ReferenceObjectLinker")
+                    response = call_mistral_with_messages(
+                        client=self.client,
+                        rate_limiter=rate_limiter,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": self.system_prompt
+                            },
+                            {
+                                "role": "user",
+                                "content": user_prompt
+                            }
+                        ],
+                        component_name="ReferenceObjectLinker",
+                        temperature=0.0,
+                        tools=self.tool_schema,
+                        tool_choice="any"
+                    )
 
                     # Extract and validate tool call
                     tool_call = self._extract_tool_call(response)
@@ -331,7 +342,7 @@ class ReferenceObjectLinker:
         logger.info(f"Successfully linked {len(linked_references)} out of {len(located_references)} references")
         return linked_references
 
-    def _select_context(self, source: ReferenceSourceType, output: ReconstructorOutput, original_law_article: str) -> str:
+    def _select_context(self, source: ReferenceSourceType, original_law_article: str, intermediate_after_state_text: str) -> str:
         """
         Select appropriate text context based on reference source type.
 
@@ -341,8 +352,8 @@ class ReferenceObjectLinker:
 
         Args:
             source: The source type of the reference (DELETIONAL or DEFINITIONAL)
-            output: ReconstructorOutput containing both text contexts
             original_law_article: The full original law article text
+            intermediate_after_state_text: The full article text after amendment
 
         Returns:
             The appropriate context text for analysis
@@ -355,44 +366,51 @@ class ReferenceObjectLinker:
         else:
             # DEFINITIONAL references use the intermediate state after amendment
             # because they need to understand the new context where the reference appears
-            return output.intermediate_after_state_text
+            return intermediate_after_state_text
 
     def _build_grammatical_analysis_prompt(self, ref: LocatedReference, context_text: str) -> str:
         """
-        Build a contextual prompt for grammatical analysis.
+        Build a contextual prompt for grammatical analysis and question generation.
 
         Args:
             ref: The located reference to analyze
             context_text: The appropriate context text
 
         Returns:
-            Formatted prompt for grammatical analysis
+            Formatted prompt for grammatical analysis and question generation
         """
         return f"""
-Analyze this French legal reference and identify its grammatical object:
+Analysez cette référence juridique française et accomplissez deux tâches :
 
-REFERENCE TO ANALYZE: "{ref.reference_text}"
+1) LIAISON D'OBJET : Identifiez le syntagme nominal complet que cette référence modifie, définit, ou clarifie.
+2) GÉNÉRATION DE QUESTION : Créez une question française précise pour résoudre ce que cette référence établit juridiquement.
 
-FULL CONTEXT: "{context_text}"
+RÉFÉRENCE À ANALYSER : "{ref.reference_text}"
+CONTEXTE COMPLET : "{context_text}"
+SOURCE DE RÉFÉRENCE : {ref.source.value}
 
-REFERENCE SOURCE: {ref.source.value}
+Pour la liaison d'objet, considérez :
+- Accord grammatical français (genre, nombre)
+- Proximité et relation logique
+- Sens sémantique dans le contexte juridique
+- Modèles prépositionnels (au/à la/aux, du/de la/des, etc.)
 
-Please identify the complete noun phrase that this reference modifies, defines, or clarifies. Consider:
-1. French grammatical agreement (gender, number)
-2. Proximity and logical relationship
-3. Semantic meaning in legal context
-4. Preposition patterns (au/à la/aux, du/de la/des, etc.)
+Pour la question, considérez :
+- Français juridique formel
+- Spécificité sur l'aspect juridique nécessitant clarification
+- Si c'est DELETIONAL (supprimé) ou DEFINITIONAL (ajouté)
+- Commencez par "Que", "Quelles sont", "Comment", etc.
 
-Use the function call to provide your analysis.
+Utilisez l'appel de fonction pour fournir votre analyse complète.
 """
 
-    def _extract_tool_call(self, response, expected_function_name: str = "link_reference_to_object") -> Optional[dict]:
+    def _extract_tool_call(self, response, expected_function_name: str = "link_reference_and_generate_question") -> Optional[dict]:
         """
         Extract tool call from Mistral response.
 
         Args:
             response: The Mistral API response
-            expected_function_name: The expected function name (default: "link_reference_to_object")
+            expected_function_name: The expected function name (default: "link_reference_and_generate_question")
 
         Returns:
             The tool call dictionary, or None if no valid tool call found
@@ -437,7 +455,7 @@ Use the function call to provide your analysis.
         """
         try:
             arguments = tool_call.get("arguments", {})
-            required_fields = ["object", "agreement_analysis", "confidence"]
+            required_fields = ["object", "agreement_analysis", "confidence", "resolution_question"]
             
             for field in required_fields:
                 if field not in arguments:
@@ -476,7 +494,8 @@ Use the function call to provide your analysis.
             source=ref.source,
             object=arguments["object"].strip(),
             agreement_analysis=arguments["agreement_analysis"].strip(),
-            confidence=float(arguments["confidence"])
+            confidence=float(arguments["confidence"]),
+            resolution_question=arguments["resolution_question"].strip()
         )
 
     def _evaluate_and_correct_link(self, linked_ref: LinkedReference, context_text: str) -> Optional[LinkedReference]:
@@ -507,25 +526,24 @@ Use the function call to provide your analysis.
                 evaluation_prompt = self._build_evaluation_prompt(current_result, context_text, iteration_history)
                 
                 # Call evaluator LLM with retry logic
-                def make_evaluator_call():
-                    return self.client.chat.complete(
-                        model=MISTRAL_MODEL,
-                        temperature=0.0,
-                        messages=[
-                            {
-                                "role": "system", 
-                                "content": self._get_evaluator_system_prompt()
-                            },
-                            {
-                                "role": "user",
-                                "content": evaluation_prompt
-                            }
-                        ],
-                        tools=self.evaluator_tool_schema,
-                        tool_choice="any"
-                    )
-                
-                response = rate_limiter.execute_with_retry(make_evaluator_call, "ReferenceObjectLinker-Evaluator")
+                response = call_mistral_with_messages(
+                    client=self.client,
+                    rate_limiter=rate_limiter,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": self._get_evaluator_system_prompt()
+                        },
+                        {
+                            "role": "user",
+                            "content": evaluation_prompt
+                        }
+                    ],
+                    component_name="ReferenceObjectLinker-Evaluator",
+                    temperature=0.0,
+                    tools=self.evaluator_tool_schema,
+                    tool_choice="any"
+                )
                 
                 # Extract evaluation result
                 tool_call = self._extract_tool_call(response, expected_function_name="evaluate_and_correct_link")
@@ -543,7 +561,8 @@ Use the function call to provide your analysis.
                         source=current_result.source,
                         object=args["corrected_object"].strip(),
                         agreement_analysis=args["corrected_agreement_analysis"].strip(),
-                        confidence=float(args["corrected_confidence"])
+                        confidence=float(args["corrected_confidence"]),
+                        resolution_question=current_result.resolution_question  # Preserve original question
                     )
                 
                 # If it's the last iteration, return the evaluator's correction
@@ -556,7 +575,8 @@ Use the function call to provide your analysis.
                         source=current_result.source,
                         object=args["corrected_object"].strip(),
                         agreement_analysis=args["corrected_agreement_analysis"].strip(),
-                        confidence=float(args["corrected_confidence"])
+                        confidence=float(args["corrected_confidence"]),
+                        resolution_question=current_result.resolution_question  # Preserve original question
                     )
                 
                 # Otherwise, send feedback to optimizer for improvement
@@ -589,7 +609,8 @@ Use the function call to provide your analysis.
                         source=current_result.source,
                         object=args["corrected_object"].strip(),
                         agreement_analysis=args["corrected_agreement_analysis"].strip(),
-                        confidence=float(args["corrected_confidence"])
+                        confidence=float(args["corrected_confidence"]),
+                        resolution_question=current_result.resolution_question  # Preserve original question
                     )
                     
             except Exception as e:
@@ -738,7 +759,8 @@ Use the evaluation function to provide your assessment.
             "source": linked_ref.source.value,
             "object": linked_ref.object,
             "agreement_analysis": linked_ref.agreement_analysis,
-            "confidence": linked_ref.confidence
+            "confidence": linked_ref.confidence,
+            "resolution_question": linked_ref.resolution_question
         }
 
     def _dict_to_linked_reference(self, data: dict) -> LinkedReference:
@@ -756,7 +778,8 @@ Use the evaluation function to provide your assessment.
             source=ReferenceSourceType(data["source"]),
             object=data["object"],
             agreement_analysis=data["agreement_analysis"],
-            confidence=data["confidence"]
+            confidence=data["confidence"],
+            resolution_question=data["resolution_question"]
         )
 
     def clear_cache(self) -> int:
@@ -798,25 +821,24 @@ Use the evaluation function to provide your assessment.
             )
             
             # Call optimizer LLM with retry logic
-            def make_optimizer_call():
-                return self.client.chat.complete(
-                    model=MISTRAL_MODEL,
-                    temperature=0.0,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": self._get_optimizer_system_prompt()
-                        },
-                        {
-                            "role": "user",
-                            "content": improvement_prompt
-                        }
-                    ],
-                    tools=self.optimizer_feedback_tool_schema,
-                    tool_choice="any"
-                )
-            
-            response = rate_limiter.execute_with_retry(make_optimizer_call, "ReferenceObjectLinker-Optimizer")
+            response = call_mistral_with_messages(
+                client=self.client,
+                rate_limiter=rate_limiter,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": self._get_optimizer_system_prompt()
+                    },
+                    {
+                        "role": "user",
+                        "content": improvement_prompt
+                    }
+                ],
+                component_name="ReferenceObjectLinker-Optimizer",
+                temperature=0.0,
+                tools=self.optimizer_feedback_tool_schema,
+                tool_choice="any"
+            )
             
             # Extract improvement result
             tool_call = self._extract_tool_call(response, expected_function_name="improve_reference_linking")
@@ -830,7 +852,8 @@ Use the evaluation function to provide your assessment.
                     source=original_ref.source,
                     object=args["improved_object"].strip(),
                     agreement_analysis=args["improved_agreement_analysis"].strip(),
-                    confidence=float(args["improved_confidence"])
+                    confidence=float(args["improved_confidence"]),
+                    resolution_question=original_ref.resolution_question  # Preserve original question
                 )
             else:
                 logger.warning(f"Invalid optimizer response for ref: {original_ref.reference_text}")
@@ -880,7 +903,7 @@ Reference source: {original_ref.source.value}
 CURRENT LINKING RESULT:
 - Object: "{current_result.object}"
 - Agreement analysis: "{current_result.agreement_analysis}"
-- Confidence: {current_result.confidence}
+- CONFIDENCE: {current_result.confidence}
 
 EVALUATOR FEEDBACK:
 {evaluator_feedback}

@@ -21,7 +21,7 @@ from bill_parser_engine.core.reference_resolver.prompts import (
     OPERATION_APPLIER_SYSTEM_PROMPT,
     OPERATION_APPLIER_USER_PROMPT_TEMPLATE
 )
-from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
+from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter, call_mistral_with_messages
 
 logger = logging.getLogger(__name__)
 
@@ -92,9 +92,15 @@ class OperationApplier:
             )
         
         # Check cache first
-        cache_key = f"operation_applier_{hash((original_text, str(operation)))}"
         if self.use_cache:
-            cached_result = self.cache.get("operation_applier", cache_key)
+            cache_key_data = {
+                'original_text': original_text,
+                'operation_type': operation.operation_type.value,
+                'target_text': operation.target_text,
+                'replacement_text': operation.replacement_text,
+                'position_hint': operation.position_hint
+            }
+            cached_result = self.cache.get("operation_applier", cache_key_data)
             if cached_result is not None:
                 logger.debug("Found cached operation result")
                 return self._deserialize_result(cached_result)
@@ -107,18 +113,17 @@ class OperationApplier:
             user_prompt = self._build_user_prompt(original_text, operation)
             
             # Call LLM with rate limiting
-            def make_api_call():
-                return self.client.chat.complete(
-                    model="mistral-large-latest",
-                    temperature=0.0,  # Deterministic application
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    response_format={"type": "json_object"}
-                )
-            
-            response = rate_limiter.execute_with_retry(make_api_call, "OperationApplier")
+            response = call_mistral_with_messages(
+                client=self.client,
+                rate_limiter=rate_limiter,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                component_name="OperationApplier",
+                temperature=0.0,  # Deterministic application
+                response_format={"type": "json_object"}
+            )
             
             # Parse response
             response_content = response.choices[0].message.content
@@ -130,12 +135,12 @@ class OperationApplier:
             processing_time = int((time.time() - start_time) * 1000)
             result.processing_time_ms = processing_time
             
-            logger.info("Operation applied - Success: %s (processing time: %dms)", result.success, processing_time)
+            logger.info("Operation applied - Success: %s", result.success)
             
             # Cache result
             if self.use_cache:
                 serialized_result = self._serialize_result(result)
-                self.cache.set("operation_applier", cache_key, serialized_result)
+                self.cache.set("operation_applier", cache_key_data, serialized_result)
             
             return result
 

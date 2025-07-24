@@ -1,19 +1,29 @@
 """
 Reference location component for the normative reference resolver pipeline.
 
-This component identifies all normative references (legal citations) in before/after 
-text fragments and tags them by source type (DELETIONAL/DEFINITIONAL). It uses 
-Mistral API in JSON Mode for structured output.
+Identifies normative references (legal citations) in delta text fragments from TextReconstructor output.
 
 Key Features:
-- Dual fragment analysis (deleted vs. new text)
-- DELETIONAL/DEFINITIONAL classification  
-- French legal reference pattern recognition
-- Simplified output without error-prone position tracking
-- Confidence-based filtering
+=============
+- **Delta Fragment Analysis**: Scans only changed text (deleted_or_replaced_text + newly_inserted_text)
+- **DELETIONAL/DEFINITIONAL Classification**: Tags references by source type for downstream processing
+- **French Legal Reference Recognition**: Specialized for French legislative patterns
+- **Confidence-Based Filtering**: Quality control through confidence scoring
+- **Structured Output**: JSON Mode for reliable parsing
+- **Caching**: Avoids redundant API calls
 
-The component focuses on accuracy over precision - better to miss an ambiguous 
-reference than include a false positive.
+Reference Classification:
+========================
+- DELETIONAL references: Found in deleted_or_replaced_text, use original law context for object linking
+- DEFINITIONAL references: Found in newly_inserted_text, use amended text context for object linking
+
+Technical Implementation:
+========================
+- Uses Mistral Chat API in JSON Mode for structured output
+- Implements French legal reference pattern recognition
+- Focuses on reference text extraction and source classification
+- Provides confidence-based quality filtering
+- Supports caching for performance optimization
 """
 
 import json
@@ -32,24 +42,27 @@ from bill_parser_engine.core.reference_resolver.models import (
 from bill_parser_engine.core.reference_resolver.prompts import REFERENCE_LOCATOR_SYSTEM_PROMPT
 from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache, get_cache
 from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter
+from .rate_limiter import call_mistral_json_model
 
 logger = logging.getLogger(__name__)
 
 
 class ReferenceLocator:
     """
-    Locates normative references in text fragments and tags by source type.
+    Locates normative references in delta text fragments.
     
-    This component implements the DELETIONAL/DEFINITIONAL classification that drives
-    the entire downstream process:
-    - DELETIONAL references: Found in deleted/replaced text, use original law context
-    - DEFINITIONAL references: Found in new/amended text, use amended text context
+    Scans only the changed text fragments (deleted_or_replaced_text + newly_inserted_text)
+    instead of full article text for efficient reference detection.
+    
+    Reference Classification:
+    - DELETIONAL references: Found in deleted_or_replaced_text fragments
+    - DEFINITIONAL references: Found in newly_inserted_text fragments
     
     Uses Mistral Chat API in JSON Mode for reliable structured output.
     
-    **Simplified Design Philosophy:**
-    - Removed error-prone character position tracking
-    - Focus on reference text and source classification 
+    Implementation:
+    - Scan only the delta fragments that actually changed
+    - Focus on reference text and source classification
     - Simple validation without complex correction logic
     - Confidence-based quality filtering
     """
@@ -71,15 +84,22 @@ class ReferenceLocator:
 
     def locate(self, reconstructor_output: ReconstructorOutput) -> List[LocatedReference]:
         """
-        Locate all normative references in the before/after text fragments.
+        Locate all normative references in the delta fragments.
         
-        This is the core method that processes both text fragments simultaneously
-        and returns all located references with proper source classification.
+        Process:
+        1. Extract delta fragments (deleted_or_replaced_text + newly_inserted_text)
+        2. Send fragments to LLM for reference detection
+        3. Classify found references by source type:
+           - DELETIONAL: References found in deleted_or_replaced_text
+           - DEFINITIONAL: References found in newly_inserted_text
+        4. Apply confidence filtering and deduplication
+        5. Return structured LocatedReference objects
 
         Args:
             reconstructor_output: Output from TextReconstructor containing:
-                - deleted_or_replaced_text: Text that was removed (DELETIONAL source)
-                - intermediate_after_state_text: Text after amendment (DEFINITIONAL source)
+                - deleted_or_replaced_text: Text that was removed (scan for DELETIONAL refs)
+                - newly_inserted_text: Text that was added (scan for DEFINITIONAL refs)
+                - intermediate_after_state_text: Full article (NOT used for scanning)
 
         Returns:
             List of LocatedReference objects with reference_text, source, and confidence
@@ -96,43 +116,43 @@ class ReferenceLocator:
         if self.use_cache:
             cache_key_data = {
                 'deleted_or_replaced_text': reconstructor_output.deleted_or_replaced_text,
-                'intermediate_after_state_text': reconstructor_output.intermediate_after_state_text,
+                'newly_inserted_text': reconstructor_output.newly_inserted_text,
                 'min_confidence': self.min_confidence
             }
             
             cached_result = self.cache.get("reference_locator", cache_key_data)
             if cached_result is not None:
-                print(f"✓ Using cached result for ReferenceLocator")
+                logger.info("Using cached result for ReferenceLocator")
                 return cached_result
         
-        print(f"→ Processing new reference location with ReferenceLocator")
+        # Calculate delta fragments for processing
+        deleted_len = len(reconstructor_output.deleted_or_replaced_text)
+        inserted_len = len(reconstructor_output.newly_inserted_text)
+        delta_chars = deleted_len + inserted_len
 
-        # Prepare input fragments for LLM
-        user_prompt = self._create_user_prompt(
+        # Prepare delta fragments for LLM
+        user_prompt_payload = self._create_user_prompt_payload(
             deleted_text=reconstructor_output.deleted_or_replaced_text,
-            intermediate_text=reconstructor_output.intermediate_after_state_text
+            newly_inserted_text=reconstructor_output.newly_inserted_text
         )
 
         try:
-            # Call Mistral API with retry logic for 429 errors
-            def make_api_call():
-                return self.client.chat.complete(
-                    model=MISTRAL_MODEL,
-                    temperature=0.0,  # Deterministic output
-                    messages=[
-                        {"role": "system", "content": REFERENCE_LOCATOR_SYSTEM_PROMPT},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    response_format={"type": "json_object"}
-                )
+            # Send fragments to LLM for reference detection
+            content = call_mistral_json_model(
+                client=self.client,
+                rate_limiter=rate_limiter,
+                system_prompt=REFERENCE_LOCATOR_SYSTEM_PROMPT,
+                user_payload=user_prompt_payload,
+                component_name="ReferenceLocator",
+            )
             
-            response = rate_limiter.execute_with_retry(make_api_call, "ReferenceLocator")
+            if not content:
+                raise RuntimeError("ReferenceLocator received no content from API utility.")
 
-            # Parse and validate response
-            content = json.loads(response.choices[0].message.content)
+            # Parse and validate JSON response
             self._validate_response_structure(content)
 
-            # Create LocatedReference objects
+            # Convert API response to LocatedReference objects
             located_refs = []
             for ref_data in content.get("located_references", []):
                 if self._validate_reference_data(ref_data):
@@ -141,16 +161,16 @@ class ReferenceLocator:
                 else:
                     logger.warning(f"Skipping invalid reference data: {ref_data}")
 
-            # Filter by confidence
+            # Filter by confidence threshold
             filtered_refs = self._filter_by_confidence(located_refs)
             
             # Remove exact duplicates while preserving cross-source variations
             deduplicated_refs = self._deduplicate_references(filtered_refs)
             
-            # Cache the successful result (if enabled)
+            # Cache the result (if enabled)
             if self.use_cache:
                 self.cache.set("reference_locator", cache_key_data, deduplicated_refs)
-                print(f"✓ Cached result for future use")
+                logger.info("Cached result for future use")
             
             return deduplicated_refs
 
@@ -161,25 +181,31 @@ class ReferenceLocator:
             logger.error(f"Reference location failed: {e}")
             raise RuntimeError(f"ReferenceLocator API call failed: {e}") from e
 
-    def _create_user_prompt(self, deleted_text: str, intermediate_text: str) -> str:
+    def _create_user_prompt_payload(self, deleted_text: str, newly_inserted_text: str) -> dict:
         """
-        Create a user prompt with the text fragments.
+        Create a user prompt payload with the delta fragments.
+        
+        Creates a dictionary containing only the changed text fragments:
+        - deleted_or_replaced_text: Text that was removed (for DELETIONAL refs)
+        - newly_inserted_text: Text that was added (for DEFINITIONAL refs)
         
         Args:
             deleted_text: Text that was deleted or replaced
-            intermediate_text: Text after the amendment
+            newly_inserted_text: Text that was added
             
         Returns:
-            JSON-formatted prompt string
+            Dictionary with delta fragments
         """
-        return json.dumps({
+        return {
             "deleted_or_replaced_text": deleted_text,
-            "intermediate_after_state_text": intermediate_text
-        })
+            "newly_inserted_text": newly_inserted_text
+        }
 
     def _validate_response_structure(self, content: dict) -> None:
         """
         Validate that the API response has the expected structure.
+        
+        Ensures the LLM response follows the expected JSON schema before processing.
         
         Args:
             content: Parsed JSON response from Mistral
@@ -197,6 +223,12 @@ class ReferenceLocator:
         """
         Validate individual reference data from the LLM response.
         
+        Validation checks:
+        - Required fields present (reference_text, source, confidence)
+        - Source type is valid (DELETIONAL or DEFINITIONAL)
+        - Confidence is numeric and in valid range (0-1)
+        - Reference text is non-empty string
+        
         Args:
             ref_data: Dictionary containing reference information
             
@@ -210,13 +242,13 @@ class ReferenceLocator:
                 logger.warning(f"Reference missing required field: {field}")
                 return False
 
-        # Validate source type
+        # Validate source type - must be DELETIONAL or DEFINITIONAL
         source = ref_data["source"]
         if source not in ["DELETIONAL", "DEFINITIONAL"]:
             logger.warning(f"Invalid source type: {source}")
             return False
 
-        # Validate confidence range
+        # Validate confidence range - must be between 0 and 1
         confidence = ref_data["confidence"]
         if not isinstance(confidence, (int, float)) or not (0 <= confidence <= 1):
             logger.warning(f"Invalid confidence value: {confidence}")
@@ -238,7 +270,7 @@ class ReferenceLocator:
             ref_data: Validated reference data from LLM response
             
         Returns:
-            LocatedReference object
+            LocatedReference object with reference_text, source, and confidence
         """
         return LocatedReference(
             reference_text=ref_data["reference_text"].strip(),
@@ -249,6 +281,8 @@ class ReferenceLocator:
     def _filter_by_confidence(self, located_refs: List[LocatedReference]) -> List[LocatedReference]:
         """
         Filter references by minimum confidence threshold.
+        
+        Removes low-confidence references to improve overall accuracy.
         
         Args:
             located_refs: List of located references
@@ -266,6 +300,7 @@ class ReferenceLocator:
             logger.info(f"Filtered {filtered_count} low-confidence references "
                        f"(threshold: {self.min_confidence})")
 
+        # Log reference statistics for monitoring
         logger.info(f"Located {len(filtered_refs)} references: "
                    f"{sum(1 for r in filtered_refs if r.source == ReferenceSourceType.DELETIONAL)} DELETIONAL, "
                    f"{sum(1 for r in filtered_refs if r.source == ReferenceSourceType.DEFINITIONAL)} DEFINITIONAL")
@@ -276,10 +311,17 @@ class ReferenceLocator:
         """
         Remove exact duplicates while preserving legitimate cross-source variations.
         
-        DEDUPLICATION LOGIC:
+        Deduplication logic:
         - Remove exact duplicates: same reference_text + same source
         - Keep cross-source duplicates: same reference_text but different source
         - Preserve highest confidence when duplicates exist
+        
+        Cross-source references are preserved because the same legal reference might
+        appear in both deleted and newly inserted text, requiring different handling:
+        
+        Example:
+        - DELETIONAL: "aux articles L. 254-1" (being removed from old context)
+        - DEFINITIONAL: "aux articles L. 254-1" (being added in new context)
         
         Args:
             located_refs: List of located references potentially containing duplicates
@@ -290,7 +332,7 @@ class ReferenceLocator:
         if not located_refs:
             return []
         
-        # Group by (reference_text, source) tuple
+        # Group by (reference_text, source) tuple to identify exact duplicates
         ref_groups = {}
         for ref in located_refs:
             key = (ref.reference_text, ref.source)

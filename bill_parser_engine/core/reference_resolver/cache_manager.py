@@ -1,9 +1,15 @@
 """
-Simple component-level caching for LLM pipeline fault tolerance.
+Centralized caching for Mistral API calls to avoid rate limit issues.
 
-This module provides a lightweight caching mechanism to store intermediate
-results from pipeline components, allowing recovery from API failures without
-reprocessing everything from scratch.
+This module provides a simple, centralized caching mechanism specifically designed
+to cache expensive Mistral API calls across all pipeline components. This prevents
+redundant API calls when processing the same inputs multiple times.
+
+Key Features:
+- Single cache instance shared across all components
+- Focused on caching Mistral API responses only
+- Simple key generation based on input parameters
+- Automatic cache invalidation and cleanup
 """
 
 import hashlib
@@ -14,16 +20,22 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 import logging
 
+logger = logging.getLogger(__name__)
 
-class SimpleCache:
+
+class MistralAPICache:
     """
-    Simple disk-based cache for component results.
+    Centralized cache for Mistral API calls.
+    
+    This cache is designed specifically to avoid redundant Mistral API calls
+    when processing the same inputs multiple times. It's shared across all
+    pipeline components that make Mistral API calls.
     
     Features:
+    - Single cache instance for all components
+    - Simple key generation based on input parameters
     - Disk persistence with compression
-    - Component-specific namespacing
-    - Cache invalidation and overwrite options
-    - Lightweight and efficient
+    - Automatic cache cleanup
     """
     
     def __init__(self, cache_dir: str = "cache"):
@@ -38,18 +50,18 @@ class SimpleCache:
         data_str = json.dumps(input_data, sort_keys=True, default=str)
         combined = f"{component}:{data_str}"
         hash_value = hashlib.sha256(combined.encode()).hexdigest()
-        return f"{component}_{hash_value[:16]}"
+        return f"mistral_{component}_{hash_value[:16]}"
 
     def get(self, component: str, input_data: Any) -> Optional[Any]:
         """
-        Retrieve cached result for component and input.
+        Retrieve cached Mistral API result for component and input.
         
         Args:
-            component: Component name
-            input_data: Input data
+            component: Component name making the API call
+            input_data: Input data that determines the API call
             
         Returns:
-            Cached result if found, None otherwise
+            Cached API result if found, None otherwise
         """
         cache_key = self._generate_cache_key(component, input_data)
         cache_file = self.cache_dir / f"{cache_key}.pkl"
@@ -61,7 +73,7 @@ class SimpleCache:
             with open(cache_file, 'rb') as f:
                 cached_data = pickle.load(f)
             
-            self.logger.debug(f"Cache HIT for {component}: {cache_key}")
+            self.logger.debug(f"Mistral API cache HIT for {component}: {cache_key}")
             return cached_data['result']
             
         except Exception as e:
@@ -72,12 +84,12 @@ class SimpleCache:
 
     def set(self, component: str, input_data: Any, result: Any) -> None:
         """
-        Store result in cache.
+        Store Mistral API result in cache.
         
         Args:
-            component: Component name
+            component: Component name that made the API call
             input_data: Input data that produced the result
-            result: Result to cache
+            result: API result to cache
         """
         cache_key = self._generate_cache_key(component, input_data)
         cache_file = self.cache_dir / f"{cache_key}.pkl"
@@ -92,95 +104,102 @@ class SimpleCache:
             with open(cache_file, 'wb') as f:
                 pickle.dump(cached_data, f)
             
-            self.logger.debug(f"Cache SET for {component}: {cache_key}")
+            self.logger.debug(f"Mistral API cache SET for {component}: {cache_key}")
             
         except Exception as e:
             self.logger.error(f"Failed to save cache entry: {e}")
 
-    def invalidate(self, component: str = None) -> int:
+    def clear(self) -> int:
         """
-        Invalidate cache entries.
+        Clear all cached Mistral API results.
         
-        Args:
-            component: Invalidate all entries for this component (all if None)
-            
         Returns:
-            Number of entries invalidated
+            Number of entries cleared
         """
-        if component:
-            pattern = f"{component}_*.pkl"
-        else:
-            pattern = "*.pkl"
-        
-        cache_files = list(self.cache_dir.glob(pattern))
+        cache_files = list(self.cache_dir.glob("mistral_*.pkl"))
         
         for cache_file in cache_files:
             cache_file.unlink(missing_ok=True)
         
         count = len(cache_files)
         if count > 0:
-            self.logger.info(f"Invalidated {count} cache entries for component '{component}'")
+            self.logger.info(f"Cleared {count} Mistral API cache entries")
         
         return count
 
-    def clear(self) -> None:
-        """Clear all cache entries."""
-        self.invalidate()
-
-    def clear_by_prefix(self, component: str) -> int:
+    def clear_by_component(self, component: str) -> int:
         """
-        Clear cache entries for a specific component.
+        Clear cached Mistral API results for a specific component.
         
         Args:
-            component: Component name to clear cache for
+            component: Component name whose cache entries should be cleared
             
         Returns:
-            Number of entries cleared
+            Number of entries cleared for the component
         """
-        return self.invalidate(component)
+        cache_files = list(self.cache_dir.glob(f"mistral_{component}_*.pkl"))
+        
+        for cache_file in cache_files:
+            cache_file.unlink(missing_ok=True)
+        
+        count = len(cache_files)
+        if count > 0:
+            self.logger.info(f"Cleared {count} Mistral API cache entries for component '{component}'")
+        
+        return count
 
-    def get_stats(self, component: str = None) -> dict:
+    def get_stats(self, component: Optional[str] = None) -> dict:
         """
-        Get cache statistics for component.
+        Get cache statistics.
         
         Args:
-            component: Component name (optional)
-            
+            component: Optional component name to get stats for. If None, returns stats for all components.
+        
         Returns:
             Dictionary with cache statistics
         """
-        if component:
-            pattern = f"{component}_*.pkl"
+        if component is None:
+            # Get stats for all components
+            cache_files = list(self.cache_dir.glob("mistral_*.pkl"))
+            
+            # Group by component
+            component_stats = {}
+            for cache_file in cache_files:
+                # Extract component name from filename
+                filename = cache_file.stem
+                if filename.startswith("mistral_"):
+                    parts = filename.split("_", 2)
+                    if len(parts) >= 3:
+                        comp = parts[1]
+                        component_stats[comp] = component_stats.get(comp, 0) + 1
+            
+            return {
+                "total_entries": len(cache_files),
+                "total_size_bytes": sum(f.stat().st_size for f in cache_files if f.exists()),
+                "component_breakdown": component_stats
+            }
         else:
-            pattern = "*.pkl"
-        
-        cache_files = list(self.cache_dir.glob(pattern))
-        
-        return {
-            "component": component or "all",
-            "entries_count": len(cache_files),
-            "total_size_bytes": sum(f.stat().st_size for f in cache_files if f.exists())
-        }
-
-    def get_stats_by_prefix(self, component: str) -> dict:
-        """
-        Get cache statistics for a specific component.
-        
-        Args:
-            component: Component name
+            # Get stats for specific component
+            cache_files = list(self.cache_dir.glob(f"mistral_{component}_*.pkl"))
             
-        Returns:
-            Dictionary with cache statistics
-        """
-        return self.get_stats(component)
+            return {
+                "component": component,
+                "entries": len(cache_files),
+                "size_bytes": sum(f.stat().st_size for f in cache_files if f.exists())
+            }
 
 
 # Global cache instance
-_global_cache: Optional[SimpleCache] = None
+_global_mistral_cache: Optional[MistralAPICache] = None
 
-def get_cache() -> SimpleCache:
-    """Get or create the global cache instance."""
-    global _global_cache
-    if _global_cache is None:
-        _global_cache = SimpleCache()
-    return _global_cache 
+def get_mistral_cache() -> MistralAPICache:
+    """Get or create the global Mistral API cache instance."""
+    global _global_mistral_cache
+    if _global_mistral_cache is None:
+        _global_mistral_cache = MistralAPICache()
+    return _global_mistral_cache
+
+
+# Backward compatibility aliases
+SimpleCache = MistralAPICache
+get_cache = get_mistral_cache 

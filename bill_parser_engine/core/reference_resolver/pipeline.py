@@ -17,12 +17,19 @@ from bill_parser_engine.core.reference_resolver.bill_splitter import BillSplitte
 from bill_parser_engine.core.reference_resolver.target_identifier import TargetArticleIdentifier
 from bill_parser_engine.core.reference_resolver.original_text_retriever import OriginalTextRetriever
 from bill_parser_engine.core.reference_resolver.legal_amendment_reconstructor import LegalAmendmentReconstructor
+from bill_parser_engine.core.reference_resolver.reference_locator import ReferenceLocator
+from bill_parser_engine.core.reference_resolver.reference_object_linker import ReferenceObjectLinker
+from bill_parser_engine.core.reference_resolver.cache_manager import get_mistral_cache
 
 from bill_parser_engine.core.reference_resolver.models import (
     BillChunk, 
     TargetArticle, 
     TargetOperationType,
-    ReconstructorOutput
+    ReconstructorOutput,
+    ReconstructionResult,
+    LocatedReference,
+    ReferenceSourceType,
+    LinkedReference
 )
 
 logger = logging.getLogger(__name__)
@@ -33,7 +40,7 @@ class BillProcessingPipeline:
     Master pipeline for processing legislative bills through the reference resolver.
     
     This class orchestrates the complete processing workflow from raw legislative text
-    to text reconstruction results, managing data flow between components and providing
+    to reference object linking results, managing data flow between components and providing
     comprehensive analysis and reporting.
     
     Current pipeline steps:
@@ -41,6 +48,8 @@ class BillProcessingPipeline:
     2. TargetArticleIdentifier - identifies target articles for each chunk
     3. OriginalTextRetriever - fetches current legal text for unique target articles
     4. LegalAmendmentReconstructor - applies amendment instructions using 3-step LLM architecture (InstructionDecomposer → OperationApplier → ResultValidator)
+    5. ReferenceLocator - locates normative references in delta fragments using focused scanning (30x+ performance improvement)
+    6. ReferenceObjectLinker - links references to grammatical objects using context-aware analysis with resolution question generation
     """
 
     def __init__(self, use_cache: bool = True, log_file_path: Optional[str] = None):
@@ -48,22 +57,23 @@ class BillProcessingPipeline:
         Initialize the pipeline with all required components.
         
         Args:
-            use_cache: Whether to enable caching at component level
+            use_cache: Whether to enable centralized Mistral API caching
             log_file_path: Path to detailed reconstruction log file (optional)
         
-        Note: Caching is handled at the component level (e.g., OriginalTextRetriever)
-        where expensive operations like API calls occur.
+        Note: All components use the same centralized Mistral API cache to avoid
+        redundant API calls and respect rate limits.
         """
         
-        # Initialize all pipeline components
+        # Initialize all pipeline components with centralized cache
         self.bill_splitter = BillSplitter()
         self.target_identifier = TargetArticleIdentifier(use_cache=use_cache)
         self.original_text_retriever = OriginalTextRetriever(use_cache=use_cache)
         self.text_reconstructor = LegalAmendmentReconstructor(
-            api_key=None, 
             use_cache=use_cache,
             log_file_path=log_file_path
         )
+        self.reference_locator = ReferenceLocator(use_cache=use_cache)
+        self.reference_object_linker = ReferenceObjectLinker(use_cache=use_cache)
         
         # Pipeline state and results
         self.legislative_text: Optional[str] = None
@@ -71,19 +81,19 @@ class BillProcessingPipeline:
         self.target_results: List[Dict] = []
         self.retrieval_results: List[Dict] = []
         self.reconstruction_results: List[Dict] = []
+        self.reference_location_results: List[Dict] = []
+        self.reference_linking_results: List[Dict] = []
         
         # Analysis results
         self.target_analysis: Dict = {}
         self.retrieval_analysis: Dict = {}
         self.reconstruction_analysis: Dict = {}
+        self.reference_location_analysis: Dict = {}
+        self.reference_linking_analysis: Dict = {}
         
-        # Comprehensive chunk-by-chunk tracing
-        self.chunk_traces: Dict[str, Dict[str, Any]] = {}  # chunk_id -> step_name -> trace_data
-        self.trace_enabled: bool = True
-        
-        logger.info("BillProcessingPipeline initialized with LegalAmendmentReconstructor (component-level caching enabled)")
+        logger.info("BillProcessingPipeline initialized with centralized Mistral API caching: %s", "enabled" if use_cache else "disabled")
         if log_file_path:
-            logger.info("Detailed reconstruction logging enabled: %s", self.text_reconstructor.get_log_file_path())
+            logger.info("Detailed reconstruction logging configured: %s (will be created when first needed)", self.text_reconstructor.get_log_file_path())
 
     def load_legislative_text(self, text: str) -> None:
         """
@@ -133,58 +143,12 @@ class BillProcessingPipeline:
 
         logger.info("Step 1: Splitting legislative bill into chunks...")
         
-        # Capture start time for tracing
-        step_start_time = time.time()
-        
         try:
             self.chunks = self.bill_splitter.split(self.legislative_text)
-            step_duration = time.time() - step_start_time
-            
             logger.info("Split into %d chunks", len(self.chunks))
-            
-            # Initialize trace data for each chunk
-            for chunk in self.chunks:
-                self._init_chunk_trace(chunk.chunk_id, chunk.text, chunk.hierarchy_path)
-                
-                # Log step 1 trace data for each chunk
-                self._log_step_trace(chunk.chunk_id, "step_1_split", {
-                    "success": True,
-                    "processing_duration_seconds": step_duration / len(self.chunks),  # Average per chunk
-                    "input_params": {
-                        "legislative_text_length": len(self.legislative_text),
-                        "legislative_text_preview": self.legislative_text[:100] + "..." if len(self.legislative_text) > 100 else self.legislative_text
-                    },
-                    "output_result": {
-                        "chunk_text": chunk.text,
-                        "chunk_text_length": len(chunk.text),
-                        "titre_text": chunk.titre_text,
-                        "article_label": chunk.article_label,
-                        "article_introductory_phrase": chunk.article_introductory_phrase,
-                        "major_subdivision_label": chunk.major_subdivision_label,
-                        "major_subdivision_introductory_phrase": chunk.major_subdivision_introductory_phrase,
-                        "numbered_point_label": chunk.numbered_point_label,
-                        "numbered_point_introductory_phrase": chunk.numbered_point_introductory_phrase,
-                        "lettered_subdivision_label": chunk.lettered_subdivision_label,
-                        "hierarchy_path": chunk.hierarchy_path,
-                        "start_pos": chunk.start_pos,
-                        "end_pos": chunk.end_pos,
-                        "inherited_target_article": chunk.inherited_target_article
-                    },
-                    "component_metadata": {
-                        "component_name": "BillSplitter",
-                        "total_chunks_created": len(self.chunks)
-                    }
-                })
-            
             return self.chunks
             
         except Exception as e:
-            # Log error for any chunks that were created before the error
-            for chunk in getattr(self, 'chunks', []):
-                self._log_step_error(chunk.chunk_id, "step_1_split", e, {
-                    "legislative_text_length": len(self.legislative_text) if self.legislative_text else 0,
-                    "partial_chunks_created": len(getattr(self, 'chunks', []))
-                })
             raise
 
     def step_2_identify_target_articles(self) -> List[Dict]:
@@ -206,40 +170,8 @@ class BillProcessingPipeline:
         for i, chunk in enumerate(self.chunks, 1):
             logger.debug("Processing chunk %d/%d: %s", i, len(self.chunks), chunk.chunk_id[:50])
             
-            # Capture start time for this chunk
-            chunk_start_time = time.time()
-            
             try:
                 target_article = self.target_identifier.identify(chunk)
-                chunk_duration = time.time() - chunk_start_time
-                
-                # Log successful step 2 trace data
-                self._log_step_trace(chunk.chunk_id, "step_2_target_identification", {
-                    "success": True,
-                    "processing_duration_seconds": chunk_duration,
-                    "input_params": {
-                        "chunk_text": chunk.text,
-                        "chunk_text_length": len(chunk.text),
-                        "article_introductory_phrase": chunk.article_introductory_phrase,
-                        "major_subdivision_introductory_phrase": chunk.major_subdivision_introductory_phrase,
-                        "hierarchy_path": chunk.hierarchy_path,
-                        "inherited_target_article": {
-                            "operation_type": chunk.inherited_target_article.operation_type.value if chunk.inherited_target_article and chunk.inherited_target_article.operation_type else None,
-                            "code": chunk.inherited_target_article.code if chunk.inherited_target_article else None,
-                            "article": chunk.inherited_target_article.article if chunk.inherited_target_article else None
-                        } if chunk.inherited_target_article else None
-                    },
-                    "output_result": {
-                        "operation_type": target_article.operation_type.value if target_article.operation_type else None,
-                        "code": target_article.code,
-                        "article": target_article.article,
-                        "full_citation": f"{target_article.code}::{target_article.article}" if target_article.code and target_article.article else target_article.article
-                    },
-                    "component_metadata": {
-                        "component_name": "TargetArticleIdentifier",
-                        "cache_used": getattr(self.target_identifier, 'use_cache', False)
-                    }
-                })
                 
                 # Skip chunks with pure versioning metadata (OTHER operation type)
                 if target_article.operation_type == TargetOperationType.OTHER:
@@ -268,29 +200,7 @@ class BillProcessingPipeline:
                     logger.debug("No specific article identified (%s)", target_article.operation_type.value)
                     
             except Exception as e:
-                chunk_duration = time.time() - chunk_start_time
                 logger.error("Error processing chunk %s: %s", chunk.chunk_id, e)
-                
-                # Log error trace data
-                self._log_step_error(chunk.chunk_id, "step_2_target_identification", e, {
-                    "processing_duration_seconds": chunk_duration,
-                    "input_params": {
-                        "chunk_text": chunk.text,
-                        "chunk_text_length": len(chunk.text),
-                        "article_introductory_phrase": chunk.article_introductory_phrase,
-                        "major_subdivision_introductory_phrase": chunk.major_subdivision_introductory_phrase,
-                        "hierarchy_path": chunk.hierarchy_path,
-                        "inherited_target_article": {
-                            "operation_type": chunk.inherited_target_article.operation_type.value if chunk.inherited_target_article and chunk.inherited_target_article.operation_type else None,
-                            "code": chunk.inherited_target_article.code if chunk.inherited_target_article else None,
-                            "article": chunk.inherited_target_article.article if chunk.inherited_target_article else None
-                        } if chunk.inherited_target_article else None
-                    },
-                    "component_metadata": {
-                        "component_name": "TargetArticleIdentifier",
-                        "cache_used": getattr(self.target_identifier, 'use_cache', False)
-                    }
-                })
                 
                 result_entry = {
                     "chunk_id": chunk.chunk_id,
@@ -451,30 +361,12 @@ class BillProcessingPipeline:
         for i, chunk in enumerate(enriched_chunks, 1):
             logger.debug("Processing chunk %d/%d: %s", i, len(enriched_chunks), chunk.chunk_id[:50])
             
-            # Capture start time for this chunk
+            # Capture start time for performance tracking
             chunk_start_time = time.time()
             
             try:
                 # Skip chunks without target articles or with errors
                 if not chunk.target_article:
-                    chunk_duration = time.time() - chunk_start_time
-                    
-                    # Log trace for skipped chunk
-                    self._log_step_trace(chunk.chunk_id, "step_4_text_reconstruction", {
-                        "success": False,
-                        "processing_duration_seconds": chunk_duration,
-                        "skip_reason": "No target article identified",
-                        "input_params": {
-                            "chunk_text": chunk.text,
-                            "chunk_text_length": len(chunk.text),
-                            "hierarchy_path": chunk.hierarchy_path,
-                            "target_article": None
-                        },
-                        "component_metadata": {
-                            "component_name": "LegalAmendmentReconstructor",
-                            "cache_used": getattr(self.text_reconstructor, 'use_cache', False)
-                        }
-                    })
                     
                     result_entry = {
                         "chunk_id": chunk.chunk_id,
@@ -492,30 +384,6 @@ class BillProcessingPipeline:
                 original_text = original_texts_lookup.get(article_key, "")
                 
                 if not original_text and chunk.target_article.operation_type.value != "INSERT":
-                    chunk_duration = time.time() - chunk_start_time
-                    
-                    # Log trace for missing original text
-                    self._log_step_trace(chunk.chunk_id, "step_4_text_reconstruction", {
-                        "success": False,
-                        "processing_duration_seconds": chunk_duration,
-                        "skip_reason": f"No original text found for {article_key}",
-                        "input_params": {
-                            "chunk_text": chunk.text,
-                            "chunk_text_length": len(chunk.text),
-                            "hierarchy_path": chunk.hierarchy_path,
-                            "target_article": {
-                                "operation_type": chunk.target_article.operation_type.value,
-                                "code": chunk.target_article.code,
-                                "article": chunk.target_article.article
-                            },
-                            "article_key": article_key,
-                            "original_text_available": False
-                        },
-                        "component_metadata": {
-                            "component_name": "LegalAmendmentReconstructor",
-                            "cache_used": getattr(self.text_reconstructor, 'use_cache', False)
-                        }
-                    })
                     
                     result_entry = {
                         "chunk_id": chunk.chunk_id,
@@ -534,10 +402,11 @@ class BillProcessingPipeline:
                     reconstruction_results.append(result_entry)
                     continue
                 
-                # Apply text reconstruction using new LegalAmendmentReconstructor
+                # Apply text reconstruction using new focused output format
                 target_article_reference = f"{chunk.target_article.code}::{chunk.target_article.article}" if chunk.target_article.code and chunk.target_article.article else chunk.target_article.article or "unknown"
                 
-                reconstruction_result = self.text_reconstructor.reconstruct_amendment(
+                # Use the updated reconstruct_amendment method that returns ReconstructorOutput
+                reconstructor_output = self.text_reconstructor.reconstruct_amendment(
                     original_law_article=original_text,
                     amendment_instruction=chunk.text,
                     target_article_reference=target_article_reference,
@@ -546,47 +415,14 @@ class BillProcessingPipeline:
                 
                 chunk_duration = time.time() - chunk_start_time
                 
-                # Extract deleted/replaced text for compatibility
-                deleted_or_replaced_text = ""
-                if reconstruction_result.operations_applied:
-                    # Extract text that was modified by looking at the differences
-                    for operation in reconstruction_result.operations_applied:
-                        if operation.target_text:
-                            deleted_or_replaced_text += operation.target_text + " "
-                deleted_or_replaced_text = deleted_or_replaced_text.strip()
-                
-                # Log successful step 4 trace data (integrating with existing reconstructor logging)
-                self._log_step_trace(chunk.chunk_id, "step_4_text_reconstruction", {
-                    "success": reconstruction_result.success,
-                    "processing_duration_seconds": chunk_duration,
-                    "input_params": {
-                        "chunk_text": chunk.text,
-                        "chunk_text_length": len(chunk.text),
-                        "hierarchy_path": chunk.hierarchy_path,
-                        "target_article": {
-                            "operation_type": chunk.target_article.operation_type.value,
-                            "code": chunk.target_article.code,
-                            "article": chunk.target_article.article
-                        },
-                        "target_article_reference": target_article_reference,
-                        "original_text_length": len(original_text),
-                        "original_text_preview": original_text[:100] + "..." if len(original_text) > 100 else original_text
-                    },
-                    "output_result": {
-                        "success": reconstruction_result.success,
-                        "final_text": reconstruction_result.final_text,
-                        "final_text_length": len(reconstruction_result.final_text),
-                        "operations_applied": len(reconstruction_result.operations_applied),
-                        "operations_failed": len(reconstruction_result.operations_failed),
-                        "validation_warnings": reconstruction_result.validation_warnings,
-                        "processing_time_ms": reconstruction_result.processing_time_ms
-                    },
-                    "component_metadata": {
-                        "component_name": "LegalAmendmentReconstructor",
-                        "cache_used": getattr(self.text_reconstructor, 'use_cache', False),
-                        "log_file_path": getattr(self.text_reconstructor, 'log_file_path', None)
-                    }
-                })
+                # Get the detailed reconstruction result from the reconstructor
+                reconstruction_result = self.text_reconstructor.last_detailed_result
+                logger.info("Retrieved last_detailed_result for chunk %s: %s", chunk.chunk_id, 
+                           "None" if reconstruction_result is None else f"success={reconstruction_result.success}")
+                if reconstruction_result is None:
+                    # This should never happen - indicates a bug in LegalAmendmentReconstructor
+                    logger.error("Critical bug: last_detailed_result is None for chunk %s", chunk.chunk_id)
+                    raise RuntimeError(f"LegalAmendmentReconstructor failed to produce detailed result for chunk {chunk.chunk_id}")
                 
                 # Create result entry compatible with existing pipeline format
                 result_entry = {
@@ -601,10 +437,12 @@ class BillProcessingPipeline:
                         "raw_text": chunk.text[:50] + "..." if len(chunk.text) > 50 else chunk.text
                     },
                     "reconstruction_result": {
-                        "deleted_or_replaced_text": deleted_or_replaced_text,
-                        "intermediate_after_state_text": reconstruction_result.final_text,
-                        "deleted_text_length": len(deleted_or_replaced_text),
-                        "after_state_length": len(reconstruction_result.final_text)
+                        "deleted_or_replaced_text": reconstructor_output.deleted_or_replaced_text,
+                        "newly_inserted_text": reconstructor_output.newly_inserted_text,
+                        "intermediate_after_state_text": reconstructor_output.intermediate_after_state_text,
+                        "deleted_text_length": len(reconstructor_output.deleted_or_replaced_text),
+                        "newly_inserted_text_length": len(reconstructor_output.newly_inserted_text),
+                        "after_state_length": len(reconstructor_output.intermediate_after_state_text)
                     },
                     # Enhanced metadata from new reconstructor
                     "advanced_reconstruction_metadata": {
@@ -632,40 +470,17 @@ class BillProcessingPipeline:
                 reconstruction_results.append(result_entry)
                 
                 # Progress indicator
-                deleted_len = len(deleted_or_replaced_text)
-                after_len = len(reconstruction_result.final_text)
+                deleted_len = len(reconstructor_output.deleted_or_replaced_text)
+                inserted_len = len(reconstructor_output.newly_inserted_text)
+                after_len = len(reconstructor_output.intermediate_after_state_text)
                 operations_info = f"{len(reconstruction_result.operations_applied)} operations applied"
                 if reconstruction_result.operations_failed:
                     operations_info += f", {len(reconstruction_result.operations_failed)} failed"
-                logger.debug("Reconstructed: %d chars deleted/replaced → %d chars after state (%s)", 
-                           deleted_len, after_len, operations_info)
+                logger.debug("Reconstructed: %d chars deleted/replaced, %d chars inserted → %d chars after state (%s)", 
+                           deleted_len, inserted_len, after_len, operations_info)
                     
             except Exception as e:
-                chunk_duration = time.time() - chunk_start_time
                 logger.error("Error processing chunk %s: %s", chunk.chunk_id, e)
-                
-                # Log error trace data
-                self._log_step_error(chunk.chunk_id, "step_4_text_reconstruction", e, {
-                    "processing_duration_seconds": chunk_duration,
-                    "input_params": {
-                        "chunk_text": chunk.text,
-                        "chunk_text_length": len(chunk.text),
-                        "hierarchy_path": chunk.hierarchy_path,
-                        "target_article": {
-                            "operation_type": chunk.target_article.operation_type.value if chunk.target_article else None,
-                            "code": chunk.target_article.code if chunk.target_article else None,
-                            "article": chunk.target_article.article if chunk.target_article else None
-                        } if chunk.target_article else None,
-                        "original_text_available": bool(original_texts_lookup.get(self._build_article_key(
-                            chunk.target_article.code if chunk.target_article else None,
-                            chunk.target_article.article if chunk.target_article else None
-                        ), ""))
-                    },
-                    "component_metadata": {
-                        "component_name": "LegalAmendmentReconstructor",
-                        "cache_used": getattr(self.text_reconstructor, 'use_cache', False)
-                    }
-                })
                 
                 result_entry = {
                     "chunk_id": chunk.chunk_id,
@@ -678,18 +493,425 @@ class BillProcessingPipeline:
                         "confidence": 1.0 if chunk.target_article else None,
                         "raw_text": (chunk.text[:50] + "..." if len(chunk.text) > 50 else chunk.text) if chunk.target_article else None
                     },
-                    "reconstruction_result": None,
+                    "reconstruction_result": None,  # Fixed: No reconstruction result due to error
                     "error": str(e)
                 }
                 reconstruction_results.append(result_entry)
 
         self.reconstruction_results = reconstruction_results
         self.reconstruction_analysis = self._analyze_reconstruction_results(reconstruction_results)
-        logger.info("Text reconstruction complete: %d/%d successful reconstructions", 
-                   self.reconstruction_analysis['successful_reconstructions'],
-                   self.reconstruction_analysis['total_chunks'])
+        
+        # Enhanced logging with detailed failure information
+        successful_count = self.reconstruction_analysis['successful_reconstructions']
+        failed_count = self.reconstruction_analysis['failed_reconstructions']
+        total_count = self.reconstruction_analysis['total_chunks']
+        
+        logger.info("Text reconstruction complete: %d/%d successful reconstructions (%d failed)", 
+                   successful_count, total_count, failed_count)
+        
+        # Log detailed failure analysis if there are failures
+        if failed_count > 0:
+            failure_analysis = self.reconstruction_analysis.get('failure_analysis', {})
+            logger.info("Failure breakdown: %d no reconstruction result, %d reconstruction failed", 
+                       failure_analysis.get('no_reconstruction_result', 0),
+                       failure_analysis.get('reconstruction_failed', 0))
+            
+            # Log chunks with operation failures
+            operation_failures = self.reconstruction_analysis.get('operation_failure_stats', {})
+            if operation_failures:
+                logger.info("Chunks with partial operation failures: %s", list(operation_failures.keys()))
         
         return reconstruction_results
+
+    def step_5_locate_references(self) -> List[Dict]:
+        """
+        Step 5: Locate normative references in delta fragments using focused scanning.
+
+
+        
+        REFERENCE CLASSIFICATION:
+        ========================
+        The method classifies references by source type for downstream processing:
+        
+        - DELETIONAL references: Found in deleted_or_replaced_text
+          → Use original law context for object linking (Step 3)
+        - DEFINITIONAL references: Found in newly_inserted_text  
+          → Use amended text context for object linking (Step 3)
+        
+        This classification drives the entire downstream reference resolution process.
+
+
+        Args:
+            None (uses self.reconstruction_results from Step 4)
+
+        Returns:
+            List of reference location results, each containing:
+            - chunk_id: Unique identifier for the chunk
+            - chunk_text_preview: Preview of the chunk text
+            - hierarchy_path: Legislative hierarchy path
+            - target_article: Target article information
+            - reconstruction_result: Text reconstruction data
+            - located_references: List of found references with source classification
+            - reference_count: Total number of references found
+            - reference_breakdown: Count by source type (DELETIONAL/DEFINITIONAL)
+            - focused_scanning_performance: Performance metrics vs traditional approach
+            - located_at: Timestamp of processing
+
+        Raises:
+            ValueError: If text reconstruction results from Step 4 are not available
+        """
+        if not self.reconstruction_results:
+            raise ValueError("Text reconstruction results must be completed first.")
+
+        logger.info("Step 5: Locating normative references using focused scanning...")
+        
+        # FILTER: Only process successful reconstructions to avoid downstream issues
+        successful_reconstructions = []
+        failed_reconstructions = []
+        
+        for result in self.reconstruction_results:
+            reconstruction_result = result.get("reconstruction_result")
+            if reconstruction_result:
+                # Check if the reconstruction was actually successful
+                advanced_metadata = result.get("advanced_reconstruction_metadata", {})
+                actual_success = advanced_metadata.get("success", True)  # Default to True for backward compatibility
+                
+                if actual_success:
+                    successful_reconstructions.append(result)
+                else:
+                    failed_reconstructions.append(result)
+            else:
+                # No reconstruction result at all
+                failed_reconstructions.append(result)
+        
+        logger.info("Processing %d successful reconstructions (skipping %d failed reconstructions)", 
+                   len(successful_reconstructions), len(failed_reconstructions))
+        
+        reference_location_results = []
+        
+        # Process only successful reconstruction results with focused scanning
+        for i, result in enumerate(successful_reconstructions, 1):
+            logger.debug("Processing successful reconstruction %d/%d: %s", i, len(successful_reconstructions), result["chunk_id"][:50])
+            
+            # Capture start time for performance tracking
+            chunk_start_time = time.time()
+            
+            try:
+                # VALIDATION: All results at this point should have successful reconstruction_result
+                # This is guaranteed by the filtering above
+                reconstruction_result = result["reconstruction_result"]
+                
+                # FOCUSED SCANNING SETUP: Create ReconstructorOutput from successful reconstruction
+                # This is the key step - we create the focused input format for the ReferenceLocator
+                reconstructor_output = ReconstructorOutput(
+                    deleted_or_replaced_text=reconstruction_result["deleted_or_replaced_text"],
+                    newly_inserted_text=reconstruction_result["newly_inserted_text"],
+                    intermediate_after_state_text=reconstruction_result["intermediate_after_state_text"]
+                )
+                
+                # CORE FOCUSED SCANNING: Use ReferenceLocator to scan delta fragments
+                # This achieves the 30x+ performance improvement by focusing on changes only
+                located_references = self.reference_locator.locate(reconstructor_output)
+                
+                chunk_duration = time.time() - chunk_start_time
+                
+                # PERFORMANCE ANALYSIS: Calculate focused scanning efficiency gains
+                # This demonstrates the dramatic improvement over traditional approaches
+                deleted_len = len(reconstruction_result["deleted_or_replaced_text"])
+                inserted_len = len(reconstruction_result["newly_inserted_text"])
+                full_len = len(reconstruction_result["intermediate_after_state_text"])
+                delta_chars = deleted_len + inserted_len
+                performance_gain = full_len / delta_chars if delta_chars > 0 else 1
+                
+                # REFERENCE CLASSIFICATION: Analyze found references by source type
+                # This breakdown is crucial for downstream processing decisions
+                deletional_refs = [r for r in located_references if r.source == ReferenceSourceType.DELETIONAL]
+                definitional_refs = [r for r in located_references if r.source == ReferenceSourceType.DEFINITIONAL]
+                
+
+                
+                # RESULT CONSTRUCTION: Build comprehensive result entry
+                # This provides all necessary information for downstream processing and analysis
+                result_entry = {
+                    "chunk_id": result["chunk_id"],
+                    "chunk_text_preview": result.get("chunk_text_preview", ""),
+                    "hierarchy_path": result.get("hierarchy_path", []),
+                    "target_article": result.get("target_article"),
+                    "reconstruction_result": reconstruction_result,
+                    "located_references": [
+                        {
+                            "reference_text": ref.reference_text,
+                            "source": ref.source.value,
+                            "confidence": ref.confidence
+                        }
+                        for ref in located_references
+                    ],
+                    "reference_count": len(located_references),
+                    "reference_breakdown": {
+                        "deletional_count": len(deletional_refs),
+                        "definitional_count": len(definitional_refs)
+                    },
+                    "focused_scanning_performance": {
+                        "delta_characters_processed": delta_chars,
+                        "full_article_characters": full_len,
+                        "performance_gain_multiplier": performance_gain,
+                        "efficiency_improvement_percent": ((performance_gain - 1) * 100) if performance_gain > 1 else 0
+                    },
+                    "located_at": datetime.now().isoformat()
+                }
+                
+                reference_location_results.append(result_entry)
+                
+                # PROGRESS REPORTING: Log processing progress
+                logger.info(
+                    f"Successful reconstruction {i}/{len(successful_reconstructions)}: "
+                    f"Located {len(located_references)} references "
+                    f"({len(deletional_refs)} DELETIONAL, {len(definitional_refs)} DEFINITIONAL) "
+                    f"in {chunk_duration:.2f}s"
+                )
+
+            except Exception as e:
+                # ERROR HANDLING: Comprehensive error logging and graceful degradation
+                # Individual chunk failures don't abort the entire pipeline
+                chunk_duration = time.time() - chunk_start_time
+                logger.error(f"Reference location failed for chunk {result['chunk_id']}: {e}")
+                
+
+                
+                # Create error result entry to maintain pipeline consistency
+                result_entry = {
+                    "chunk_id": result["chunk_id"],
+                    "chunk_text_preview": result.get("chunk_text_preview", ""),
+                    "hierarchy_path": result.get("hierarchy_path", []),
+                    "target_article": result.get("target_article"),
+                    "reconstruction_result": result.get("reconstruction_result"),
+                    "located_references": [],
+                    "reference_count": 0,
+                    "error": str(e)
+                }
+                reference_location_results.append(result_entry)
+
+        # ADD FAILED RECONSTRUCTIONS: Include failed reconstructions in results for pipeline consistency
+        # These will have empty reference results since they weren't processed
+        for failed_result in failed_reconstructions:
+            result_entry = {
+                "chunk_id": failed_result["chunk_id"],
+                "chunk_text_preview": failed_result.get("chunk_text_preview", ""),
+                "hierarchy_path": failed_result.get("hierarchy_path", []),
+                "target_article": failed_result.get("target_article"),
+                "reconstruction_result": failed_result.get("reconstruction_result"),
+                "located_references": [],
+                "reference_count": 0,
+                "skip_reason": "Reconstruction failed - skipped to avoid downstream issues"
+            }
+            reference_location_results.append(result_entry)
+        
+        # PIPELINE STATE UPDATE: Store results and perform comprehensive analysis
+        self.reference_location_results = reference_location_results
+        self.reference_location_analysis = self._analyze_reference_location_results(reference_location_results)
+        
+        # FINAL REPORTING: Log overall pipeline step completion with summary statistics
+        total_refs = sum(result["reference_count"] for result in reference_location_results)
+        successful_chunks = sum(1 for result in reference_location_results if "skip_reason" not in result)
+        
+        logger.info(
+            f"Step 5 completed: Located {total_refs} references across {successful_chunks} successful chunks "
+            f"(skipped {len(failed_reconstructions)} failed reconstructions) "
+            f"using focused scanning approach"
+        )
+        
+        return reference_location_results
+
+    def step_6_link_references(self) -> List[Dict]:
+        """
+        Step 6: Link references to grammatical objects using context-aware analysis with resolution question generation.
+
+        Args:
+            None (uses self.reference_location_results from Step 5)
+
+        Returns:
+            List of reference linking results, each containing:
+            - chunk_id: Unique identifier for the chunk
+            - chunk_text_preview: Preview of the chunk text
+            - hierarchy_path: Legislative hierarchy path
+            - target_article: Target article information
+            - reconstruction_result: Text reconstruction data
+            - linked_references: List of found linked references with objects and resolution questions
+            - linked_reference_count: Total number of linked references found
+            - linked_at: Timestamp of processing
+
+        Raises:
+            ValueError: If reference location results from Step 5 are not available
+        """
+        if not self.reference_location_results:
+            raise ValueError("Reference location results must be completed first.")
+
+        logger.info("Step 6: Linking references to grammatical objects...")
+        
+        # FILTER: Only process successful reference locations to avoid downstream issues
+        successful_reference_locations = []
+        failed_reference_locations = []
+        
+        for result in self.reference_location_results:
+            # Skip chunks that were skipped in step 5 due to failed reconstructions
+            if "skip_reason" in result:
+                failed_reference_locations.append(result)
+                continue
+                
+            # Skip chunks without reconstruction_result or located_references
+            if not result.get("reconstruction_result") or not result.get("located_references"):
+                failed_reference_locations.append(result)
+                continue
+                
+            # Skip chunks with no references to process
+            if len(result.get("located_references", [])) == 0:
+                failed_reference_locations.append(result)
+                continue
+                
+            successful_reference_locations.append(result)
+        
+        logger.info("Processing %d successful reference locations (skipping %d failed/skipped locations)", 
+                   len(successful_reference_locations), len(failed_reference_locations))
+        
+        reference_linking_results = []
+        
+        # Process only successful reference location results
+        for i, result in enumerate(successful_reference_locations, 1):
+            logger.debug("Processing successful reference location %d/%d: %s", i, len(successful_reference_locations), result["chunk_id"][:50])
+            
+            # Capture start time for performance tracking
+            chunk_start_time = time.time()
+            
+            try:
+                # VALIDATION: All results at this point should have successful reconstruction_result and located_references
+                # This is guaranteed by the filtering above
+                reconstruction_result = result["reconstruction_result"]
+                located_references_data = result["located_references"]
+                
+                # Convert located references data back to LocatedReference objects
+                located_references = []
+                for ref_data in located_references_data:
+                    located_ref = LocatedReference(
+                        reference_text=ref_data["reference_text"],
+                        source=ReferenceSourceType(ref_data["source"]),
+                        confidence=ref_data["confidence"]
+                    )
+                    located_references.append(located_ref)
+                
+                # CONTEXT PREPARATION: Get original text from retrieval results
+                target_article = result.get("target_article", {})
+                article_key = self._build_article_key(target_article.get("code"), target_article.get("article"))
+                original_texts_lookup = self._create_original_texts_lookup()
+                original_law_article = original_texts_lookup.get(article_key, "")
+                intermediate_after_state_text = reconstruction_result["intermediate_after_state_text"]
+                
+                # CORE REFERENCE LINKING: Use ReferenceObjectLinker with context switching
+                linked_references = self.reference_object_linker.link_references(
+                    located_references=located_references,
+                    original_law_article=original_law_article,
+                    intermediate_after_state_text=intermediate_after_state_text
+                )
+                
+                chunk_duration = time.time() - chunk_start_time
+                
+                # REFERENCE CLASSIFICATION: Analyze linked references by source type
+                deletional_refs = [r for r in linked_references if r.source == ReferenceSourceType.DELETIONAL]
+                definitional_refs = [r for r in linked_references if r.source == ReferenceSourceType.DEFINITIONAL]
+                
+
+                
+                # RESULT CONSTRUCTION: Build comprehensive result entry
+                result_entry = {
+                    "chunk_id": result["chunk_id"],
+                    "chunk_text_preview": result.get("chunk_text_preview", ""),
+                    "hierarchy_path": result.get("hierarchy_path", []),
+                    "target_article": result.get("target_article"),
+                    "reconstruction_result": reconstruction_result,
+                    "linked_references": [
+                        {
+                            "reference_text": ref.reference_text,
+                            "source": ref.source.value,
+                            "object": ref.object,
+                            "agreement_analysis": ref.agreement_analysis,
+                            "confidence": ref.confidence,
+                            "resolution_question": ref.resolution_question
+                        }
+                        for ref in linked_references
+                    ],
+                    "linked_reference_count": len(linked_references),
+                    "reference_breakdown": {
+                        "deletional_count": len(deletional_refs),
+                        "definitional_count": len(definitional_refs)
+                    },
+                    "context_switching_info": {
+                        "original_law_article_available": bool(original_law_article.strip()),
+                        "intermediate_after_state_text_available": bool(intermediate_after_state_text.strip()),
+                        "article_key": article_key
+                    },
+                    "processing_duration_seconds": chunk_duration,
+                    "linked_at": datetime.now().isoformat()
+                }
+                
+                reference_linking_results.append(result_entry)
+                
+                # PROGRESS REPORTING: Log processing progress
+                logger.info(
+                    f"Successful reference location {i}/{len(successful_reference_locations)}: "
+                    f"Linked {len(linked_references)} references "
+                    f"({len(deletional_refs)} DELETIONAL, {len(definitional_refs)} DEFINITIONAL) "
+                    f"in {chunk_duration:.2f}s"
+                )
+
+            except Exception as e:
+                # ERROR HANDLING: Comprehensive error logging and graceful degradation
+                chunk_duration = time.time() - chunk_start_time
+                logger.error(f"Reference linking failed for chunk {result['chunk_id']}: {e}")
+                
+
+                
+                # Create error result entry to maintain pipeline consistency
+                result_entry = {
+                    "chunk_id": result["chunk_id"],
+                    "chunk_text_preview": result.get("chunk_text_preview", ""),
+                    "hierarchy_path": result.get("hierarchy_path", []),
+                    "target_article": result.get("target_article"),
+                    "reconstruction_result": result.get("reconstruction_result"),
+                    "linked_references": [],
+                    "linked_reference_count": 0,
+                    "error": str(e)
+                }
+                reference_linking_results.append(result_entry)
+
+        # ADD FAILED REFERENCE LOCATIONS: Include failed reference locations in results for pipeline consistency
+        # These will have empty linking results since they weren't processed
+        for failed_result in failed_reference_locations:
+            result_entry = {
+                "chunk_id": failed_result["chunk_id"],
+                "chunk_text_preview": failed_result.get("chunk_text_preview", ""),
+                "hierarchy_path": failed_result.get("hierarchy_path", []),
+                "target_article": failed_result.get("target_article"),
+                "reconstruction_result": failed_result.get("reconstruction_result"),
+                "linked_references": [],
+                "linked_reference_count": 0,
+                "skip_reason": "Reference location failed or skipped - skipped to avoid downstream issues"
+            }
+            reference_linking_results.append(result_entry)
+
+        # PIPELINE STATE UPDATE: Store results and perform comprehensive analysis
+        self.reference_linking_results = reference_linking_results
+        self.reference_linking_analysis = self._analyze_reference_linking_results(reference_linking_results)
+        
+        # FINAL REPORTING: Log overall pipeline step completion with summary statistics
+        total_refs = sum(result["linked_reference_count"] for result in reference_linking_results)
+        successful_chunks = sum(1 for result in reference_linking_results if "skip_reason" not in result)
+        
+        logger.info(
+            f"Step 6 completed: Linked {total_refs} references across {successful_chunks} successful chunks "
+            f"(skipped {len(failed_reference_locations)} failed/skipped reference locations) "
+            f"using context-switching approach"
+        )
+        
+        return reference_linking_results
 
     def run_full_pipeline(self) -> Dict:
         """
@@ -708,6 +930,8 @@ class BillProcessingPipeline:
         target_results = self.step_2_identify_target_articles()
         retrieval_results = self.step_3_retrieve_original_texts()
         reconstruction_results = self.step_4_reconstruct_texts()
+        reference_location_results = self.step_5_locate_references()
+        reference_linking_results = self.step_6_link_references()
         
         # Compile comprehensive results
         pipeline_results = {
@@ -715,7 +939,7 @@ class BillProcessingPipeline:
                 "generated_at": datetime.now().isoformat(),
                 "total_chunks": len(chunks),
                 "pipeline_version": "1.0",
-                "pipeline_steps": ["BillSplitter", "TargetArticleIdentifier", "OriginalTextRetriever", "LegalAmendmentReconstructor"]
+                "pipeline_steps": ["BillSplitter", "TargetArticleIdentifier", "OriginalTextRetriever", "LegalAmendmentReconstructor", "ReferenceLocator", "ReferenceObjectLinker"]
             },
             "chunks": [self._chunk_to_dict(chunk) for chunk in chunks],
             "target_analysis": self.target_analysis,
@@ -723,7 +947,11 @@ class BillProcessingPipeline:
             "retrieval_analysis": self.retrieval_analysis,
             "original_text_results": retrieval_results,
             "reconstruction_analysis": self.reconstruction_analysis,
-            "text_reconstruction_results": reconstruction_results
+            "text_reconstruction_results": reconstruction_results,
+            "reference_location_analysis": self.reference_location_analysis,
+            "reference_linking_analysis": self.reference_linking_analysis,
+            "reference_location_results": reference_location_results,
+            "reference_linking_results": reference_linking_results
         }
         
         logger.info("Full pipeline execution complete")
@@ -750,30 +978,40 @@ class BillProcessingPipeline:
                 "generated_at": datetime.now().isoformat(),
                 "total_chunks": len(self.chunks),
                 "pipeline_version": "1.0",
-                "pipeline_steps": ["BillSplitter", "TargetArticleIdentifier", "OriginalTextRetriever", "LegalAmendmentReconstructor"]
+                "pipeline_steps": ["BillSplitter", "TargetArticleIdentifier", "OriginalTextRetriever", "LegalAmendmentReconstructor", "ReferenceLocator", "ReferenceObjectLinker"]
             },
             "target_analysis": self.target_analysis,
             "target_identification_results": self.target_results,
             "retrieval_analysis": self.retrieval_analysis,
             "original_text_results": self.retrieval_results,
             "reconstruction_analysis": self.reconstruction_analysis,
-            "text_reconstruction_results": self.reconstruction_results
+            "text_reconstruction_results": self.reconstruction_results,
+            "reference_location_analysis": self.reference_location_analysis,
+            "reference_linking_analysis": self.reference_linking_analysis,
+            "reference_location_results": self.reference_location_results,
+            "reference_linking_results": self.reference_linking_results
         }
         
         with open(results_file, 'w', encoding='utf-8') as f:
             json.dump(pipeline_results, f, indent=2, ensure_ascii=False)
         
-        # Save reconstruction results for next pipeline step (ReferenceLocator)
-        reconstruction_output_file = output_dir / f"text_reconstruction_output_{timestamp}.json"
+                    # Save reconstruction results for next pipeline step (ReferenceResolver)
+        reconstruction_output_file = output_dir / f"reference_linking_output_{timestamp}.json"
         reconstruction_output = {
             "metadata": {
                 "generated_at": datetime.now().isoformat(),
                 "total_chunks_processed": len(self.reconstruction_results),
                 "successful_reconstructions": self.reconstruction_analysis.get("successful_reconstructions", 0),
-                "next_pipeline_step": "ReferenceLocator"
+                "successful_reference_locations": self.reference_location_analysis.get("successful_locations", 0),
+                "successful_reference_links": self.reference_linking_analysis.get("successful_links", 0),
+                "next_pipeline_step": "ReferenceResolver"
             },
             "reconstruction_results": self.reconstruction_results,
-            "analysis": self.reconstruction_analysis
+            "reconstruction_analysis": self.reconstruction_analysis,
+            "reference_location_results": self.reference_location_results,
+            "reference_location_analysis": self.reference_location_analysis,
+            "reference_linking_results": self.reference_linking_results,
+            "reference_linking_analysis": self.reference_linking_analysis
         }
         
         with open(reconstruction_output_file, 'w', encoding='utf-8') as f:
@@ -804,291 +1042,108 @@ class BillProcessingPipeline:
             "text_reconstruction": {
                 "success_rate": self.reconstruction_analysis.get("success_rate", 0),
                 "successful_reconstructions": self.reconstruction_analysis.get("successful_reconstructions", 0),
-                "total_chunks": self.reconstruction_analysis.get("total_chunks", 0)
+                "failed_reconstructions": self.reconstruction_analysis.get("failed_reconstructions", 0),
+                "total_chunks": self.reconstruction_analysis.get("total_chunks", 0),
+                "failure_analysis": self.reconstruction_analysis.get("failure_analysis", {}),
+                "operation_failure_stats": self.reconstruction_analysis.get("operation_failure_stats", {})
+            },
+            "reference_location": {
+                "successful_locations": self.reference_location_analysis.get("successful_locations", 0),
+                "total_locations": self.reference_location_analysis.get("total_locations", 0)
+            },
+            "reference_linking": {
+                "successful_links": self.reference_linking_analysis.get("successful_links", 0),
+                "total_links": self.reference_linking_analysis.get("total_links", 0)
             }
         }
+
+    def get_reconstruction_status_for_chunk(self, chunk_id: str) -> Optional[Dict]:
+        """
+        Get detailed reconstruction status for a specific chunk.
+        
+        Args:
+            chunk_id: The chunk ID to look up
+            
+        Returns:
+            Dictionary with reconstruction status details, or None if chunk not found
+        """
+        if not self.reconstruction_results:
+            return None
+            
+        for result in self.reconstruction_results:
+            if result["chunk_id"] == chunk_id:
+                reconstruction_result = result.get("reconstruction_result")
+                advanced_metadata = result.get("advanced_reconstruction_metadata", {})
+                
+                return {
+                    "chunk_id": chunk_id,
+                    "has_reconstruction_result": bool(reconstruction_result),
+                    "actual_success": advanced_metadata.get("success", True),
+                    "operations_applied": advanced_metadata.get("operations_applied", 0),
+                    "operations_failed": advanced_metadata.get("operations_failed", 0),
+                    "processing_time_ms": advanced_metadata.get("processing_time_ms", 0),
+                    "validation_warnings": advanced_metadata.get("validation_warnings", []),
+                    "error": result.get("error"),
+                    "target_article": result.get("target_article"),
+                    "reconstruction_result_preview": {
+                        "deleted_text_length": reconstruction_result.get("deleted_text_length", 0) if reconstruction_result else 0,
+                        "newly_inserted_text_length": reconstruction_result.get("newly_inserted_text_length", 0) if reconstruction_result else 0,
+                        "after_state_length": reconstruction_result.get("after_state_length", 0) if reconstruction_result else 0
+                    } if reconstruction_result else None
+                }
+        
+        return None
 
     # Cache management methods
 
-    def clear_component_cache(self, component_name: Optional[str] = None) -> None:
+    def clear_cache(self, component: Optional[str] = None) -> int:
         """
-        Clear cache for a specific component or all components.
+        Clear cached Mistral API results.
         
         Args:
-            component_name: Name of component to clear ('target_identifier', 
-                          'original_text_retriever', 'text_reconstructor'), 
-                          or None to clear all
-        """
-        if component_name:
-            if component_name == "target_identifier" and hasattr(self.target_identifier, 'clear_cache'):
-                self.target_identifier.clear_cache()
-            elif component_name == "original_text_retriever" and hasattr(self.original_text_retriever, 'clear_cache'):
-                self.original_text_retriever.clear_cache()
-            elif component_name == "text_reconstructor" and hasattr(self.text_reconstructor, 'clear_all_caches'):
-                self.text_reconstructor.clear_all_caches()
-            else:
-                logger.warning("Component '%s' not found or doesn't support caching", component_name)
-                return
-        else:
-            # Clear all component caches
-            for component_name, component in [
-                ("target_identifier", self.target_identifier),
-                ("original_text_retriever", self.original_text_retriever),
-                ("text_reconstructor", self.text_reconstructor)
-            ]:
-                if hasattr(component, 'clear_cache'):
-                    component.clear_cache()
-                elif hasattr(component, 'clear_all_caches'):  # For LegalAmendmentReconstructor
-                    component.clear_all_caches()
+            component: Optional component name to clear cache for. If None, clears all cache entries.
+                      Valid component names: 'target_identifier', 'text_reconstructor', 
+                      'reference_locator', 'reference_object_linker'
         
-        logger.info("Cleared component cache for: %s", component_name or "all components")
+        Returns:
+            Number of cache entries cleared
+        """
+        # All components use the same centralized cache
+        cache = get_mistral_cache()
+        
+        if component is None:
+            # Clear all cache entries
+            cleared_count = cache.clear()
+            logger.info("Cleared %d Mistral API cache entries", cleared_count)
+        else:
+            # Clear cache for specific component
+            cleared_count = cache.clear_by_component(component)
+            logger.info("Cleared %d Mistral API cache entries for component '%s'", cleared_count, component)
+        
+        return cleared_count
+
+    def get_cache_stats(self, component: Optional[str] = None) -> dict:
+        """
+        Get statistics for cached Mistral API calls.
+        
+        Args:
+            component: Optional component name to get stats for. If None, returns stats for all components.
+                      Valid component names: 'target_identifier', 'text_reconstructor', 
+                      'reference_locator', 'reference_object_linker'
+        
+        Returns:
+            Dictionary with cache statistics
+        """
+        cache = get_mistral_cache()
+        return cache.get_stats(component)
 
     # Comprehensive tracing methods
 
-    def _init_chunk_trace(self, chunk_id: str, chunk_text: str = "", hierarchy_path: List[str] = None) -> None:
-        """Initialize trace data for a chunk."""
-        if not self.trace_enabled:
-            return
-            
-        self.chunk_traces[chunk_id] = {
-            "chunk_metadata": {
-                "chunk_id": chunk_id,
-                "chunk_text_preview": chunk_text[:100] + "..." if len(chunk_text) > 100 else chunk_text,
-                "chunk_text_length": len(chunk_text),
-                "hierarchy_path": hierarchy_path or [],
-                "trace_initialized_at": datetime.now().isoformat()
-            }
-        }
 
-    def _log_step_trace(self, chunk_id: str, step_name: str, step_data: Dict[str, Any]) -> None:
-        """Log detailed trace data for a specific step and chunk."""
-        if not self.trace_enabled or chunk_id not in self.chunk_traces:
-            return
-        
-        # Add timestamp to step data
-        step_data_with_timestamp = {
-            "timestamp": datetime.now().isoformat(),
-            **step_data
-        }
-        
-        self.chunk_traces[chunk_id][step_name] = step_data_with_timestamp
 
-    def _log_step_error(self, chunk_id: str, step_name: str, error: Exception, additional_context: Dict[str, Any] = None) -> None:
-        """Log error information for a specific step and chunk."""
-        if not self.trace_enabled:
-            return
-        
-        if chunk_id not in self.chunk_traces:
-            self._init_chunk_trace(chunk_id)
-        
-        error_data = {
-            "timestamp": datetime.now().isoformat(),
-            "success": False,
-            "error": str(error),
-            "error_type": type(error).__name__,
-            "additional_context": additional_context or {}
-        }
-        
-        self.chunk_traces[chunk_id][step_name] = error_data
 
-    def _serialize_for_json(self, obj: Any) -> Any:
-        """
-        Recursively serialize objects to make them JSON-compatible.
-        
-        Args:
-            obj: Object to serialize
-            
-        Returns:
-            JSON-serializable representation of the object
-        """
-        if obj is None:
-            return None
-        elif isinstance(obj, (str, int, float, bool)):
-            return obj
-        elif isinstance(obj, (list, tuple)):
-            return [self._serialize_for_json(item) for item in obj]
-        elif isinstance(obj, dict):
-            return {key: self._serialize_for_json(value) for key, value in obj.items()}
-        elif hasattr(obj, '__dict__'):
-            # Handle dataclass objects and custom classes
-            result = {}
-            for key, value in obj.__dict__.items():
-                if not key.startswith('_'):  # Skip private attributes
-                    result[key] = self._serialize_for_json(value)
-            return result
-        elif hasattr(obj, 'value'):
-            # Handle Enum objects
-            return obj.value
-        else:
-            # Fallback: convert to string
-            return str(obj)
 
-    def export_chunk_traces_to_file(self, output_path: Path) -> None:
-        """Export all chunk traces to a comprehensive text file for debugging."""
-        if not self.chunk_traces:
-            logger.warning("No chunk traces available to export")
-            return
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write("="*80 + "\n")
-            f.write("COMPREHENSIVE PIPELINE CHUNK TRACES\n")
-            f.write("="*80 + "\n")
-            f.write(f"Generated at: {datetime.now().isoformat()}\n")
-            f.write(f"Total chunks traced: {len(self.chunk_traces)}\n")
-            f.write("="*80 + "\n\n")
-            
-            for chunk_id, trace_data in self.chunk_traces.items():
-                f.write(f"CHUNK: {chunk_id}\n")
-                f.write("-"*80 + "\n")
-                
-                # Write chunk metadata
-                if "chunk_metadata" in trace_data:
-                    metadata = trace_data["chunk_metadata"]
-                    f.write(f"Text Preview: {metadata.get('chunk_text_preview', 'N/A')}\n")
-                    f.write(f"Text Length: {metadata.get('chunk_text_length', 0)} characters\n")
-                    f.write(f"Hierarchy Path: {' > '.join(metadata.get('hierarchy_path', []))}\n")
-                    f.write(f"Initialized: {metadata.get('trace_initialized_at', 'N/A')}\n")
-                    f.write("\n")
-                
-                # Write step traces in order (focusing on chunk-specific steps)
-                step_order = ["step_1_split", "step_2_target_identification", "step_4_text_reconstruction"]
-                
-                for step_name in step_order:
-                    if step_name in trace_data:
-                        f.write(f"  {step_name.upper().replace('_', ' ')}\n")
-                        f.write(f"  {'-'*60}\n")
-                        
-                        step_info = trace_data[step_name]
-                        f.write(f"  Timestamp: {step_info.get('timestamp', 'N/A')}\n")
-                        f.write(f"  Success: {step_info.get('success', 'N/A')}\n")
-                        
-                        if step_info.get('success') == False:
-                            f.write(f"  Error: {step_info.get('error', 'N/A')}\n")
-                            f.write(f"  Error Type: {step_info.get('error_type', 'N/A')}\n")
-                        
-                        # Write step-specific details with proper serialization
-                        for key, value in step_info.items():
-                            if key not in ['timestamp', 'success', 'error', 'error_type']:
-                                if isinstance(value, (dict, list)):
-                                    try:
-                                        # Serialize complex objects before JSON encoding
-                                        serialized_value = self._serialize_for_json(value)
-                                        f.write(f"  {key.title().replace('_', ' ')}: {json.dumps(serialized_value, indent=4, ensure_ascii=False)}\n")
-                                    except (TypeError, ValueError) as e:
-                                        # Fallback to string representation if JSON serialization fails
-                                        f.write(f"  {key.title().replace('_', ' ')}: {str(value)}\n")
-                                        logger.debug(f"JSON serialization failed for {key}: {e}")
-                                else:
-                                    f.write(f"  {key.title().replace('_', ' ')}: {value}\n")
-                        
-                        f.write("\n")
-                
-                # Write any additional steps not in the standard order
-                for step_name, step_info in trace_data.items():
-                    if step_name not in step_order and step_name != "chunk_metadata":
-                        f.write(f"  {step_name.upper().replace('_', ' ')}\n")
-                        f.write(f"  {'-'*60}\n")
-                        
-                        f.write(f"  Timestamp: {step_info.get('timestamp', 'N/A')}\n")
-                        f.write(f"  Success: {step_info.get('success', 'N/A')}\n")
-                        
-                        if step_info.get('success') == False:
-                            f.write(f"  Error: {step_info.get('error', 'N/A')}\n")
-                            f.write(f"  Error Type: {step_info.get('error_type', 'N/A')}\n")
-                        
-                        # Write step-specific details with proper serialization
-                        for key, value in step_info.items():
-                            if key not in ['timestamp', 'success', 'error', 'error_type']:
-                                if isinstance(value, (dict, list)):
-                                    try:
-                                        # Serialize complex objects before JSON encoding
-                                        serialized_value = self._serialize_for_json(value)
-                                        f.write(f"  {key.title().replace('_', ' ')}: {json.dumps(serialized_value, indent=4, ensure_ascii=False)}\n")
-                                    except (TypeError, ValueError) as e:
-                                        # Fallback to string representation if JSON serialization fails
-                                        f.write(f"  {key.title().replace('_', ' ')}: {str(value)}\n")
-                                        logger.debug(f"JSON serialization failed for {key}: {e}")
-                                else:
-                                    f.write(f"  {key.title().replace('_', ' ')}: {value}\n")
-                        
-                        f.write("\n")
-                
-                f.write("="*80 + "\n\n")
-        
-        logger.info("Chunk traces exported to: %s", output_path)
 
-    def enable_tracing(self) -> None:
-        """Enable comprehensive chunk tracing."""
-        self.trace_enabled = True
-        logger.info("Comprehensive chunk tracing enabled")
-
-    def disable_tracing(self) -> None:
-        """Disable comprehensive chunk tracing."""
-        self.trace_enabled = False
-        logger.info("Comprehensive chunk tracing disabled")
-
-    def clear_traces(self) -> None:
-        """Clear all accumulated trace data."""
-        self.chunk_traces.clear()
-        logger.info("All chunk traces cleared")
-
-    def get_current_trace_status(self) -> Dict[str, Any]:
-        """
-        Get the current status of chunk tracing for notebook monitoring.
-        
-        Returns:
-            Dictionary with tracing status information
-        """
-        if not self.chunk_traces:
-            return {
-                "tracing_enabled": self.trace_enabled,
-                "chunks_traced": 0,
-                "steps_completed": [],
-                "message": "No traces collected yet"
-            }
-        
-        # Analyze what steps have been completed
-        steps_completed = set()
-        steps_per_chunk = {}
-        
-        for chunk_id, trace_data in self.chunk_traces.items():
-            chunk_steps = []
-            for step_name in trace_data:
-                if step_name != "chunk_metadata":
-                    steps_completed.add(step_name)
-                    chunk_steps.append(step_name)
-            steps_per_chunk[chunk_id] = chunk_steps
-        
-        return {
-            "tracing_enabled": self.trace_enabled,
-            "chunks_traced": len(self.chunk_traces),
-            "steps_completed": sorted(list(steps_completed)),
-            "steps_per_chunk_sample": dict(list(steps_per_chunk.items())[:3]),  # Show first 3 chunks
-            "total_steps_per_chunk": {step: sum(1 for chunk_steps in steps_per_chunk.values() if step in chunk_steps) for step in steps_completed}
-        }
-
-    def export_traces_after_step(self, step_name: str, output_path: Optional[Path] = None) -> Optional[Path]:
-        """
-        Convenience method to export traces after completing a specific step.
-        
-        Args:
-            step_name: Name of the step just completed (e.g., "step_1", "step_2")
-            output_path: Optional path for export (auto-generated if None)
-            
-        Returns:
-            Path to exported file if traces exist, None otherwise
-        """
-        if not self.chunk_traces:
-            logger.info("No traces to export after %s", step_name)
-            return None
-        
-        if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = Path(f"traces_after_{step_name}_{timestamp}.txt")
-        
-        self.export_chunk_traces_to_file(output_path)
-        logger.info("Exported traces after %s to: %s", step_name, output_path)
-        return output_path
 
     # Private helper methods
 
@@ -1136,7 +1191,7 @@ class BillProcessingPipeline:
             "code_stats": code_stats,
             "total_chunks_processed": len(results),
             "chunks_with_errors": error_count,
-            "chunks_with_identified_articles": len([r for r in results if r.get("target_article", {}).get("article")])
+            "chunks_with_identified_articles": len([r for r in results if r.get("target_article") and r["target_article"].get("article")])
         }
 
     def _analyze_retrieval_results(self, retrieval_results: List[Dict]) -> Dict:
@@ -1171,11 +1226,29 @@ class BillProcessingPipeline:
 
     def _analyze_reconstruction_results(self, reconstruction_results: List[Dict]) -> Dict:
         """Analyze reconstruction results."""
-        successful_reconstructions = [r for r in reconstruction_results if r.get("reconstruction_result")]
-        failed_reconstructions = [r for r in reconstruction_results if not r.get("reconstruction_result")]
+        # Check both presence of reconstruction_result AND actual success status
+        successful_reconstructions = []
+        failed_reconstructions = []
+        
+        for r in reconstruction_results:
+            reconstruction_result = r.get("reconstruction_result")
+            if reconstruction_result:
+                # Check if the reconstruction was actually successful
+                # Look for success status in advanced_reconstruction_metadata
+                advanced_metadata = r.get("advanced_reconstruction_metadata", {})
+                actual_success = advanced_metadata.get("success", True)  # Default to True for backward compatibility
+                
+                if actual_success:
+                    successful_reconstructions.append(r)
+                else:
+                    failed_reconstructions.append(r)
+            else:
+                # No reconstruction result at all (e.g., missing original text, exceptions)
+                failed_reconstructions.append(r)
         
         operation_stats = {}
         deleted_text_lengths = []
+        newly_inserted_text_lengths = []
         after_state_lengths = []
         
         for result in successful_reconstructions:
@@ -1186,10 +1259,32 @@ class BillProcessingPipeline:
                 
             reconstruction = result["reconstruction_result"]
             deleted_text_lengths.append(reconstruction["deleted_text_length"])
+            newly_inserted_text_lengths.append(reconstruction.get("newly_inserted_text_length", 0))
             after_state_lengths.append(reconstruction["after_state_length"])
         
         avg_deleted_length = sum(deleted_text_lengths) / len(deleted_text_lengths) if deleted_text_lengths else 0
+        avg_newly_inserted_length = sum(newly_inserted_text_lengths) / len(newly_inserted_text_lengths) if newly_inserted_text_lengths else 0
         avg_after_length = sum(after_state_lengths) / len(after_state_lengths) if after_state_lengths else 0
+        
+        # Analyze failure types for better debugging
+        failure_analysis = {
+            "no_reconstruction_result": len([r for r in failed_reconstructions if not r.get("reconstruction_result")]),
+            "reconstruction_failed": len([r for r in failed_reconstructions if r.get("reconstruction_result")])
+        }
+        
+        # Analyze operation failure details for successful reconstructions
+        operation_failure_stats = {}
+        for r in successful_reconstructions:
+            advanced_metadata = r.get("advanced_reconstruction_metadata", {})
+            operations_failed = advanced_metadata.get("operations_failed", 0)
+            operations_applied = advanced_metadata.get("operations_applied", 0)
+            
+            if operations_failed > 0:
+                operation_failure_stats[r["chunk_id"]] = {
+                    "operations_applied": operations_applied,
+                    "operations_failed": operations_failed,
+                    "success_rate": operations_applied / (operations_applied + operations_failed) if (operations_applied + operations_failed) > 0 else 0
+                }
         
         return {
             "total_chunks": len(reconstruction_results),
@@ -1199,13 +1294,185 @@ class BillProcessingPipeline:
             "operation_type_stats": operation_stats,
             "text_length_stats": {
                 "average_deleted_length": avg_deleted_length,
+                "average_newly_inserted_length": avg_newly_inserted_length,
                 "average_after_state_length": avg_after_length,
                 "max_deleted_length": max(deleted_text_lengths) if deleted_text_lengths else 0,
+                "max_newly_inserted_length": max(newly_inserted_text_lengths) if newly_inserted_text_lengths else 0,
                 "max_after_state_length": max(after_state_lengths) if after_state_lengths else 0,
                 "total_deleted_characters": sum(deleted_text_lengths),
+                "total_newly_inserted_characters": sum(newly_inserted_text_lengths),
                 "total_after_state_characters": sum(after_state_lengths)
             },
+            "failure_analysis": failure_analysis,
+            "operation_failure_stats": operation_failure_stats,
             "failed_chunks": [r["chunk_id"] for r in failed_reconstructions]
+        }
+
+    def _analyze_reference_location_results(self, reference_location_results: List[Dict]) -> Dict:
+        """Analyze reference location results."""
+        # A chunk is considered successful if it has no error AND no skip_reason
+        # skip_reason indicates the chunk was intentionally skipped (e.g., failed reconstruction)
+        # Note: Chunks with empty located_references are considered successful - they just have no references to resolve
+        successful_locations = [r for r in reference_location_results if not r.get("error") and not r.get("skip_reason")]
+        failed_locations = [r for r in reference_location_results if r.get("error") or r.get("skip_reason")]
+        
+        # Analyze reference types and sources
+        total_references = 0
+        deletional_references = 0
+        definitional_references = 0
+        confidence_scores = []
+        performance_gains = []
+        
+        for result in successful_locations:
+            located_refs = result.get("located_references", [])
+            total_references += len(located_refs)
+            
+            for ref in located_refs:
+                if ref.get("source") == "DELETIONAL":
+                    deletional_references += 1
+                elif ref.get("source") == "DEFINITIONAL":
+                    definitional_references += 1
+                
+                if "confidence" in ref:
+                    confidence_scores.append(ref["confidence"])
+            
+            # Track performance gains
+            perf_data = result.get("focused_scanning_performance", {})
+            if "performance_gain" in perf_data:
+                performance_gains.append(perf_data["performance_gain"])
+        
+        # Calculate averages
+        avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
+        avg_performance_gain = sum(performance_gains) / len(performance_gains) if performance_gains else 1.0
+        avg_references_per_chunk = total_references / len(successful_locations) if successful_locations else 0
+        
+        return {
+            "total_chunks": len(reference_location_results),
+            "successful_locations": len(successful_locations),
+            "failed_locations": len(failed_locations),
+            "success_rate": len(successful_locations) / len(reference_location_results) if reference_location_results else 0,
+            "reference_stats": {
+                "total_references": total_references,
+                "deletional_references": deletional_references,
+                "definitional_references": definitional_references,
+                "average_references_per_chunk": avg_references_per_chunk,
+                "average_confidence": avg_confidence,
+                "confidence_distribution": {
+                    "high_confidence": len([c for c in confidence_scores if c >= 0.8]),
+                    "medium_confidence": len([c for c in confidence_scores if 0.5 <= c < 0.8]),
+                    "low_confidence": len([c for c in confidence_scores if c < 0.5])
+                }
+            },
+            "focused_scanning_performance": {
+                "average_performance_gain": avg_performance_gain,
+                "max_performance_gain": max(performance_gains) if performance_gains else 1.0,
+                "min_performance_gain": min(performance_gains) if performance_gains else 1.0,
+                "total_performance_gains": performance_gains
+            },
+            "failed_chunks": [r["chunk_id"] for r in failed_locations]
+        }
+
+    def _analyze_reference_linking_results(self, reference_linking_results: List[Dict]) -> Dict:
+        """Analyze reference linking results with proper categorization."""
+        # Categorize chunks by their actual status:
+        # - successful_processed: chunks processed without errors (with or without references)
+        # - failed_processing: chunks with actual processing errors
+        # - skipped_no_refs: chunks intentionally skipped because no references were found
+        
+        successful_processed = []
+        failed_processing = []
+        skipped_no_refs = []
+        
+        for result in reference_linking_results:
+            if result.get("error"):
+                # Actual processing error
+                failed_processing.append(result)
+            elif result.get("skip_reason"):
+                # Intentionally skipped (usually no references found)
+                skipped_no_refs.append(result)
+            else:
+                # Successfully processed (with or without references)
+                successful_processed.append(result)
+        
+        # Analyze reference types and sources from successfully processed chunks
+        total_links = 0
+        deletional_links = 0
+        definitional_links = 0
+        confidence_scores = []
+        objects_found = []
+        resolution_questions_generated = []
+        
+        for result in successful_processed:
+            linked_refs = result.get("linked_references", [])
+            total_links += len(linked_refs)
+            
+            for ref in linked_refs:
+                if ref.get("source") == "DELETIONAL":
+                    deletional_links += 1
+                elif ref.get("source") == "DEFINITIONAL":
+                    definitional_links += 1
+                
+                if "confidence" in ref:
+                    confidence_scores.append(ref["confidence"])
+                
+                if "object" in ref and ref["object"]:
+                    objects_found.append(ref["object"])
+                
+                if "resolution_question" in ref and ref["resolution_question"]:
+                    resolution_questions_generated.append(ref["resolution_question"])
+        
+        # Calculate meaningful averages
+        avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
+        # Only calculate avg_links_per_chunk for chunks that actually had references
+        chunks_with_refs = [r for r in successful_processed if r.get("linked_references")]
+        avg_links_per_chunk = total_links / len(chunks_with_refs) if chunks_with_refs else 0
+        
+        # Analyze object types
+        unique_objects = list(set(objects_found))
+        object_frequency = {}
+        for obj in objects_found:
+            object_frequency[obj] = object_frequency.get(obj, 0) + 1
+        
+        # Calculate meaningful success rates
+        total_chunks = len(reference_linking_results)
+        processing_success_rate = len(successful_processed) / total_chunks if total_chunks else 0
+        chunks_with_refs_rate = len(chunks_with_refs) / total_chunks if total_chunks else 0
+        
+        return {
+            "total_chunks": total_chunks,
+            "processing_results": {
+                "successful_processed": len(successful_processed),
+                "failed_processing": len(failed_processing),
+                "skipped_no_refs": len(skipped_no_refs),
+                "processing_success_rate": processing_success_rate,
+                "chunks_with_refs_rate": chunks_with_refs_rate
+            },
+            "reference_stats": {
+                "total_links": total_links,
+                "deletional_links": deletional_links,
+                "definitional_links": definitional_links,
+                "chunks_with_references": len(chunks_with_refs),
+                "chunks_without_references": len(successful_processed) - len(chunks_with_refs),
+                "average_links_per_chunk_with_refs": avg_links_per_chunk,
+                "average_confidence": avg_confidence,
+                "confidence_distribution": {
+                    "high_confidence": len([c for c in confidence_scores if c >= 0.8]),
+                    "medium_confidence": len([c for c in confidence_scores if 0.5 <= c < 0.8]),
+                    "low_confidence": len([c for c in confidence_scores if c < 0.5])
+                }
+            },
+            "object_analysis": {
+                "total_objects_found": len(objects_found),
+                "unique_objects_count": len(unique_objects),
+                "unique_objects": unique_objects[:10],  # Top 10 for brevity
+                "most_common_objects": sorted(object_frequency.items(), key=lambda x: x[1], reverse=True)[:10]
+            },
+            "resolution_questions": {
+                "total_questions_generated": len(resolution_questions_generated),
+                "sample_questions": resolution_questions_generated[:5]  # Sample for review
+            },
+            "failed_chunks": [r["chunk_id"] for r in failed_processing],
+            "skipped_chunks": [r["chunk_id"] for r in skipped_no_refs]
         }
 
     def _enrich_chunks_with_target_articles(self, chunks: List[BillChunk]) -> List[BillChunk]:
@@ -1278,25 +1545,7 @@ class BillProcessingPipeline:
             "inherited_target_article": chunk.inherited_target_article
         }
 
-    def _dict_to_chunk(self, chunk_dict: Dict) -> BillChunk:
-        """Convert dictionary to BillChunk object for deserialization."""
-        return BillChunk(
-            chunk_id=chunk_dict["chunk_id"],
-            text=chunk_dict["text"],
-            titre_text=chunk_dict["titre_text"],
-            article_label=chunk_dict["article_label"],
-            article_introductory_phrase=chunk_dict["article_introductory_phrase"],
-            major_subdivision_label=chunk_dict["major_subdivision_label"],
-            major_subdivision_introductory_phrase=chunk_dict["major_subdivision_introductory_phrase"],
-            numbered_point_label=chunk_dict["numbered_point_label"],
-            numbered_point_introductory_phrase=chunk_dict.get("numbered_point_introductory_phrase"),
-            lettered_subdivision_label=chunk_dict.get("lettered_subdivision_label"),
-            hierarchy_path=chunk_dict["hierarchy_path"],
-            start_pos=chunk_dict["start_pos"],
-            end_pos=chunk_dict["end_pos"],
-            target_article=chunk_dict.get("target_article"),
-            inherited_target_article=chunk_dict.get("inherited_target_article")
-        )
+
 
     # Utility methods from original script
     def _is_exotic_format(self, article: str) -> bool:
@@ -1323,34 +1572,6 @@ class BillProcessingPipeline:
         """
         return self.text_reconstructor.get_log_file_path()
 
-    def run_full_pipeline_with_tracing(self, trace_output_path: Optional[Path] = None) -> Dict:
-        """
-        Run the complete pipeline and automatically export chunk traces.
 
-        Args:
-            trace_output_path: Path for chunk trace export (auto-generated if None)
-
-        Returns:
-            Dictionary containing all results and analyses
-        """
-        logger.info("Starting full pipeline execution with comprehensive chunk tracing...")
-        
-        # Clear any existing traces
-        self.clear_traces()
-        
-        # Execute full pipeline
-        pipeline_results = self.run_full_pipeline()
-        
-        # Export traces if any were collected
-        if self.chunk_traces:
-            if trace_output_path is None:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                trace_output_path = Path(f"chunk_traces_{timestamp}.txt")
-            
-            self.export_chunk_traces_to_file(trace_output_path)
-            pipeline_results["trace_export_path"] = str(trace_output_path)
-        
-        logger.info("Full pipeline execution with tracing complete")
-        return pipeline_results
 
  

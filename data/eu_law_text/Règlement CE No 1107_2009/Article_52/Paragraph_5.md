@@ -1,0 +1,3 @@
+# Article 52 - Paragraph_5
+
+5. Un produit phytopharmaceutique pour lequel un permis de commerce parallèle a été délivré est mis sur le marché et utilisé uniquement conformément aux dispositions de l'autorisation du produit de référence. Pour faciliter le suivi et les contrôles, la Commission fixe dans un règlement visé à l'article 68 les exigences spécifiques en matière de contrôle pour le produit à introduire.

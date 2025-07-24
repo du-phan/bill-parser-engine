@@ -1,0 +1,4 @@
+## Article 82
+### Clause de réexamen
+
+Le 14 décembre 2014 au plus tard, la Commission présente un rapport au Parlement européen et au Conseil sur le fonctionnement de la reconnaissance mutuelle des autorisations et en particulier sur l'application par les États membres des dispositions visées à l'article 36, paragraphe 3, et à l'article 50, paragraphe 2, sur la division de la Communauté en trois zones et sur l'application des critères d'approbation des substances actives, des phytoprotecteurs et des synergistes visés à l'annexe II et sur leur incidence sur la diversification et la compétitivité de l'agriculture, ainsi que sur la santé humaine et l'environnement. Le rapport peut être assorti, le cas échéant, de propositions législatives appropriées visant à modifier ces dispositions.

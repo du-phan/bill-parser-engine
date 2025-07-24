@@ -1,0 +1,3 @@
+# Article 29 - Paragraph_3
+
+3. Le respect des exigences énumérées au paragraphe 1, point b) et points e) à h), est assuré par des essais et des analyses officiels ou officiellement reconnus, dans des conditions agricoles, phytosanitaires et environnementales correspondant à l'emploi du produit phytopharmaceutique en question et représentatives des conditions prévalant dans la zone où le produit est destiné à être utilisé.

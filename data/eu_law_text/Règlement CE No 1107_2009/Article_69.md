@@ -1,0 +1,4 @@
+#### Article 69
+##### Mesures d'urgence
+
+Lorsqu'il apparaît clairement qu'une substance active, un phytoprotecteur, un synergiste ou un coformulant approuvé ou un produit phytopharmaceutique qui a été autorisé en vertu du présent règlement est susceptible de constituer un risque grave pour la santé humaine ou animale ou l'environnement et que ce risque ne peut être maîtrisé de façon satisfaisante au moyen des mesures prises par l'État membre ou les États membres concernés, des mesures visant à restreindre ou interdire l'utilisation et/ou la vente de la substance ou du produit en question sont prises immédiatement selon la procédure de réglementation visée à l'article 79, paragraphe 3, soit à l'initiative de la Commission, soit à la demande d'un État membre. Avant d'arrêter de telles mesures, la Commission examine les éléments disponibles et peut demander l'avis de l'Autorité. La Commission peut fixer le délai imparti à l'Autorité pour émettre cet avis.

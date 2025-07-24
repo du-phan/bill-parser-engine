@@ -1,0 +1,3 @@
+# Article 37 - Paragraph_3
+
+3. Pour une demande d'autorisation d'un produit phytopharmaceutique contenant une substance active non encore approuvée, l'État membre qui examine la demande entreprend l'évaluation dès qu'il reçoit le projet de rapport d'évaluation visé à l'article 12, paragraphe 1. Si la demande porte sur le même produit phytopharmaceutique et les mêmes utilisations que ceux qui figurent dans le dossier visé à l'article 8, l'État membre statue sur la demande au plus tard dans les six mois qui suivent l'approbation de la substance active.
