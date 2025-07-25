@@ -59,14 +59,13 @@ class LegalAmendmentReconstructor:
     - Caches final results (no component-level caching)
     """
 
-    def __init__(self, api_key: Optional[str] = None, use_cache: bool = True, log_file_path: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, use_cache: bool = True):
         """
         Initialize the legal amendment reconstructor.
 
         Args:
             api_key: Mistral API key (defaults to MISTRAL_API_KEY environment variable)
             use_cache: Whether to use centralized Mistral API caching
-            log_file_path: Path to detailed log file (defaults to 'reconstruction_log.txt')
         """
         # Store API key for component initialization
         self.api_key = api_key or os.getenv("MISTRAL_API_KEY")
@@ -85,191 +84,11 @@ class LegalAmendmentReconstructor:
         # Store the last detailed reconstruction result for pipeline access
         self.last_detailed_result: Optional[ReconstructionResult] = None
         
-        # Setup detailed logging to file (lazy initialization)
-        self.log_file_path = Path(log_file_path) if log_file_path else Path("reconstruction_log.txt")
-        self._log_file_initialized = False
-        
 
 
     def _initialize_log_file(self):
-        """Initialize the detailed log file with header information (lazy initialization)."""
-        if self._log_file_initialized:
-            return
-            
-        try:
-            with open(self.log_file_path, 'w', encoding='utf-8') as f:
-                f.write("=" * 100 + "\n")
-                f.write("LEGAL AMENDMENT RECONSTRUCTOR - DETAILED LOG\n")
-                f.write("=" * 100 + "\n")
-                f.write(f"Log initialized at: {datetime.now().isoformat()}\n")
-                f.write(f"Log file: {self.log_file_path.absolute()}\n")
-                f.write("=" * 100 + "\n\n")
-            self._log_file_initialized = True
-
-        except Exception as e:
-            logger.warning("Failed to initialize log file %s: %s", self.log_file_path, e)
-
-    def log_reconstruction_details(
-        self,
-        chunk_id: str,
-        target_article_reference: str,
-        original_law_article: str,
-        amendment_instruction: str,
-        operations: List[AmendmentOperation],
-        result: ReconstructionResult,
-        validation: Optional[ValidationResult] = None,
-        step_by_step_states: Optional[List[str]] = None
-    ):
-        """
-        Write comprehensive reconstruction details to the log file.
-
-        Args:
-            chunk_id: Unique identifier for the chunk being processed
-            target_article_reference: Reference to the target article
-            original_law_article: Original legal text before modification
-            amendment_instruction: The amendment instruction text
-            operations: List of atomic operations that were decomposed
-            result: Final reconstruction result
-            validation: Validation result (if available)
-            step_by_step_states: List of text states after each operation (if available)
-        """
-        # Initialize log file lazily when first needed
-        self._initialize_log_file()
-        
-        try:
-            with open(self.log_file_path, 'a', encoding='utf-8') as f:
-                # Header for this reconstruction
-                f.write("\n" + "=" * 80 + "\n")
-                f.write(f"RECONSTRUCTION ENTRY - {datetime.now().isoformat()}\n")
-                f.write("=" * 80 + "\n")
-                
-                # Basic information
-                f.write(f"CHUNK ID: {chunk_id}\n")
-                f.write(f"TARGET ARTICLE: {target_article_reference}\n")
-                f.write(f"SUCCESS: {result.success}\n")
-                f.write(f"PROCESSING TIME: {result.processing_time_ms}ms\n")
-                f.write(f"OPERATIONS APPLIED: {len(result.operations_applied)}/{len(operations)}\n")
-                f.write(f"OPERATIONS FAILED: {len(result.operations_failed)}\n")
-                f.write("\n")
-                
-                # Original legal text
-                f.write("-" * 40 + " ORIGINAL LEGAL TEXT " + "-" * 40 + "\n")
-                f.write(f"Length: {len(original_law_article)} characters\n")
-                f.write(f"Text:\n{original_law_article}\n")
-                f.write("\n")
-                
-                # Amendment instruction
-                f.write("-" * 40 + " AMENDMENT INSTRUCTION " + "-" * 39 + "\n")
-                f.write(f"Length: {len(amendment_instruction)} characters\n")
-                f.write(f"Text:\n{amendment_instruction}\n")
-                f.write("\n")
-                
-                # Decomposed operations
-                f.write("-" * 40 + " DECOMPOSED OPERATIONS " + "-" * 39 + "\n")
-                f.write(f"Total operations: {len(operations)}\n")
-                for i, op in enumerate(operations, 1):
-                    f.write(f"\nOperation {i}:\n")
-                    f.write(f"  Type: {op.operation_type.value}\n")
-                    f.write(f"  Position: {op.position_hint}\n")
-                    f.write(f"  Target Text: {op.target_text or 'N/A'}\n")
-                    f.write(f"  Replacement Text: {op.replacement_text or 'N/A'}\n")
-                    f.write(f"  Sequence Order: {op.sequence_order}\n")
-                    f.write(f"  Confidence: {op.confidence_score:.3f}\n")
-                f.write("\n")
-                
-                # Step-by-step application (if available)
-                if step_by_step_states:
-                    f.write("-" * 40 + " STEP-BY-STEP APPLICATION " + "-" * 33 + "\n")
-                    f.write("State 0 (Original):\n")
-                    f.write(f"{original_law_article}\n\n")
-                    
-                    for i, state in enumerate(step_by_step_states, 1):
-                        f.write(f"State {i} (After Operation {i}):\n")
-                        f.write(f"{state}\n\n")
-                
-                # Final result
-                f.write("-" * 40 + " FINAL RECONSTRUCTED TEXT " + "-" * 35 + "\n")
-                f.write(f"Length: {len(result.final_text)} characters\n")
-                f.write(f"Length change: {result.final_text_length - result.original_text_length:+d} characters\n")
-                f.write(f"Text:\n{result.final_text}\n")
-                f.write("\n")
-                
-                # Before/After comparison
-                f.write("-" * 40 + " BEFORE/AFTER COMPARISON " + "-" * 36 + "\n")
-                f.write("BEFORE:\n")
-                f.write(f"{original_law_article}\n")
-                f.write("\nAFTER:\n")
-                f.write(f"{result.final_text}\n")
-                f.write("\n")
-                
-                # Operations results
-                if result.operations_applied:
-                    f.write("-" * 40 + " SUCCESSFUL OPERATIONS " + "-" * 39 + "\n")
-                    for i, op in enumerate(result.operations_applied, 1):
-                        f.write(f"{i}. {op.operation_type.value} - {op.position_hint}\n")
-                    f.write("\n")
-                
-                if result.operations_failed:
-                    f.write("-" * 40 + " FAILED OPERATIONS " + "-" * 43 + "\n")
-                    for i, (op, error) in enumerate(result.operations_failed, 1):
-                        if op:
-                            f.write(f"{i}. {op.operation_type.value} - {op.position_hint}\n")
-                            f.write(f"   Error: {error}\n")
-                        else:
-                            f.write(f"{i}. System Error: {error}\n")
-                    f.write("\n")
-                
-                # Validation results
-                if validation:
-                    f.write("-" * 40 + " VALIDATION RESULTS " + "-" * 42 + "\n")
-                    f.write(f"Status: {validation.validation_status}\n")
-                    f.write(f"Overall Score: {validation.overall_score:.3f}\n")
-                    f.write(f"Summary: {validation.validation_summary}\n")
-                    
-                    if validation.critical_errors:
-                        f.write(f"\nCritical Errors ({len(validation.critical_errors)}):\n")
-                        for error in validation.critical_errors:
-                            f.write(f"  - {error}\n")
-                    
-                    if validation.major_errors:
-                        f.write(f"\nMajor Errors ({len(validation.major_errors)}):\n")
-                        for error in validation.major_errors:
-                            f.write(f"  - {error}\n")
-                    
-                    if validation.minor_errors:
-                        f.write(f"\nMinor Errors ({len(validation.minor_errors)}):\n")
-                        for error in validation.minor_errors:
-                            f.write(f"  - {error}\n")
-                    
-                    if validation.suggestions:
-                        f.write(f"\nSuggestions ({len(validation.suggestions)}):\n")
-                        for suggestion in validation.suggestions:
-                            f.write(f"  - {suggestion}\n")
-                    f.write("\n")
-                
-                # Validation warnings from result
-                if result.validation_warnings:
-                    f.write("-" * 40 + " VALIDATION WARNINGS " + "-" * 41 + "\n")
-                    for warning in result.validation_warnings:
-                        f.write(f"  - {warning}\n")
-                    f.write("\n")
-                
-                # Summary statistics
-                f.write("-" * 40 + " SUMMARY STATISTICS " + "-" * 42 + "\n")
-                f.write(f"Original text length: {result.original_text_length} chars\n")
-                f.write(f"Final text length: {result.final_text_length} chars\n")
-                f.write(f"Length change: {result.final_text_length - result.original_text_length:+d} chars\n")
-                f.write(f"Operations attempted: {len(operations)}\n")
-                f.write(f"Operations successful: {len(result.operations_applied)}\n")
-                f.write(f"Operations failed: {len(result.operations_failed)}\n")
-                f.write(f"Success rate: {len(result.operations_applied)/len(operations)*100:.1f}%\n" if operations else "Success rate: N/A\n")
-                f.write(f"Processing time: {result.processing_time_ms}ms\n")
-                f.write(f"Overall success: {result.success}\n")
-                
-                f.write("\n" + "=" * 80 + "\n")
-                
-        except Exception as e:
-            logger.error("Failed to write reconstruction details to log file: %s", e)
+        # This method is no longer needed as log_file_path is removed from constructor
+        pass
 
     def reconstruct_amendment(
         self,
@@ -388,15 +207,9 @@ class LegalAmendmentReconstructor:
                 self.last_detailed_result = detailed_result
 
                 # Log the failed reconstruction
-                self.log_reconstruction_details(
-                    chunk_id=chunk_id,
-                    target_article_reference=target_article_reference,
-                    original_law_article=original_law_article,
-                    amendment_instruction=amendment_instruction,
-                    operations=operations,
-                    result=detailed_result,
-                    validation=validation,
-                    step_by_step_states=step_by_step_states
+                logger.info(
+                    "Reconstruction completed - Success: %s, Applied: %d/%d operations, Validation: %s",
+                    detailed_result.success, len(detailed_result.operations_applied), len(operations), detailed_result.validation_warnings
                 )
                 
                 # Cache failed result (temporarily disabled)
@@ -492,15 +305,9 @@ class LegalAmendmentReconstructor:
             self.last_detailed_result = detailed_result
 
             # Log detailed reconstruction information to file
-            self.log_reconstruction_details(
-                chunk_id=chunk_id,
-                target_article_reference=target_article_reference,
-                original_law_article=original_law_article,
-                amendment_instruction=amendment_instruction,
-                operations=operations,
-                result=detailed_result,
-                validation=validation,
-                step_by_step_states=step_by_step_states
+            logger.info(
+                "Reconstruction completed for chunk %s - Success: %s, Applied: %d/%d operations",
+                chunk_id, detailed_result.success, len(detailed_result.operations_applied), len(operations)
             )
 
             # Cache result if enabled (temporarily disabled)
@@ -537,15 +344,9 @@ class LegalAmendmentReconstructor:
             self.last_detailed_result = detailed_result
 
             # Log the failed reconstruction
-            self.log_reconstruction_details(
-                chunk_id=chunk_id,
-                target_article_reference=target_article_reference,
-                original_law_article=original_law_article,
-                amendment_instruction=amendment_instruction,
-                operations=operations,
-                result=detailed_result,
-                validation=validation,
-                step_by_step_states=step_by_step_states
+            logger.warning(
+                "Reconstruction failed for chunk %s - Success: %s, Applied: %d/%d operations",
+                chunk_id, detailed_result.success, len(detailed_result.operations_applied), len(operations)
             )
             
             # Cache failed result (temporarily disabled)
@@ -644,8 +445,8 @@ class LegalAmendmentReconstructor:
         Args:
             log_file_path: New path for the detailed log file
         """
-        self.log_file_path = Path(log_file_path)
-        self._log_file_initialized = False  # Reset initialization flag for new path
+        # This method is no longer needed as log_file_path is removed from constructor
+        pass
 
 
     def get_log_file_path(self) -> str:
@@ -655,7 +456,8 @@ class LegalAmendmentReconstructor:
         Returns:
             String path to the current log file
         """
-        return str(self.log_file_path.absolute())
+        # This method is no longer needed as log_file_path is removed from constructor
+        return "Log file path not available"
 
     def clear_all_caches(self) -> dict:
         """

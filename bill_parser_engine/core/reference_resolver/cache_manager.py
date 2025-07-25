@@ -50,7 +50,8 @@ class MistralAPICache:
         data_str = json.dumps(input_data, sort_keys=True, default=str)
         combined = f"{component}:{data_str}"
         hash_value = hashlib.sha256(combined.encode()).hexdigest()
-        return f"mistral_{component}_{hash_value[:16]}"
+        cache_key = f"mistral_{component}_{hash_value[:16]}"
+        return cache_key
 
     def get(self, component: str, input_data: Any) -> Optional[Any]:
         """
@@ -73,7 +74,6 @@ class MistralAPICache:
             with open(cache_file, 'rb') as f:
                 cached_data = pickle.load(f)
             
-            self.logger.debug(f"Mistral API cache HIT for {component}: {cache_key}")
             return cached_data['result']
             
         except Exception as e:
@@ -104,10 +104,10 @@ class MistralAPICache:
             with open(cache_file, 'wb') as f:
                 pickle.dump(cached_data, f)
             
-            self.logger.debug(f"Mistral API cache SET for {component}: {cache_key}")
-            
         except Exception as e:
             self.logger.error(f"Failed to save cache entry: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
 
     def clear(self) -> int:
         """
@@ -147,6 +147,21 @@ class MistralAPICache:
             self.logger.info(f"Cleared {count} Mistral API cache entries for component '{component}'")
         
         return count
+
+    def invalidate(self, component: str) -> int:
+        """
+        Invalidate cached Mistral API results for a specific component.
+        
+        This is an alias for clear_by_component() to maintain backward compatibility
+        with existing component code.
+        
+        Args:
+            component: Component name whose cache entries should be invalidated
+            
+        Returns:
+            Number of entries invalidated for the component
+        """
+        return self.clear_by_component(component)
 
     def get_stats(self, component: Optional[str] = None) -> dict:
         """

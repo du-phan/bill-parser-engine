@@ -122,7 +122,7 @@ class ReferenceLocator:
             
             cached_result = self.cache.get("reference_locator", cache_key_data)
             if cached_result is not None:
-                logger.info("Using cached result for ReferenceLocator")
+                logger.info("Found cached result for ReferenceLocator")
                 return cached_result
         
         # Calculate delta fragments for processing

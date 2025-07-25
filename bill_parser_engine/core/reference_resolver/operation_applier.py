@@ -102,7 +102,7 @@ class OperationApplier:
             }
             cached_result = self.cache.get("operation_applier", cache_key_data)
             if cached_result is not None:
-                logger.debug("Found cached operation result")
+                logger.info("Found cached operation result")
                 return self._deserialize_result(cached_result)
 
         start_time = time.time()

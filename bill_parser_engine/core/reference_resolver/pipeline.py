@@ -19,6 +19,7 @@ from bill_parser_engine.core.reference_resolver.original_text_retriever import O
 from bill_parser_engine.core.reference_resolver.legal_amendment_reconstructor import LegalAmendmentReconstructor
 from bill_parser_engine.core.reference_resolver.reference_locator import ReferenceLocator
 from bill_parser_engine.core.reference_resolver.reference_object_linker import ReferenceObjectLinker
+from bill_parser_engine.core.reference_resolver.reference_resolver import ReferenceResolver
 from bill_parser_engine.core.reference_resolver.cache_manager import get_mistral_cache
 
 from bill_parser_engine.core.reference_resolver.models import (
@@ -26,10 +27,10 @@ from bill_parser_engine.core.reference_resolver.models import (
     TargetArticle, 
     TargetOperationType,
     ReconstructorOutput,
-    ReconstructionResult,
     LocatedReference,
     ReferenceSourceType,
-    LinkedReference
+    LinkedReference,
+    ResolutionResult
 )
 
 logger = logging.getLogger(__name__)
@@ -50,15 +51,15 @@ class BillProcessingPipeline:
     4. LegalAmendmentReconstructor - applies amendment instructions using 3-step LLM architecture (InstructionDecomposer → OperationApplier → ResultValidator)
     5. ReferenceLocator - locates normative references in delta fragments using focused scanning (30x+ performance improvement)
     6. ReferenceObjectLinker - links references to grammatical objects using context-aware analysis with resolution question generation
+    7. ReferenceResolver - resolves linked references through question-guided content extraction with EU file access optimization
     """
 
-    def __init__(self, use_cache: bool = True, log_file_path: Optional[str] = None):
+    def __init__(self, use_cache: bool = True):
         """
         Initialize the pipeline with all required components.
         
         Args:
             use_cache: Whether to enable centralized Mistral API caching
-            log_file_path: Path to detailed reconstruction log file (optional)
         
         Note: All components use the same centralized Mistral API cache to avoid
         redundant API calls and respect rate limits.
@@ -68,12 +69,10 @@ class BillProcessingPipeline:
         self.bill_splitter = BillSplitter()
         self.target_identifier = TargetArticleIdentifier(use_cache=use_cache)
         self.original_text_retriever = OriginalTextRetriever(use_cache=use_cache)
-        self.text_reconstructor = LegalAmendmentReconstructor(
-            use_cache=use_cache,
-            log_file_path=log_file_path
-        )
+        self.text_reconstructor = LegalAmendmentReconstructor(use_cache=use_cache)
         self.reference_locator = ReferenceLocator(use_cache=use_cache)
         self.reference_object_linker = ReferenceObjectLinker(use_cache=use_cache)
+        self.reference_resolver = ReferenceResolver(use_cache=use_cache)
         
         # Pipeline state and results
         self.legislative_text: Optional[str] = None
@@ -83,6 +82,7 @@ class BillProcessingPipeline:
         self.reconstruction_results: List[Dict] = []
         self.reference_location_results: List[Dict] = []
         self.reference_linking_results: List[Dict] = []
+        self.reference_resolution_results: List[Dict] = []
         
         # Analysis results
         self.target_analysis: Dict = {}
@@ -90,10 +90,8 @@ class BillProcessingPipeline:
         self.reconstruction_analysis: Dict = {}
         self.reference_location_analysis: Dict = {}
         self.reference_linking_analysis: Dict = {}
+        self.reference_resolution_analysis: Dict = {}
         
-        logger.info("BillProcessingPipeline initialized with centralized Mistral API caching: %s", "enabled" if use_cache else "disabled")
-        if log_file_path:
-            logger.info("Detailed reconstruction logging configured: %s (will be created when first needed)", self.text_reconstructor.get_log_file_path())
 
     def load_legislative_text(self, text: str) -> None:
         """
@@ -168,7 +166,7 @@ class BillProcessingPipeline:
         
         results = []
         for i, chunk in enumerate(self.chunks, 1):
-            logger.debug("Processing chunk %d/%d: %s", i, len(self.chunks), chunk.chunk_id[:50])
+            logger.info("Processing chunk %d/%d: %s", i, len(self.chunks), chunk.chunk_id[:50])
             
             try:
                 target_article = self.target_identifier.identify(chunk)
@@ -554,7 +552,7 @@ class BillProcessingPipeline:
             - located_references: List of found references with source classification
             - reference_count: Total number of references found
             - reference_breakdown: Count by source type (DELETIONAL/DEFINITIONAL)
-            - focused_scanning_performance: Performance metrics vs traditional approach
+
             - located_at: Timestamp of processing
 
         Raises:
@@ -591,7 +589,7 @@ class BillProcessingPipeline:
         
         # Process only successful reconstruction results with focused scanning
         for i, result in enumerate(successful_reconstructions, 1):
-            logger.debug("Processing successful reconstruction %d/%d: %s", i, len(successful_reconstructions), result["chunk_id"][:50])
+            logger.info("Processing successful reconstruction %d/%d: %s", i, len(successful_reconstructions), result["chunk_id"][:50])
             
             # Capture start time for performance tracking
             chunk_start_time = time.time()
@@ -615,13 +613,7 @@ class BillProcessingPipeline:
                 
                 chunk_duration = time.time() - chunk_start_time
                 
-                # PERFORMANCE ANALYSIS: Calculate focused scanning efficiency gains
-                # This demonstrates the dramatic improvement over traditional approaches
-                deleted_len = len(reconstruction_result["deleted_or_replaced_text"])
-                inserted_len = len(reconstruction_result["newly_inserted_text"])
-                full_len = len(reconstruction_result["intermediate_after_state_text"])
-                delta_chars = deleted_len + inserted_len
-                performance_gain = full_len / delta_chars if delta_chars > 0 else 1
+
                 
                 # REFERENCE CLASSIFICATION: Analyze found references by source type
                 # This breakdown is crucial for downstream processing decisions
@@ -651,12 +643,7 @@ class BillProcessingPipeline:
                         "deletional_count": len(deletional_refs),
                         "definitional_count": len(definitional_refs)
                     },
-                    "focused_scanning_performance": {
-                        "delta_characters_processed": delta_chars,
-                        "full_article_characters": full_len,
-                        "performance_gain_multiplier": performance_gain,
-                        "efficiency_improvement_percent": ((performance_gain - 1) * 100) if performance_gain > 1 else 0
-                    },
+
                     "located_at": datetime.now().isoformat()
                 }
                 
@@ -777,7 +764,7 @@ class BillProcessingPipeline:
         
         # Process only successful reference location results
         for i, result in enumerate(successful_reference_locations, 1):
-            logger.debug("Processing successful reference location %d/%d: %s", i, len(successful_reference_locations), result["chunk_id"][:50])
+            logger.info("Processing successful reference location %d/%d: %s", i, len(successful_reference_locations), result["chunk_id"][:50])
             
             # Capture start time for performance tracking
             chunk_start_time = time.time()
@@ -913,6 +900,311 @@ class BillProcessingPipeline:
         
         return reference_linking_results
 
+    def step_7_resolve_references(self) -> List[Dict]:
+        """
+        Step 7: Resolve linked references through question-guided content extraction with EU file access optimization.
+
+        Args:
+            None (uses self.reference_linking_results from Step 6)
+
+        Returns:
+            List of reference resolution results, each containing:
+            - chunk_id: Unique identifier for the chunk
+            - chunk_text_preview: Preview of the chunk text
+            - hierarchy_path: Legislative hierarchy path
+            - target_article: Target article information
+            - reconstruction_result: Text reconstruction data
+            - resolution_result: Reference resolution data with resolved content
+            - resolved_reference_count: Total number of resolved references
+            - resolved_at: Timestamp of processing
+
+        Raises:
+            ValueError: If reference linking results from Step 6 are not available
+        """
+        if not self.reference_linking_results:
+            raise ValueError("Reference linking results must be completed first.")
+
+        logger.info("Step 7: Resolving references through question-guided content extraction...")
+        
+        # FILTER: Only process successful reference links to avoid downstream issues
+        successful_reference_links = []
+        failed_reference_links = []
+        
+        for result in self.reference_linking_results:
+            # Skip chunks that were skipped in step 6 due to failed reference locations
+            if "skip_reason" in result:
+                failed_reference_links.append(result)
+                continue
+                
+            # Skip chunks without reconstruction_result or linked_references
+            if not result.get("reconstruction_result") or not result.get("linked_references"):
+                failed_reference_links.append(result)
+                continue
+                
+            # Skip chunks with no references to resolve
+            if len(result.get("linked_references", [])) == 0:
+                failed_reference_links.append(result)
+                continue
+                
+            successful_reference_links.append(result)
+        
+        logger.info("Processing %d successful reference links (skipping %d failed/skipped links)", 
+                   len(successful_reference_links), len(failed_reference_links))
+        
+        reference_resolution_results = []
+        
+        # Process only successful reference linking results
+        for i, result in enumerate(successful_reference_links, 1):
+            logger.info("Processing successful reference link %d/%d: %s", i, len(successful_reference_links), result["chunk_id"][:50])
+            
+            # Capture start time for performance tracking
+            chunk_start_time = time.time()
+            
+            try:
+                # VALIDATION: All results at this point should have successful reconstruction_result and linked_references
+                # This is guaranteed by the filtering above
+                reconstruction_result = result["reconstruction_result"]
+                linked_references_data = result["linked_references"]
+                
+                # Convert linked references data back to LinkedReference objects
+                linked_references = []
+                for ref_data in linked_references_data:
+                    from bill_parser_engine.core.reference_resolver.models import LinkedReference, ReferenceSourceType
+                    linked_ref = LinkedReference(
+                        reference_text=ref_data["reference_text"],
+                        source=ReferenceSourceType(ref_data["source"]),
+                        object=ref_data["object"],
+                        agreement_analysis=ref_data["agreement_analysis"],
+                        confidence=ref_data["confidence"],
+                        resolution_question=ref_data["resolution_question"]
+                    )
+                    linked_references.append(linked_ref)
+                
+                # CONTEXT PREPARATION: Get original text from retrieval results
+                target_article = result.get("target_article", {})
+                article_key = self._build_article_key(target_article.get("code"), target_article.get("article"))
+                original_texts_lookup = self._create_original_texts_lookup()
+                original_article_text = original_texts_lookup.get(article_key, "")
+                
+                # Create TargetArticle object for context
+                target_article_obj = None
+                if target_article.get("code") and target_article.get("article"):
+                    target_article_obj = TargetArticle(
+                        operation_type=TargetOperationType[target_article["operation_type"]],
+                        code=target_article["code"],
+                        article=target_article["article"]
+                    )
+                
+                # CORE REFERENCE RESOLUTION: Use ReferenceResolver with proper parameters
+                # This fixes the critical bug by passing original_article_text
+                resolution_result = self.reference_resolver.resolve_references(
+                    linked_references=linked_references,
+                    original_article_text=original_article_text,
+                    target_article=target_article_obj
+                )
+                
+                chunk_duration = time.time() - chunk_start_time
+                
+                # REFERENCE CLASSIFICATION: Analyze resolved references by source type
+                deletional_refs = resolution_result.resolved_deletional_references
+                definitional_refs = resolution_result.resolved_definitional_references
+                unresolved_refs = resolution_result.unresolved_references
+                
+                # RESULT CONSTRUCTION: Build comprehensive result entry
+                result_entry = {
+                    "chunk_id": result["chunk_id"],
+                    "chunk_text_preview": result.get("chunk_text_preview", ""),
+                    "hierarchy_path": result.get("hierarchy_path", []),
+                    "target_article": result.get("target_article"),
+                    "reconstruction_result": reconstruction_result,
+                    "resolution_result": {
+                        "resolved_deletional_references": [
+                            {
+                                "reference_text": ref.linked_reference.reference_text,
+                                "object": ref.linked_reference.object,
+                                "resolved_content": ref.resolved_content,
+                                "retrieval_metadata": ref.retrieval_metadata
+                            }
+                            for ref in deletional_refs
+                        ],
+                        "resolved_definitional_references": [
+                            {
+                                "reference_text": ref.linked_reference.reference_text,
+                                "object": ref.linked_reference.object,
+                                "resolved_content": ref.resolved_content,
+                                "retrieval_metadata": ref.retrieval_metadata
+                            }
+                            for ref in definitional_refs
+                        ],
+                        "unresolved_references": [
+                            {
+                                "reference_text": ref.reference_text,
+                                "object": ref.object,
+                                "error": "Failed to resolve"
+                            }
+                            for ref in unresolved_refs
+                        ]
+                    },
+                    "resolved_reference_count": len(deletional_refs) + len(definitional_refs),
+                    "reference_breakdown": {
+                        "deletional_resolved": len(deletional_refs),
+                        "definitional_resolved": len(definitional_refs),
+                        "unresolved": len(unresolved_refs)
+                    },
+                    "context_info": {
+                        "original_article_text_available": bool(original_article_text.strip()),
+                        "article_key": article_key,
+                        "target_article_provided": target_article_obj is not None
+                    },
+                    "processing_duration_seconds": chunk_duration,
+                    "resolved_at": datetime.now().isoformat()
+                }
+                
+                reference_resolution_results.append(result_entry)
+                
+                # PROGRESS REPORTING: Log processing progress
+                logger.info(
+                    f"Successful reference link {i}/{len(successful_reference_links)}: "
+                    f"Resolved {len(deletional_refs) + len(definitional_refs)} references "
+                    f"({len(deletional_refs)} DELETIONAL, {len(definitional_refs)} DEFINITIONAL, {len(unresolved_refs)} unresolved) "
+                    f"in {chunk_duration:.2f}s"
+                )
+
+            except Exception as e:
+                # ERROR HANDLING: Comprehensive error logging and graceful degradation
+                chunk_duration = time.time() - chunk_start_time
+                logger.error(f"Reference resolution failed for chunk {result['chunk_id']}: {e}")
+                
+                # Create error result entry to maintain pipeline consistency
+                result_entry = {
+                    "chunk_id": result["chunk_id"],
+                    "chunk_text_preview": result.get("chunk_text_preview", ""),
+                    "hierarchy_path": result.get("hierarchy_path", []),
+                    "target_article": result.get("target_article"),
+                    "reconstruction_result": result.get("reconstruction_result"),
+                    "resolution_result": None,
+                    "resolved_reference_count": 0,
+                    "error": str(e)
+                }
+                reference_resolution_results.append(result_entry)
+
+        # ADD FAILED REFERENCE LINKS: Include failed reference links in results for pipeline consistency
+        # These will have empty resolution results since they weren't processed
+        for failed_result in failed_reference_links:
+            result_entry = {
+                "chunk_id": failed_result["chunk_id"],
+                "chunk_text_preview": failed_result.get("chunk_text_preview", ""),
+                "hierarchy_path": failed_result.get("hierarchy_path", []),
+                "target_article": failed_result.get("target_article"),
+                "reconstruction_result": failed_result.get("reconstruction_result"),
+                "resolution_result": None,
+                "resolved_reference_count": 0,
+                "skip_reason": "Reference linking failed or skipped - skipped to avoid downstream issues"
+            }
+            reference_resolution_results.append(result_entry)
+
+        # PIPELINE STATE UPDATE: Store results and perform comprehensive analysis
+        self.reference_resolution_results = reference_resolution_results
+        self.reference_resolution_analysis = self._analyze_reference_resolution_results(reference_resolution_results)
+        
+        # FINAL REPORTING: Log overall pipeline step completion with summary statistics
+        total_resolved = sum(result["resolved_reference_count"] for result in reference_resolution_results)
+        successful_chunks = sum(1 for result in reference_resolution_results if "skip_reason" not in result)
+        
+        logger.info(
+            f"Step 7 completed: Resolved {total_resolved} references across {successful_chunks} successful chunks "
+            f"(skipped {len(failed_reference_links)} failed/skipped reference links) "
+            f"using question-guided content extraction"
+        )
+        
+        return reference_resolution_results
+
+    def _analyze_reference_resolution_results(self, reference_resolution_results: List[Dict]) -> Dict:
+        """Analyze reference resolution results with proper categorization."""
+        # Categorize chunks by their actual status:
+        # - successful_processed: chunks processed without errors (with or without resolved references)
+        # - failed_processing: chunks with actual processing errors
+        # - skipped_no_refs: chunks intentionally skipped because no references were found
+        
+        successful_processed = []
+        failed_processing = []
+        skipped_no_refs = []
+        
+        for result in reference_resolution_results:
+            if result.get("error"):
+                # Actual processing error
+                failed_processing.append(result)
+            elif result.get("skip_reason"):
+                # Intentionally skipped (usually no references found)
+                skipped_no_refs.append(result)
+            else:
+                # Successfully processed (with or without resolved references)
+                successful_processed.append(result)
+        
+        # Analyze resolved references from successfully processed chunks
+        total_resolved = 0
+        deletional_resolved = 0
+        definitional_resolved = 0
+        unresolved_count = 0
+        retrieval_sources = {}
+        
+        for result in successful_processed:
+            resolution_result = result.get("resolution_result")
+            if resolution_result:
+                deletional_refs = resolution_result.get("resolved_deletional_references", [])
+                definitional_refs = resolution_result.get("resolved_definitional_references", [])
+                unresolved_refs = resolution_result.get("unresolved_references", [])
+                
+                total_resolved += len(deletional_refs) + len(definitional_refs)
+                deletional_resolved += len(deletional_refs)
+                definitional_resolved += len(definitional_refs)
+                unresolved_count += len(unresolved_refs)
+                
+                # Analyze retrieval sources
+                for ref in deletional_refs + definitional_refs:
+                    metadata = ref.get("retrieval_metadata", {})
+                    source = metadata.get("source", "unknown")
+                    retrieval_sources[source] = retrieval_sources.get(source, 0) + 1
+        
+        # Calculate meaningful averages
+        chunks_with_resolved_refs = [r for r in successful_processed if r.get("resolution_result") and 
+                                   (len(r["resolution_result"].get("resolved_deletional_references", [])) + 
+                                    len(r["resolution_result"].get("resolved_definitional_references", []))) > 0]
+        
+        # Calculate meaningful success rates
+        total_chunks = len(reference_resolution_results)
+        processing_success_rate = len(successful_processed) / total_chunks if total_chunks else 0
+        chunks_with_resolved_refs_rate = len(chunks_with_resolved_refs) / total_chunks if total_chunks else 0
+        resolution_success_rate = total_resolved / (total_resolved + unresolved_count) if (total_resolved + unresolved_count) > 0 else 0
+        
+        return {
+            "total_chunks": total_chunks,
+            "processing_results": {
+                "successful_processed": len(successful_processed),
+                "failed_processing": len(failed_processing),
+                "skipped_no_refs": len(skipped_no_refs),
+                "processing_success_rate": processing_success_rate,
+                "chunks_with_resolved_refs_rate": chunks_with_resolved_refs_rate
+            },
+            "resolution_stats": {
+                "total_resolved": total_resolved,
+                "deletional_resolved": deletional_resolved,
+                "definitional_resolved": definitional_resolved,
+                "unresolved": unresolved_count,
+                "resolution_success_rate": resolution_success_rate,
+                "chunks_with_resolved_refs": len(chunks_with_resolved_refs),
+                "chunks_without_resolved_refs": len(successful_processed) - len(chunks_with_resolved_refs)
+            },
+            "retrieval_analysis": {
+                "retrieval_sources": retrieval_sources,
+                "eu_file_access_count": retrieval_sources.get("eu_file", 0),
+                "french_api_count": retrieval_sources.get("french_api", 0),
+                "original_article_count": retrieval_sources.get("original_article_text", 0)
+            },
+            "failed_chunks": [r["chunk_id"] for r in failed_processing],
+            "skipped_chunks": [r["chunk_id"] for r in skipped_no_refs]
+        }
+
     def run_full_pipeline(self) -> Dict:
         """
         Run the complete pipeline from start to finish.
@@ -932,6 +1224,7 @@ class BillProcessingPipeline:
         reconstruction_results = self.step_4_reconstruct_texts()
         reference_location_results = self.step_5_locate_references()
         reference_linking_results = self.step_6_link_references()
+        reference_resolution_results = self.step_7_resolve_references()
         
         # Compile comprehensive results
         pipeline_results = {
@@ -939,7 +1232,7 @@ class BillProcessingPipeline:
                 "generated_at": datetime.now().isoformat(),
                 "total_chunks": len(chunks),
                 "pipeline_version": "1.0",
-                "pipeline_steps": ["BillSplitter", "TargetArticleIdentifier", "OriginalTextRetriever", "LegalAmendmentReconstructor", "ReferenceLocator", "ReferenceObjectLinker"]
+                "pipeline_steps": ["BillSplitter", "TargetArticleIdentifier", "OriginalTextRetriever", "LegalAmendmentReconstructor", "ReferenceLocator", "ReferenceObjectLinker", "ReferenceResolver"]
             },
             "chunks": [self._chunk_to_dict(chunk) for chunk in chunks],
             "target_analysis": self.target_analysis,
@@ -950,8 +1243,10 @@ class BillProcessingPipeline:
             "text_reconstruction_results": reconstruction_results,
             "reference_location_analysis": self.reference_location_analysis,
             "reference_linking_analysis": self.reference_linking_analysis,
+            "reference_resolution_analysis": self.reference_resolution_analysis,
             "reference_location_results": reference_location_results,
-            "reference_linking_results": reference_linking_results
+            "reference_linking_results": reference_linking_results,
+            "reference_resolution_results": reference_resolution_results
         }
         
         logger.info("Full pipeline execution complete")
@@ -1054,6 +1349,11 @@ class BillProcessingPipeline:
             "reference_linking": {
                 "successful_links": self.reference_linking_analysis.get("successful_links", 0),
                 "total_links": self.reference_linking_analysis.get("total_links", 0)
+            },
+            "reference_resolution": {
+                "total_resolved": self.reference_resolution_analysis.get("resolution_stats", {}).get("total_resolved", 0),
+                "resolution_success_rate": self.reference_resolution_analysis.get("resolution_stats", {}).get("resolution_success_rate", 0),
+                "eu_file_access_count": self.reference_resolution_analysis.get("retrieval_analysis", {}).get("eu_file_access_count", 0)
             }
         }
 
@@ -1102,8 +1402,13 @@ class BillProcessingPipeline:
         
         Args:
             component: Optional component name to clear cache for. If None, clears all cache entries.
-                      Valid component names: 'target_identifier', 'text_reconstructor', 
-                      'reference_locator', 'reference_object_linker'
+                      Valid component names: 'TargetArticleIdentifier', 'InstructionDecomposer', 
+                      'OperationApplier', 'ResultValidator', 'ReferenceLocator', 
+                      'ReferenceObjectLinker', 'ReferenceObjectLinker-Evaluator', 
+                      'ReferenceObjectLinker-Optimizer', 'ReferenceResolver.parser', 
+                      'ReferenceResolver.extractor', 'ReferenceResolver.subsection_parser', 
+                      'ReferenceResolver.subsection_extractor', 'OriginalTextRetriever-EU', 
+                      'OriginalTextRetriever-French'
         
         Returns:
             Number of cache entries cleared
@@ -1321,7 +1626,6 @@ class BillProcessingPipeline:
         deletional_references = 0
         definitional_references = 0
         confidence_scores = []
-        performance_gains = []
         
         for result in successful_locations:
             located_refs = result.get("located_references", [])
@@ -1336,14 +1640,10 @@ class BillProcessingPipeline:
                 if "confidence" in ref:
                     confidence_scores.append(ref["confidence"])
             
-            # Track performance gains
-            perf_data = result.get("focused_scanning_performance", {})
-            if "performance_gain" in perf_data:
-                performance_gains.append(perf_data["performance_gain"])
+
         
         # Calculate averages
         avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
-        avg_performance_gain = sum(performance_gains) / len(performance_gains) if performance_gains else 1.0
         avg_references_per_chunk = total_references / len(successful_locations) if successful_locations else 0
         
         return {
@@ -1363,12 +1663,7 @@ class BillProcessingPipeline:
                     "low_confidence": len([c for c in confidence_scores if c < 0.5])
                 }
             },
-            "focused_scanning_performance": {
-                "average_performance_gain": avg_performance_gain,
-                "max_performance_gain": max(performance_gains) if performance_gains else 1.0,
-                "min_performance_gain": min(performance_gains) if performance_gains else 1.0,
-                "total_performance_gains": performance_gains
-            },
+
             "failed_chunks": [r["chunk_id"] for r in failed_locations]
         }
 
@@ -1552,25 +1847,6 @@ class BillProcessingPipeline:
         """Check if the article format is too exotic to process."""
         exotic_patterns = ["Titre", "titre", "Livre", "livre", "Chapitre", "chapitre", "Section", "section"]
         return any(pattern in article for pattern in exotic_patterns)
-
-    def set_reconstruction_log_file(self, log_file_path: str):
-        """
-        Set the path for detailed reconstruction logging.
-        
-        Args:
-            log_file_path: Path to the detailed reconstruction log file
-        """
-        self.text_reconstructor.set_log_file_path(log_file_path)
-        logger.info("Reconstruction log file set to: %s", log_file_path)
-
-    def get_reconstruction_log_file(self) -> str:
-        """
-        Get the current reconstruction log file path.
-        
-        Returns:
-            String path to the current reconstruction log file
-        """
-        return self.text_reconstructor.get_log_file_path()
 
 
 

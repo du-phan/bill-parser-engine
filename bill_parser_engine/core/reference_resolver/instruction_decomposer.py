@@ -73,7 +73,7 @@ class InstructionDecomposer:
             cache_key_data = {'amendment_instruction': amendment_instruction}
             cached_result = self.cache.get("instruction_decomposer", cache_key_data)
             if cached_result is not None:
-                logger.debug("Found cached decomposition result")
+                logger.info("Found cached decomposition result")
                 return self._deserialize_operations(cached_result)
 
         start_time = time.time()

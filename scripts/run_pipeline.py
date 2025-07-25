@@ -189,11 +189,10 @@ def main():
     output_dir = project_root / "scripts" / "output"
     
     try:
-        # Initialize pipeline with optional detailed logging
-        log_file_path = output_dir / f"detailed_reconstruction_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        pipeline = BillProcessingPipeline(use_cache=True, log_file_path=str(log_file_path))
+        # Initialize pipeline with caching enabled
+        pipeline = BillProcessingPipeline(use_cache=True)
         
-        logger.info("Pipeline initialized with detailed logging: %s", pipeline.get_reconstruction_log_file())
+        logger.info("Pipeline initialized successfully")
         
         # Load legislative text
         logger.info("Loading legislative text from %s", bill_file)
@@ -444,7 +443,6 @@ def main():
         logger.info("  • Error isolation and context preservation")
         logger.info("  • Integration with existing LegalAmendmentReconstructor logging")
         logger.info("  • Perfect for Jupyter notebook step-by-step debugging")
-        logger.info("    Reconstruction log file: %s", pipeline.get_reconstruction_log_file())
         logger.info("    Comprehensive trace file: %s", comprehensive_trace_file)
         
         # Detailed logging examples
@@ -454,10 +452,6 @@ def main():
         logger.info("  • Step-by-step operation application tracking")
         logger.info("  • Validation results and error analysis")
         logger.info("  • Perfect for manual verification and debugging")
-        
-        # Example of how to set custom log file
-        # pipeline.set_reconstruction_log_file("custom_reconstruction_log.txt")
-        # logger.info("Custom log file set to: %s", pipeline.get_reconstruction_log_file())
         
     except FileNotFoundError:
         logger.error("Legislative bill file not found at %s", bill_file)

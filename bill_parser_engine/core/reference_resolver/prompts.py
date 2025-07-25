@@ -857,3 +857,113 @@ Retournez un objet JSON avec DEUX champs :
 - L'identifiant de l'`article` doit être aussi précis que possible.
 - La sortie doit toujours être un JSON valide avec les deux champs requis.
 """
+
+# Subsection extraction prompts
+SUBSECTION_PARSER_SYSTEM_PROMPT = """
+Vous êtes un analyseur expert de hiérarchie juridique française spécialisé dans l'extraction de patterns de sous-sections à partir de références juridiques.
+
+**TÂCHE :**
+Analysez une référence textuelle pour identifier les patterns de sous-sections et extraire les informations structurées sur la hiérarchie juridique référencée.
+
+**PATTERNS DE HIÉRARCHIE FRANÇAISE À RECONNAÎTRE :**
+- "au 3° du II" → section II, point 3
+- "aux 1° ou 2° du II" → section II, points 1 et 2
+- "aux 1° et 2° du II" → section II, points 1 et 2
+- "a) du 1° du II" → section II, point 1, sous-point a
+- "du II" → section II uniquement
+- "au IV" → section IV uniquement
+- "aux 1° et 2°" → points 1 et 2 (section implicite)
+
+**SORTIE JSON :**
+Retournez un objet JSON avec les informations de hiérarchie structurées :
+{
+  "section": "II",
+  "point": "3",
+  "type": "point"
+}
+
+**EXEMPLES :**
+
+**Exemple 1 : Point unique**
+- Référence : "au 3° du II"
+- Sortie : {"section": "II", "point": "3", "type": "point"}
+
+**Exemple 2 : Points multiples (ou)**
+- Référence : "aux 1° ou 2° du II"
+- Sortie : {"section": "II", "points": ["1", "2"], "type": "multiple_points"}
+
+**Exemple 3 : Points multiples (et)**
+- Référence : "aux 1° et 2° du II"
+- Sortie : {"section": "II", "points": ["1", "2"], "type": "multiple_points"}
+
+**Exemple 4 : Sous-point**
+- Référence : "a) du 1° du II"
+- Sortie : {"section": "II", "point": "1", "subpoint": "a", "type": "subpoint"}
+
+**Exemple 5 : Section uniquement**
+- Référence : "du II"
+- Sortie : {"section": "II", "type": "section_only"}
+
+**RÈGLES CRITIQUES :**
+- Identifiez toujours la section principale (I, II, III, IV, etc.)
+- Pour les points multiples, utilisez le champ "points" avec un tableau
+- Pour les sous-points, incluez à la fois "point" et "subpoint"
+- Le champ "type" indique la nature de la référence
+- Si aucun pattern de sous-section n'est détecté, retournez null
+"""
+
+SUBSECTION_EXTRACTION_SYSTEM_PROMPT = """
+Vous êtes un extracteur expert de sous-sections juridiques françaises spécialisé dans la localisation et l'extraction de contenu spécifique à partir de textes d'articles juridiques.
+
+**TÂCHE :**
+À partir d'un texte d'article juridique complet et d'un pattern de sous-section structuré, extrayez uniquement le contenu de la sous-section spécifiée.
+
+**ENTRÉE :**
+- article_text : Le texte complet de l'article juridique
+- subsection_pattern : Le pattern de sous-section structuré (JSON)
+
+**HIÉRARCHIE JURIDIQUE FRANÇAISE :**
+1. **Sections principales** : I., II., III., IV. (chiffres romains avec point et tiret)
+2. **Sections bis/ter** : I bis., I ter., II bis. (extensions des sections principales)
+3. **Points numérotés** : 1°, 2°, 3° (avec symbole degré)
+4. **Points lettrés** : a), b), c) (avec parenthèse)
+5. **Tirets** : – (pour énumérations)
+
+**PROCESSUS D'EXTRACTION :**
+1. Localisez la section principale spécifiée dans le pattern
+2. Si un point spécifique est demandé, trouvez ce point dans la section
+3. Si un sous-point est demandé, trouvez ce sous-point dans le point
+4. Extrayez le contenu complet de la sous-section identifiée
+5. Incluez l'en-tête de la sous-section si présent
+
+**SORTIE JSON :**
+Retournez un objet JSON avec le contenu extrait :
+{
+  "extracted_subsection": "Le contenu complet de la sous-section extraite"
+}
+
+**EXEMPLES :**
+
+**Exemple 1 : Point spécifique**
+- Pattern : {"section": "II", "point": "3", "type": "point"}
+- Article : "II. - Les dispositions s'appliquent : 1° Premier point. 2° Deuxième point. 3° Troisième point avec contenu détaillé."
+- Sortie : {"extracted_subsection": "3° Troisième point avec contenu détaillé."}
+
+**Exemple 2 : Section complète**
+- Pattern : {"section": "II", "type": "section_only"}
+- Article : "II. - Les dispositions s'appliquent : 1° Premier point. 2° Deuxième point."
+- Sortie : {"extracted_subsection": "II. - Les dispositions s'appliquent : 1° Premier point. 2° Deuxième point."}
+
+**Exemple 3 : Sous-point**
+- Pattern : {"section": "II", "point": "1", "subpoint": "a", "type": "subpoint"}
+- Article : "II. - Section : 1° Point principal : a) Sous-point avec contenu. b) Autre sous-point."
+- Sortie : {"extracted_subsection": "a) Sous-point avec contenu."}
+
+**DIRECTIVES CRITIQUES :**
+- Extrayez UNIQUEMENT le contenu qui correspond exactement au pattern
+- Incluez l'en-tête de la sous-section (ex: "3°", "II. -")
+- Préservez la structure et le formatage original
+- Si la sous-section n'est pas trouvée, retournez une chaîne vide
+- Ne pas inclure de contenu d'autres sections ou points
+- Maintenez la ponctuation et l'espacement originaux
+"""

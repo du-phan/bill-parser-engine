@@ -12,10 +12,7 @@ import json
 from typing import Optional, Callable, Any, Dict, List
 import logging
 
-try:
-    from mistralai import Mistral
-except ImportError:
-    Mistral = None
+from mistralai import Mistral
 
 # Mistral model configuration
 MISTRAL_MODEL = "magistral-medium-2506"
@@ -43,7 +40,7 @@ class SharedRateLimiter:
                     cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, min_delay_seconds: float = 3.5):
+    def __init__(self, min_delay_seconds: float = 2.5):
         """
         Initialize the rate limiter (only once due to singleton).
         

@@ -278,7 +278,9 @@ class ReferenceObjectLinker:
                     cached_result = self.cache.get("reference_object_linker", cache_input)
                     if cached_result:
                         linked_ref = self._dict_to_linked_reference(cached_result)
-                        logger.debug(f"Cache HIT for reference: {ref.reference_text}")
+                        logger.info(f"Cache HIT for reference: {ref.reference_text}")
+                    else:
+                        logger.info(f"Cache MISS for reference: {ref.reference_text}")
                 
                 # If not in cache, process with LLM
                 if linked_ref is None:
@@ -323,7 +325,7 @@ class ReferenceObjectLinker:
                             cache_input = self._create_cache_input(ref, context_text)
                             cache_result = self._linked_reference_to_dict(linked_ref)
                             self.cache.set("reference_object_linker", cache_input, cache_result)
-                            logger.debug(f"Cache SET for reference: {ref.reference_text}")
+                            logger.info(f"Cache SET for reference: {ref.reference_text}")
                         
                         if linked_ref:
                             logger.info(f"Successfully linked reference: {ref.reference_text} → {linked_ref.object}")
@@ -520,7 +522,7 @@ Utilisez l'appel de fonction pour fournir votre analyse complète.
         
         for iteration in range(self.max_iterations):
             try:
-                logger.debug(f"Evaluator-optimizer iteration {iteration + 1}/{self.max_iterations} for reference: {linked_ref.reference_text}")
+                logger.info(f"Evaluator-optimizer iteration {iteration + 1}/{self.max_iterations} for reference: {linked_ref.reference_text}")
                 
                 # Build evaluation prompt with iteration history
                 evaluation_prompt = self._build_evaluation_prompt(current_result, context_text, iteration_history)
@@ -737,11 +739,15 @@ Use the evaluation function to provide your assessment.
         Returns:
             Dictionary suitable for cache key generation
         """
+        import hashlib
+        # Use deterministic hashing for system prompt
+        system_prompt_hash = int(hashlib.sha256(self.system_prompt.encode()).hexdigest()[:8], 16)
+        
         return {
             "reference_text": ref.reference_text,
             "source": ref.source.value,
             "context_text": context_text,
-            "system_prompt_hash": hash(self.system_prompt) % (10**8)  # Include prompt version
+            "system_prompt_hash": system_prompt_hash  # Include prompt version
         }
 
     def _linked_reference_to_dict(self, linked_ref: LinkedReference) -> dict:
@@ -845,7 +851,7 @@ Use the evaluation function to provide your assessment.
             if tool_call and self._validate_optimizer_response(tool_call):
                 args = tool_call["arguments"]
                 
-                logger.debug(f"Optimizer improvement: {args['improvement_reasoning']}")
+                logger.info(f"Optimizer improvement: {args['improvement_reasoning']}")
                 
                 return LinkedReference(
                     reference_text=original_ref.reference_text,
