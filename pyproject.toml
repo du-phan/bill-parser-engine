@@ -6,13 +6,20 @@ authors = ["Du Phan"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.12"
 fastapi = "^0.115.12"
 pydantic = "^2.11.5"
 httpx = "^0.28.1"
 python-dotenv = "^1.1.0"
 loguru = "^0.7.3"
+mistralai = "^1.8.1"
+pytest = "^8.3.5"
+requests = "^2.32.3"
+pylegifrance = "^0.0.3a5"
 
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core"]

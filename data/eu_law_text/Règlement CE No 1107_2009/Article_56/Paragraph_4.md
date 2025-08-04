@@ -1,0 +1,3 @@
+# Article 56 - Paragraph_4
+
+4. Le titulaire d'une autorisation pour un produit phytopharmaceutique communique chaque année aux autorités compétentes des États membres qui ont autorisé ledit produit toute information dont il dispose sur un manque d'efficacité eu égard aux résultats escomptés, l'apparition d'une résistance et tout effet inattendu sur les végétaux, les produits végétaux ou l'environnement.

@@ -1,0 +1,3 @@
+# Article 38 - Paragraph_1
+
+1. Lorsqu'il est nécessaire d'établir si l'origine différente d'une substance active, d'un phytoprotecteur ou d'un synergiste ou, en cas de même origine, une modification de son procédé et/ou de son lieu de fabrication est conforme à l'article 29, paragraphe 1, point b), une évaluation est réalisée par l'État membre qui a agi en tant que rapporteur, visé à l'article 7, paragraphe 1, pour la substance active, le phytoprotecteur ou le synergiste, à moins que l'État membre examinant la demande visé à l'article 35 ne décide d'évaluer l'équivalence. Le demandeur fournit toutes les données nécessaires à l'État membre évaluant l'équivalence.

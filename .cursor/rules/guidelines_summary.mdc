@@ -3,9 +3,7 @@ description:
 globs: 
 alwaysApply: true
 ---
-# DAPLOS Parser Development Guidelines Summary
-
-This document summarizes the key development principles for the DAPLOS Parser project.
+# Development Guidelines Summary
 
 ## Core Principles
 
@@ -30,7 +28,6 @@ This document summarizes the key development principles for the DAPLOS Parser pr
 
 ## Key Processes
 
-*   **Validation:** Perform validation within specific `FlagParser` implementations.
 *   **Error Handling:** Raise specific exceptions and use structured logging.
 *   **Testing:** Implement comprehensive unit, integration, and end-to-end tests.
 *   **Version Control:** Use Git with a standard workflow (e.g., Gitflow) and require PRs/code reviews.

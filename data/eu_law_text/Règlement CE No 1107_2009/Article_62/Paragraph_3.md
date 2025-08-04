@@ -1,0 +1,3 @@
+# Article 62 - Paragraph_3
+
+3. Le demandeur potentiel et le ou les titulaires des autorisations correspondantes mettent tout en œuvre pour veiller à partager les essais et études impliquant l'utilisation d'animaux vertébrés. Les coûts afférents au partage des rapports d'essais et d'études doivent être déterminés de manière équitable, transparente et non discriminatoire. Le demandeur potentiel est uniquement tenu de participer aux coûts des informations qu'il doit soumettre pour satisfaire aux exigences en matière d'autorisation.

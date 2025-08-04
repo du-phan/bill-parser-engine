@@ -1,0 +1,3 @@
+# Article 3 - Point_18
+
+18) «bonne pratique phytosanitaire», pratique impliquant que les traitements au moyen de produits phytopharmaceutiques appliqués à des végétaux ou produits végétaux donnés, conformément aux conditions de leurs utilisations autorisées, soient sélectionnés, dosés et dispensés dans le temps de manière à assurer une efficacité optimale avec la quantité minimale nécessaire, compte tenu des conditions locales et des possibilités de contrôle cultural et biologique;

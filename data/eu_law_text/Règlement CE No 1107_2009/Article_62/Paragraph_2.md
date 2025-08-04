@@ -1,0 +1,3 @@
+# Article 62 - Paragraph_2
+
+2. Les États membres n'acceptent pas la répétition des essais et études impliquant l'utilisation d'animaux vertébrés ou ceux qui sont entrepris alors que les méthodes conventionnelles décrites à l'annexe II de la directive 1999/45/CE auraient raisonnablement pu être utilisées à l'appui des demandes d'autorisation. Toute personne ayant l'intention de procéder à des essais et études impliquant l'utilisation d'animaux vertébrés prend les mesures nécessaires pour s'assurer que ces essais et études n'ont pas déjà été effectués ou entrepris.

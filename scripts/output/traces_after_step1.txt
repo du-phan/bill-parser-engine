@@ -1,0 +1,3173 @@
+================================================================================
+COMPREHENSIVE PIPELINE CHUNK TRACES
+================================================================================
+Generated at: 2025-06-21T17:44:23.534265
+Total chunks traced: 68
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::1°
+--------------------------------------------------------------------------------
+Text Preview: 1° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 1°
+Initialized: 2025-06-21T17:44:23.532976
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.532987
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "1°"
+    ],
+    "start_pos": 565,
+    "end_pos": 580,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::2°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) (nouveau) Au 3° du II, les mots : « prévu aux articles L. 254-6-2 et L. 254-6-3 » sont remplacés ...
+Text Length: 170 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 2° > a)
+Initialized: 2025-06-21T17:44:23.532992
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.532998
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) (nouveau) Au 3° du II, les mots : « prévu aux articles L. 254-6-2 et L. 254-6-3 » sont remplacés par les mots : « à l'utilisation des produits phytopharmaceutiques » ;",
+    "chunk_text_length": 170,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 254-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "a)"
+    ],
+    "start_pos": 623,
+    "end_pos": 796,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::2°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le VI est ainsi modifié : à la fin de la première phrase, les mots : « incompatible avec celui de...
+Text Length: 748 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 2° > b)
+Initialized: 2025-06-21T17:44:23.533000
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533005
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le VI est ainsi modifié : à la fin de la première phrase, les mots : « incompatible avec celui des activités mentionnées aux 1° ou 2° du II ou au IV » sont remplacés par les mots : « interdit aux producteurs au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009, sauf lorsque la production concerne des produits de biocontrôle figurant sur la liste mentionnée à l'article L. 253-5 du présent code, des produits composés uniquement de substances de base au sens de l'article 23 du règlement (CE) n° 1107/2009 ou de produits à faible risque au sens de l'article 47 du même règlement (CE) n° 1107/2009 et des produits dont l'usage est autorisé dans le cadre de l'agriculture biologique » ; la seconde phrase est supprimée ;",
+    "chunk_text_length": 748,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 254-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "2°",
+        "b)"
+    ],
+    "start_pos": 796,
+    "end_pos": 1555,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3°
+--------------------------------------------------------------------------------
+Text Preview: 3° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3°
+Initialized: 2025-06-21T17:44:23.533007
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533010
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "3° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3°"
+    ],
+    "start_pos": 1557,
+    "end_pos": 1572,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° bis::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le I est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV...
+Text Length: 874 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° bis > a)
+Initialized: 2025-06-21T17:44:23.533013
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533016
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le I est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ; au 3°, les mots : « mentionnée, d'une part, au 3° du II de l'article L. 254-1 et, d'autre part, aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « , d'une part, mentionnée au 3° du II de l'article L. 254-1 et, d'autre part, de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 874,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "a)"
+    ],
+    "start_pos": 1631,
+    "end_pos": 2523,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° bis::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le II est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au I...
+Text Length: 522 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° bis > b)
+Initialized: 2025-06-21T17:44:23.533019
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533022
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le II est ainsi modifié : à la fin du 1°, les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ; au 2°, les mots : « mentionnée aux 1° ou 2° du II ou au IV de l'article L. 254-1 » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » et, à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 522,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° bis",
+        "b)"
+    ],
+    "start_pos": 2523,
+    "end_pos": 3056,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° ter::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le premier alinéa est ainsi modifié : les mots : « mentionnée aux 1° ou 2° du même II ou au IV du...
+Text Length: 489 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° ter > a)
+Initialized: 2025-06-21T17:44:23.533024
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533027
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : les mots : « mentionnée aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ; les mots : « mentionnée aux 1° ou 2° de ce II ou à ce IV de ce même article » sont remplacés par les mots : « de producteur au sens du même 11 » ; à la fin, les mots : « de ce II » sont remplacés par les mots : « du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 489,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-2 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "a)"
+    ],
+    "start_pos": 3117,
+    "end_pos": 3624,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° ter::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le second alinéa est supprimé ;
+Text Length: 34 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° ter > b)
+Initialized: 2025-06-21T17:44:23.533029
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533032
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le second alinéa est supprimé ;",
+    "chunk_text_length": 34,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-2 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° ter",
+        "b)"
+    ],
+    "start_pos": 3624,
+    "end_pos": 3659,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-2"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° quater::a)
+--------------------------------------------------------------------------------
+Text Preview: a) À la fin du I, les mots : « mentionnée aux 1° ou 2° du même II ou au IV de ce même article » sont...
+Text Length: 224 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° quater > a)
+Initialized: 2025-06-21T17:44:23.533034
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533037
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) À la fin du I, les mots : « mentionnée aux 1° ou 2° du même II ou au IV de ce même article » sont remplacés par les mots : « de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 du 21 octobre 2009 » ;",
+    "chunk_text_length": 224,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° quater",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-3 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "a)"
+    ],
+    "start_pos": 3723,
+    "end_pos": 3950,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::3° quater::b)
+--------------------------------------------------------------------------------
+Text Preview: b) À la fin du II, les mots : « les activités mentionnées aux 1° ou 2° du même II ou au IV du même a...
+Text Length: 231 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 3° quater > b)
+Initialized: 2025-06-21T17:44:23.533039
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533042
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) À la fin du II, les mots : « les activités mentionnées aux 1° ou 2° du même II ou au IV du même article » sont remplacés par les mots : « une activité de producteur au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009 » ;",
+    "chunk_text_length": 231,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "3° quater",
+    "numbered_point_introductory_phrase": "L'article L. 254-1-3 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "3° quater",
+        "b)"
+    ],
+    "start_pos": 3950,
+    "end_pos": 4182,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-1-3"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::4°
+--------------------------------------------------------------------------------
+Text Preview: 4° Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 2...
+Text Length: 176 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 4°
+Initialized: 2025-06-21T17:44:23.533044
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533047
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "4° Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 254-1 » sont remplacés par les mots : « au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 176,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "4°",
+    "numbered_point_introductory_phrase": "Au cinquième alinéa du I de l'article L. 254-2, les mots : « aux 1° et 2° du II de l'article L. 254-1 » sont remplacés par les mots : « au 1° du II de l'article L. 254-1 » ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "4°"
+    ],
+    "start_pos": 4184,
+    "end_pos": 4362,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5°
+--------------------------------------------------------------------------------
+Text Preview: 5° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5°
+Initialized: 2025-06-21T17:44:23.533049
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533105
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "5° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5°"
+    ],
+    "start_pos": 4362,
+    "end_pos": 4377,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5° bis
+--------------------------------------------------------------------------------
+Text Preview: 5° bis (nouveau) Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;
+Text Length: 69 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5° bis
+Initialized: 2025-06-21T17:44:23.533107
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533110
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "5° bis (nouveau) Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;",
+    "chunk_text_length": 69,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5° bis",
+    "numbered_point_introductory_phrase": "Les articles L. 254-6-2 et L. 254-6-3 sont abrogés ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° bis"
+    ],
+    "start_pos": 4377,
+    "end_pos": 4448,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-2"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5° ter::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le premier alinéa est ainsi modifié : la première phrase est remplacée par quatre phrases ainsi r...
+Text Length: 950 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5° ter > a)
+Initialized: 2025-06-21T17:44:23.533112
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533115
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : la première phrase est remplacée par quatre phrases ainsi rédigées : « I. – Le conseil mentionné au 3° du II de l'article L. 254-1 couvre toute recommandation d'utilisation de produits phytopharmaceutiques. Il est formalisé par écrit. La prestation est effectuée à titre onéreux. Il s'inscrit dans un objectif de réduction de l'usage et des impacts des produits phytopharmaceutiques et respecte les principes généraux de la lutte intégrée contre les ennemis des cultures mentionnée à l'article L. 253-6. » ; à la deuxième phrase, les mots : « ils privilégient » sont remplacés par les mots : « il privilégie » et les mots : « ils recommandent » sont remplacés par les mots : « il recommande » ; au début de la troisième phrase, les mots : « Ils promeuvent » sont remplacés par les mots : « Il promeut » ; au début de la dernière phrase, les mots : « Ils tiennent » sont remplacés par les mots : « Il tient » ;",
+    "chunk_text_length": 950,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-6-4 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "a)"
+    ],
+    "start_pos": 4507,
+    "end_pos": 5480,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::5° ter::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Il est ajouté un II ainsi rédigé : « II. – Le conseil stratégique à l'utilisation de produits phy...
+Text Length: 639 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 5° ter > b)
+Initialized: 2025-06-21T17:44:23.533117
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533120
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Il est ajouté un II ainsi rédigé : « II. – Le conseil stratégique à l'utilisation de produits phytopharmaceutiques établit un plan d'action pluriannuel pour la protection des cultures de l'exploitation agricole qui s'inscrit dans les objectifs du plan d'action national mentionné à l'article L. 253-6. Il est fondé sur un diagnostic prenant en compte les spécificités de l'exploitation. Les exigences concernant la prévention des conflits d'intérêts pour la délivrance du conseil stratégique par le détenteur d'un agrément au titre des activités mentionnées au 1° du II de l'article L. 254-1 sont déterminées par voie réglementaire. » ;",
+    "chunk_text_length": 639,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "5° ter",
+    "numbered_point_introductory_phrase": "L'article L. 254-6-4 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "5° ter",
+        "b)"
+    ],
+    "start_pos": 5480,
+    "end_pos": 6123,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-6-4"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) (nouveau) Au premier alinéa, les mots : « , et notamment la désignation de l'autorité administrat...
+Text Length: 289 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° > a)
+Initialized: 2025-06-21T17:44:23.533122
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533125
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) (nouveau) Au premier alinéa, les mots : « , et notamment la désignation de l'autorité administrative, les conditions de délivrance, de renouvellement, de suspension, de modulation et de retrait des agréments, des certificats ainsi que des habilitations des organismes » sont supprimés ;",
+    "chunk_text_length": 289,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6°",
+    "numbered_point_introductory_phrase": "L'article L. 254-7-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "a)"
+    ],
+    "start_pos": 6170,
+    "end_pos": 6462,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le second alinéa est ainsi modifié : à la première phrase, après le mot : « prévoit », il est ins...
+Text Length: 268 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° > b)
+Initialized: 2025-06-21T17:44:23.533127
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533130
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le second alinéa est ainsi modifié : à la première phrase, après le mot : « prévoit », il est inséré le mot : « notamment » ; la dernière phrase est ainsi rédigée : « Il précise les modalités de délivrance du conseil mentionné au 3° du II de l'article L. 254-1. » ;",
+    "chunk_text_length": 268,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6°",
+    "numbered_point_introductory_phrase": "L'article L. 254-7-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6°",
+        "b)"
+    ],
+    "start_pos": 6462,
+    "end_pos": 6741,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-7-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6° bis::a)
+--------------------------------------------------------------------------------
+Text Preview: a) À la fin de la première phrase du premier alinéa du I, les mots : « auprès desquelles la redevanc...
+Text Length: 317 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° bis > a)
+Initialized: 2025-06-21T17:44:23.533132
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533135
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) À la fin de la première phrase du premier alinéa du I, les mots : « auprès desquelles la redevance pour pollutions diffuses est exigible, mentionnées au IV de l'article L. 213-10-8 du code de l'environnement » sont remplacés par les mots : « exerçant les activités mentionnées au 1° du II de l'article L. 254-1 » ;",
+    "chunk_text_length": 317,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "a)"
+    ],
+    "start_pos": 6803,
+    "end_pos": 7123,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6° bis::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Au début du premier alinéa du II, les mots : « L'autorité administrative notifie à chaque obligé ...
+Text Length: 466 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° bis > b)
+Initialized: 2025-06-21T17:44:23.533137
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533140
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Au début du premier alinéa du II, les mots : « L'autorité administrative notifie à chaque obligé pour les périodes du 1ᵉʳ janvier 2020 au 31 décembre 2020 et du 1ᵉʳ janvier 2021 au 31 décembre 2021, puis, à compter du 1ᵉʳ janvier 2022, pour chaque période successive d'une durée fixée par décret en Conseil d'État, dans la limite de quatre ans » sont remplacés par les mots : « L'autorité administrative notifie à chaque obligé, pour chaque période successive » ;",
+    "chunk_text_length": 466,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6° bis",
+    "numbered_point_introductory_phrase": "L'article L. 254-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° bis",
+        "b)"
+    ],
+    "start_pos": 7123,
+    "end_pos": 7590,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 254-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::6° ter
+--------------------------------------------------------------------------------
+Text Preview: 6° ter (nouveau) Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé ...
+Text Length: 128 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 6° ter
+Initialized: 2025-06-21T17:44:23.533142
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533145
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "6° ter (nouveau) Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé par le nombre : « 50 000 » ;",
+    "chunk_text_length": 128,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6° ter",
+    "numbered_point_introductory_phrase": "Au premier alinéa du I de l'article L. 254-12, le nombre : « 15 000 » est remplacé par le nombre : « 50 000 » ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "6° ter"
+    ],
+    "start_pos": 7592,
+    "end_pos": 7722,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 1ᵉʳ::7°
+--------------------------------------------------------------------------------
+Text Preview: 7° (nouveau) Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :
+
+	« T...
+Text Length: 864 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 1ᵉʳ > 7°
+Initialized: 2025-06-21T17:44:23.533147
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533150
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "7° (nouveau) Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :\n\n\t« TITRE PRÉLIMINAIRE\n\n\t« DU CONSEIL STRATÉGIQUE GLOBAL\n\n\t« Art. L. 500-1. – I. – Les exploitants agricoles peuvent bénéficier d'un conseil stratégique global, formalisé par écrit, fourni par des conseillers compétents en agronomie, en protection des végétaux, en utilisation efficace, économe et durable des ressources ou en stratégie de valorisation et de filière, afin d'améliorer la viabilité économique, environnementale et sociale de leur exploitation.\n\n\t« Le conseil stratégique à l'utilisation de produits phytopharmaceutiques mentionné à l'article L. 254-6-4 constitue un volet de ce conseil stratégique global.\n\n\t« II. – Un décret définit les exigences relatives à l'exercice de la fonction de conseiller mentionnée au I, notamment en matière de formation. »",
+    "chunk_text_length": 864,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 1ᵉʳ",
+    "article_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "7°",
+    "numbered_point_introductory_phrase": "Avant le titre Iᵉʳ du livre V, il est ajouté un titre préliminaire ainsi rédigé :",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 1ᵉʳ",
+        "7°"
+    ],
+    "start_pos": 7722,
+    "end_pos": 8588,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::I::1°
+--------------------------------------------------------------------------------
+Text Preview: 1° (nouveau)(Supprimé)
+Text Length: 22 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > I > 1°
+Initialized: 2025-06-21T17:44:23.533152
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533155
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° (nouveau)(Supprimé)",
+    "chunk_text_length": 22,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de la santé publique est ainsi modifié :",
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "I",
+        "1°"
+    ],
+    "start_pos": 8657,
+    "end_pos": 8682,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::I::2°::aaa)
+--------------------------------------------------------------------------------
+Text Preview: aaa) À la seconde phrase du premier alinéa, après le mot : « État », sont insérés les mots : « et ap...
+Text Length: 150 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > I > 2° > aaa)
+Initialized: 2025-06-21T17:44:23.533157
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533160
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "aaa) À la seconde phrase du premier alinéa, après le mot : « État », sont insérés les mots : « et après en avoir informé ses ministères de tutelle » ;",
+    "chunk_text_length": 150,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de la santé publique est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 1313-5 est ainsi modifié :",
+    "lettered_subdivision_label": "aaa)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "I",
+        "2°",
+        "aaa)"
+    ],
+    "start_pos": 8736,
+    "end_pos": 8890,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de la santé publique",
+        "article": "L. 1313-5"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::I::2°::aa, a et b)
+--------------------------------------------------------------------------------
+Text Preview: aa, a et b) (Supprimés)
+Text Length: 23 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > I > 2° > aa, a et b)
+Initialized: 2025-06-21T17:44:23.533162
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533165
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "aa, a et b) (Supprimés)",
+    "chunk_text_length": 23,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de la santé publique est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 1313-5 est ainsi modifié :",
+    "lettered_subdivision_label": "aa, a et b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "I",
+        "2°",
+        "aa, a et b)"
+    ],
+    "start_pos": 8890,
+    "end_pos": 8915,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de la santé publique",
+        "article": "L. 1313-5"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::I::3°
+--------------------------------------------------------------------------------
+Text Preview: 3° (nouveau) Le deuxième alinéa de l'article L. 1313-6-1 est complété par une phrase ainsi rédigée :...
+Text Length: 209 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > I > 3°
+Initialized: 2025-06-21T17:44:23.533168
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533171
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "3° (nouveau) Le deuxième alinéa de l'article L. 1313-6-1 est complété par une phrase ainsi rédigée : « Le comité de suivi des autorisations de mise sur le marché peut également se saisir des mêmes questions. »",
+    "chunk_text_length": 209,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de la santé publique est ainsi modifié :",
+    "numbered_point_label": "3°",
+    "numbered_point_introductory_phrase": "Le deuxième alinéa de l'article L. 1313-6-1 est complété par une phrase ainsi rédigée : « Le comité de suivi des autorisations de mise sur le marché peut également se saisir des mêmes questions. »",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "I",
+        "3°"
+    ],
+    "start_pos": 8918,
+    "end_pos": 9130,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::1°A
+--------------------------------------------------------------------------------
+Text Preview: 1°A (nouveau) Après le deuxième alinéa de l'article L. 253-1, il est inséré un alinéa ainsi rédigé :...
+Text Length: 768 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 1°A
+Initialized: 2025-06-21T17:44:23.533173
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533176
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1°A (nouveau) Après le deuxième alinéa de l'article L. 253-1, il est inséré un alinéa ainsi rédigé :\n\t\n\t\t« Lorsqu'elle est saisie d'une demande d'autorisation de mise sur le marché relative à des produits utilisés en agriculture, l'Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail est tenue, préalablement à l'adoption de toute décision de rejet, de communiquer les motifs pour lesquels elle envisage de rejeter la demande. Ces motifs sont communiqués dans les meilleurs délais, de façon à permettre au demandeur de produire des observations écrites. Ces observations sont prises en compte par l'Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail aux fins d'adoption de sa décision. » ;",
+    "chunk_text_length": 768,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "1°A",
+    "numbered_point_introductory_phrase": "Après le deuxième alinéa de l'article L. 253-1, il est inséré un alinéa ainsi rédigé :",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "1°A"
+    ],
+    "start_pos": 9195,
+    "end_pos": 10494,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::1°
+--------------------------------------------------------------------------------
+Text Preview: 1° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 1°
+Initialized: 2025-06-21T17:44:23.533178
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533181
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "1°"
+    ],
+    "start_pos": 9966,
+    "end_pos": 10510,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::2°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le I est remplacé par des I à I ter ainsi rédigés : « I. – Sous réserve des I bis et I ter, la pu...
+Text Length: 3974 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 2° > a)
+Initialized: 2025-06-21T17:44:23.533183
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533186
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le I est remplacé par des I à I ter ainsi rédigés : « I. – Sous réserve des I bis et I ter, la pulvérisation aérienne des produits phytopharmaceutiques est interdite. « I bis. – A. – Pour lutter contre un danger sanitaire grave qui ne peut être maîtrisé par d'autres moyens, la pulvérisation aérienne de produits phytopharmaceutiques peut être autorisée temporairement par arrêté conjoint des ministres chargés de l'environnement, de l'agriculture et de la santé. « B. – Les programmes d'application par aéronef circulant sans personne à bord de produits phytopharmaceutiques de biocontrôle mentionnés à l'article L. 253-6 et figurant sur la liste mentionnée au IV de l'article L. 253-7, de produits autorisés en agriculture biologique et de produits à faible risque au sens de l'article 47 du règlement (CE) n° 1107/2009 du Parlement européen et du Conseil du 21 octobre 2009 concernant la mise sur le marché des produits phytopharmaceutiques et abrogeant les directives 79/117/CEE et 91/414/CEE du Conseil peuvent être autorisés, lorsqu'ils présentent des avantages manifestes pour la santé humaine et pour l'environnement par rapport aux applications par voie terrestre, sur les parcelles agricoles comportant une pente supérieure ou égale à 30 %, sur les bananeraies et sur les vignes-mères de porte-greffes conduites au sol. « Un arrêté des ministres chargés de l'environnement, de l'agriculture et de la santé, pris après avis de l'Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail et après consultation des organisations professionnelles et syndicales représentant les exploitants et les salariés agricoles, définit les conditions d'autorisation de ces programmes dans les conditions prévues à l'article 9 de la directive 2009/128/CE du Parlement européen et du Conseil du 21 octobre 2009 instaurant un cadre d'action communautaire pour parvenir à une utilisation des pesticides compatible avec le développement durable. « I ter. – A. – Par dérogation au I, des programmes d'application par aéronef circulant sans personne à bord de produits mentionnés au B du I bis peuvent être autorisés, dans les conditions fixées aux B et C du présent I ter, sur des parcelles et des cultures autres que celles mentionnées au B du I bis lorsqu'ils présentent des avantages manifestes pour la santé humaine et l'environnement par rapport aux applications par voie terrestre. « B. – Les programmes mentionnés au A du présent I ter sont autorisés à titre d'essai pour une durée maximale de trois ans. « Les essais visent à déterminer, pour un type de parcelles ou de cultures, les avantages manifestes de la pulvérisation par aéronef circulant sans personne à bord du point de vue des incidences sur la santé humaine et l'environnement par rapport aux applications par voie terrestre. « Leurs résultats sont évalués par l'Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail. « Les évaluations sont présentées à l'Office parlementaire d'évaluation des choix scientifiques et technologiques. « Un décret, pris après avis de l'Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail, définit les conditions d'autorisation et les modalités de réalisation de ces essais ainsi que les modalités de transmission de leurs résultats à cette agence. « C. – Un arrêté des ministres chargés de l'environnement, de l'agriculture et de la santé dresse la liste des types de parcelles ou des cultures pour lesquelles les résultats des essais mentionnés au B montrent que la pulvérisation par aéronef circulant sans personne à bord est susceptible de présenter des avantages manifestes pour la santé humaine et pour l'environnement. « Pour les types de parcelles ou les cultures inscrites sur la liste mentionnée au premier alinéa du présent C, un programme d'application par aéronef circulant sans personne à bord peut être autorisé dans les conditions prévues au B du I bis. » ;",
+    "chunk_text_length": 3974,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 253-8 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "2°",
+        "a)"
+    ],
+    "start_pos": 10025,
+    "end_pos": 14051,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 253-8"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::2°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 2° > b)
+Initialized: 2025-06-21T17:44:23.533188
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533191
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 253-8 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "2°",
+        "b)"
+    ],
+    "start_pos": 14051,
+    "end_pos": 14068,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 253-8"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::2°::c)
+--------------------------------------------------------------------------------
+Text Preview: c) (nouveau) Les deuxième et troisième alinéas du II sont supprimés ;
+Text Length: 69 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 2° > c)
+Initialized: 2025-06-21T17:44:23.533193
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533196
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "c) (nouveau) Les deuxième et troisième alinéas du II sont supprimés ;",
+    "chunk_text_length": 69,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 253-8 est ainsi modifié :",
+    "lettered_subdivision_label": "c)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "2°",
+        "c)"
+    ],
+    "start_pos": 14068,
+    "end_pos": 14141,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 253-8"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::2°::d)
+--------------------------------------------------------------------------------
+Text Preview: d) (nouveau) Le deuxième alinéa du II bis est ainsi modifié : à la fin de la première phrase, les mo...
+Text Length: 367 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 2° > d)
+Initialized: 2025-06-21T17:44:23.533198
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533201
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "d) (nouveau) Le deuxième alinéa du II bis est ainsi modifié : à la fin de la première phrase, les mots : « , ainsi que la conformité de ces avancées au plan de recherche sur les alternatives aux néonicotinoïdes de la filière concernée par un arrêté de dérogation mentionné au deuxième alinéa du II » sont supprimés ; les deuxième et dernière phrases sont supprimées ;",
+    "chunk_text_length": 367,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 253-8 est ainsi modifié :",
+    "lettered_subdivision_label": "d)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "2°",
+        "d)"
+    ],
+    "start_pos": 14141,
+    "end_pos": 14524,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 253-8"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::2°::e)
+--------------------------------------------------------------------------------
+Text Preview: e) (nouveau) Le troisième alinéa du même II bis est supprimé ;
+Text Length: 62 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 2° > e)
+Initialized: 2025-06-21T17:44:23.533203
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533208
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "e) (nouveau) Le troisième alinéa du même II bis est supprimé ;",
+    "chunk_text_length": 62,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 253-8 est ainsi modifié :",
+    "lettered_subdivision_label": "e)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "2°",
+        "e)"
+    ],
+    "start_pos": 14524,
+    "end_pos": 14590,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 253-8"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::2°::f)
+--------------------------------------------------------------------------------
+Text Preview: f) (nouveau) Après ledit II bis, il est inséré un II ter ainsi rédigé : « II ter. – Sans préjudice d...
+Text Length: 1805 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 2° > f)
+Initialized: 2025-06-21T17:44:23.533210
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533213
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "f) (nouveau) Après ledit II bis, il est inséré un II ter ainsi rédigé : « II ter. – Sans préjudice de la nécessité d'obtenir une autorisation de mise sur le marché ou une autorisation accordée dans les conditions prévues à l'article 53 du règlement (CE) n° 1107/2009, un décret peut, à titre exceptionnel, après avis du conseil de surveillance prévu au II bis, déroger à l'interdiction d'utilisation des produits mentionnée au II ainsi que des semences traitées avec ces produits, pour un usage déterminé, lorsque les conditions suivantes sont réunies : « 1° Les substances actives contenues dans les produits sont approuvées en application du règlement (CE) n° 1107/2009 ; « 2° Les alternatives disponibles à l'utilisation de ces produits sont inexistantes ou manifestement insuffisantes ; « 3° Il existe un plan de recherche sur les alternatives à leur utilisation. « Ce décret peut interdire temporairement et pour une durée qu'il détermine la plantation et la replantation de végétaux attractifs d'insectes pollinisateurs après l'emploi de semences traitées, ainsi autorisées à titre exceptionnel. « Le conseil de surveillance prévu au II bis se prononce, dans son avis, sur la nécessité d'une dérogation exceptionnelle, sur les conditions auxquelles cette dérogation serait adéquate et strictement proportionnée et sur l'état de la recherche d'alternatives. « Le conseil de surveillance publie chaque année et remet avant le 15 octobre au Gouvernement et au Parlement un rapport relatif à chaque dérogation exceptionnelle et portant sur leurs conséquences notamment environnementales et économiques, ainsi que sur l'état d'avancement du plan de recherche, en veillant à ce que soient prévues les modalités de déploiement des solutions alternatives existantes en conditions réelles d'exploitation. » ;",
+    "chunk_text_length": 1805,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 253-8 est ainsi modifié :",
+    "lettered_subdivision_label": "f)",
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "2°",
+        "f)"
+    ],
+    "start_pos": 14590,
+    "end_pos": 16425,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 253-8"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::3°
+--------------------------------------------------------------------------------
+Text Preview: 3° L'article L. 253-8-3 est abrogé ;
+Text Length: 36 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 3°
+Initialized: 2025-06-21T17:44:23.533215
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533218
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "3° L'article L. 253-8-3 est abrogé ;",
+    "chunk_text_length": 36,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "3°",
+    "numbered_point_introductory_phrase": "L'article L. 253-8-3 est abrogé ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "3°"
+    ],
+    "start_pos": 16428,
+    "end_pos": 16995,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 253-8-3"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE Iᴱᴿ::Article 2::II::4°
+--------------------------------------------------------------------------------
+Text Preview: 4° (nouveau) La section 6 du chapitre III du titre V du livre II est complétée par un article L. 253...
+Text Length: 1448 characters
+Hierarchy Path: # TITRE Iᴱᴿ > Article 2 > II > 4°
+Initialized: 2025-06-21T17:44:23.533220
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533223
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "4° (nouveau) La section 6 du chapitre III du titre V du livre II est complétée par un article L. 253-8-4 ainsi rédigé:\n\n\t\t« Art. L. 253-8-4. – I. – Constitue un usage prioritaire toute solution permettant de lutter contre un organisme nuisible ou un végétal indésirable qui affecte ou est susceptible d'affecter de manière significative le potentiel de production agricole et alimentaire lorsque les alternatives sont inexistantes, insuffisantes ou susceptibles de disparaître à brève échéance.\n\n\t\t« II. – Un conseil d'orientation pour la protection des cultures suit la disponibilité des méthodes et moyens chimiques et non chimiques de protection des cultures.\n\n\t\t« Il avise le ministre chargé de l'agriculture des usages qu'il considère prioritaires.\n\n\t\t« III. – Le ministre chargé de l'agriculture fixe par arrêté, après avis du conseil d'orientation pour la protection des cultures, la liste des usages prioritaires.\n\n\t\t« IV. – L'Agence nationale de sécurité sanitaire de l'alimentation, de l'environnement et du travail établit, pour les usages prioritaires, un calendrier d'instruction des demandes tenant compte du cycle cultural et s'emploie à le respecter. Ce calendrier est présenté au conseil d'orientation pour la protection des cultures.\n\n\t\t« V. – Un décret précise les conditions d'application du présent article, notamment les modalités de fonctionnement et la composition du conseil d'orientation pour la protection des cultures. »",
+    "chunk_text_length": 1448,
+    "titre_text": "# TITRE Iᴱᴿ",
+    "article_label": "Article 2",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le code rural et de la pêche maritime est ainsi modifié :",
+    "numbered_point_label": "4°",
+    "numbered_point_introductory_phrase": "La section 6 du chapitre III du titre V du livre II est complétée par un article L. 253-8-4 ainsi rédigé:",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE Iᴱᴿ",
+        "Article 2",
+        "II",
+        "4°"
+    ],
+    "start_pos": 16467,
+    "end_pos": 18446,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::1° à 3°
+--------------------------------------------------------------------------------
+Text Preview: 1° à 3° (Supprimés)
+Text Length: 19 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 1° à 3°
+Initialized: 2025-06-21T17:44:23.533225
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533231
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° à 3° (Supprimés)",
+    "chunk_text_length": 19,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "1° à 3°",
+    "numbered_point_introductory_phrase": "(Supprimés)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "1° à 3°"
+    ],
+    "start_pos": 18033,
+    "end_pos": 18055,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::3° bis::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Au second alinéa du I, après le mot : « organise », sont insérés les mots : « , après concertatio...
+Text Length: 163 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 3° bis > a)
+Initialized: 2025-06-21T17:44:23.533233
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533236
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Au second alinéa du I, après le mot : « organise », sont insérés les mots : « , après concertation avec le commissaire enquêteur ou la commission d'enquête, » ;",
+    "chunk_text_length": 163,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 181-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "3° bis",
+        "a)"
+    ],
+    "start_pos": 18115,
+    "end_pos": 18282,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 181-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::3° bis::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le 1° du III est complété par une phrase ainsi rédigée : « Le commissaire enquêteur ou la commiss...
+Text Length: 762 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 3° bis > b)
+Initialized: 2025-06-21T17:44:23.533238
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533241
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le 1° du III est complété par une phrase ainsi rédigée : « Le commissaire enquêteur ou la commission d'enquête peuvent néanmoins choisir, en concertation avec l'autorité administrative chargée de la consultation du public, de remplacer cette réunion publique par une permanence à des lieux, jours et heures qu'ils déterminent, incluant au moins une journée dans la mairie de chaque commune du lieu d'implantation du projet ; » b bis) Le 4° du même III est complété par deux phrases ainsi rédigées : « Ces réponses, à l'exception de la réponse à l'avis de l'autorité environnementale, sont facultatives. Les réponses aux observations et aux propositions du public peuvent être transmises et publiées en une fois, jusqu'à la fin de la consultation du public ; »",
+    "chunk_text_length": 762,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 181-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "3° bis",
+        "b)"
+    ],
+    "start_pos": 18282,
+    "end_pos": 19051,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 181-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::3° bis::c)
+--------------------------------------------------------------------------------
+Text Preview: c) Après la première phrase du 5° dudit III, est insérée une phrase ainsi rédigée : « Le commissaire...
+Text Length: 454 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 3° bis > c)
+Initialized: 2025-06-21T17:44:23.533243
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533246
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "c) Après la première phrase du 5° dudit III, est insérée une phrase ainsi rédigée : « Le commissaire enquêteur ou la commission d'enquête peuvent néanmoins choisir, en concertation avec l'autorité administrative chargée de la consultation du public, de remplacer cette réunion publique par une permanence à des lieux, jours et heures qu'ils déterminent, incluant au moins une journée dans la mairie de chaque commune du lieu d'implantation du projet. » ;",
+    "chunk_text_length": 454,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 181-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "c)",
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "3° bis",
+        "c)"
+    ],
+    "start_pos": 19051,
+    "end_pos": 19509,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 181-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::3° bis::d)
+--------------------------------------------------------------------------------
+Text Preview: d) Au dernier alinéa dudit III, après le mot : « consultation », sont insérés les mots : « , ou le p...
+Text Length: 156 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 3° bis > d)
+Initialized: 2025-06-21T17:44:23.533248
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533251
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "d) Au dernier alinéa dudit III, après le mot : « consultation », sont insérés les mots : « , ou le premier jour de la permanence qui lui est substituée, » ;",
+    "chunk_text_length": 156,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 181-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "d)",
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "3° bis",
+        "d)"
+    ],
+    "start_pos": 19509,
+    "end_pos": 19669,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 181-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::3° bis::e)
+--------------------------------------------------------------------------------
+Text Preview: e) Au premier alinéa du IV, le mot : « clôture » est remplacé par le mot : « fin » ;
+Text Length: 84 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 3° bis > e)
+Initialized: 2025-06-21T17:44:23.533252
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533255
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "e) Au premier alinéa du IV, le mot : « clôture » est remplacé par le mot : « fin » ;",
+    "chunk_text_length": 84,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "3° bis",
+    "numbered_point_introductory_phrase": "L'article L. 181-10-1 est ainsi modifié :",
+    "lettered_subdivision_label": "e)",
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "3° bis",
+        "e)"
+    ],
+    "start_pos": 19669,
+    "end_pos": 19755,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 181-10-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::4°
+--------------------------------------------------------------------------------
+Text Preview: 4° (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 4°
+Initialized: 2025-06-21T17:44:23.533257
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533260
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "4° (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "4°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "4°"
+    ],
+    "start_pos": 19758,
+    "end_pos": 19774,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::5°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Au second alinéa du I, après le mot : « industrielles », sont insérés les mots : « et aux émissio...
+Text Length: 119 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 5° > a)
+Initialized: 2025-06-21T17:44:23.533262
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533266
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Au second alinéa du I, après le mot : « industrielles », sont insérés les mots : « et aux émissions de l'élevage » ;",
+    "chunk_text_length": 119,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "5°",
+    "numbered_point_introductory_phrase": "L'article L. 512-7 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "5°",
+        "a)"
+    ],
+    "start_pos": 19817,
+    "end_pos": 19940,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 512-7"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::5°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) (nouveau) Après le I bis, il est inséré un I ter ainsi rédigé : « I ter. – Peuvent également rele...
+Text Length: 592 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 5° > b)
+Initialized: 2025-06-21T17:44:23.533268
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533271
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) (nouveau) Après le I bis, il est inséré un I ter ainsi rédigé : « I ter. – Peuvent également relever du régime de l'enregistrement les installations d'élevage mentionnées à l'annexe I bis de la directive 2010/75/UE du Parlement européen et du Conseil relative aux émissions industrielles et aux émissions de l'élevage, à l'exception des installations destinées à l'élevage intensif énumérées à l'annexe I de la directive 2011/92/UE du Parlement européen et du Conseil du 13 décembre 2011 concernant l'évaluation des incidences de certains projets publics et privés sur l'environnement. » ;",
+    "chunk_text_length": 592,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "5°",
+    "numbered_point_introductory_phrase": "L'article L. 512-7 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "5°",
+        "b)"
+    ],
+    "start_pos": 19940,
+    "end_pos": 20534,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 512-7"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::I::6°
+--------------------------------------------------------------------------------
+Text Preview: 6° (nouveau)(Supprimé)
+Text Length: 22 characters
+Hierarchy Path: # TITRE II > Article 3 > I > 6°
+Initialized: 2025-06-21T17:44:23.533273
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533276
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "6° (nouveau)(Supprimé)",
+    "chunk_text_length": 22,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "6°",
+    "numbered_point_introductory_phrase": "(Supprimé)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "I",
+        "6°"
+    ],
+    "start_pos": 20537,
+    "end_pos": 20562,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 3::II
+--------------------------------------------------------------------------------
+Text Preview: II (nouveau). – Le 5° du I du présent article entre en vigueur à la date de
+publication de l'acte d'...
+Text Length: 274 characters
+Hierarchy Path: # TITRE II > Article 3 > II
+Initialized: 2025-06-21T17:44:23.533278
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533281
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "II (nouveau). – Le 5° du I du présent article entre en vigueur à la date de\npublication de l'acte d'exécution prévu au 2 de l'article 70 decies de la\ndirective 2010/75/UE du Parlement européen et du Conseil relative aux\némissions industrielles et aux émissions de l'élevage.",
+    "chunk_text_length": 274,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 3",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le 5° du I du présent article entre en vigueur à la date de",
+    "numbered_point_label": null,
+    "numbered_point_introductory_phrase": null,
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 3",
+        "II"
+    ],
+    "start_pos": 20562,
+    "end_pos": 20838,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 4::I
+--------------------------------------------------------------------------------
+Text Preview: I et II. – (Supprimés)
+Text Length: 22 characters
+Hierarchy Path: # TITRE II > Article 4 > I
+Initialized: 2025-06-21T17:44:23.533282
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533285
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "I et II. – (Supprimés)",
+    "chunk_text_length": 22,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 4",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "(Supprimés)",
+    "numbered_point_label": null,
+    "numbered_point_introductory_phrase": null,
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 4",
+        "I"
+    ],
+    "start_pos": 20852,
+    "end_pos": 20876,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 4::II
+--------------------------------------------------------------------------------
+Text Preview: I et II. – (Supprimés)
+Text Length: 22 characters
+Hierarchy Path: # TITRE II > Article 4 > II
+Initialized: 2025-06-21T17:44:23.533287
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533290
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "I et II. – (Supprimés)",
+    "chunk_text_length": 22,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 4",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "(Supprimés)",
+    "numbered_point_label": null,
+    "numbered_point_introductory_phrase": null,
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 4",
+        "II"
+    ],
+    "start_pos": 20852,
+    "end_pos": 20876,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE II::Article 4::III
+--------------------------------------------------------------------------------
+Text Preview: III (nouveau). – L'État met en place un plan pluriannuel de
+renforcement de l'offre d'assurance réco...
+Text Length: 1335 characters
+Hierarchy Path: # TITRE II > Article 4 > III
+Initialized: 2025-06-21T17:44:23.533294
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533297
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "III (nouveau). – L'État met en place un plan pluriannuel de\nrenforcement de l'offre d'assurance récolte destinée aux prairies. Ce plan\nporte sur l'information des éleveurs en cours de campagne, le\nperfectionnement et l'accroissement de la performance de l'approche\nindicielle, la meilleure intégration de l'ensemble des aléas climatiques dans\nl'assurance récolte des prairies et la simplification et l'accélération de la\nprocédure de recours pour les éleveurs.\n\nS'agissant des évaluations des pertes de récoltes ou de cultures fondées sur des indices, ce plan pluriannuel étudie la possibilité pour les instances départementales, placées sous l'autorité du représentant de l'État dans le département, de se réunir postérieurement à chaque fin de campagne de production sur demande des organisations syndicales d'exploitants agricoles représentatives. Ces instances départementales pourraient être chargées de présenter et expliquer les résultats des indices utilisés, d'échanger sur les éventuels points de contestation et de les analyser. Le représentant de l'État dans le département transmettrait une synthèse des travaux de l'instance au comité national des indices.\n\nLe Gouvernement remet au Parlement, au plus tard le 31 décembre 2026, un rapport sur l'état d'avancement de ce plan pluriannuel et la poursuite de son déploiement.",
+    "chunk_text_length": 1335,
+    "titre_text": "# TITRE II",
+    "article_label": "Article 4",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "III",
+    "major_subdivision_introductory_phrase": "L'État met en place un plan pluriannuel de",
+    "numbered_point_label": null,
+    "numbered_point_introductory_phrase": null,
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE II",
+        "Article 4",
+        "III"
+    ],
+    "start_pos": 20876,
+    "end_pos": 22213,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE III::Article 5::1°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Après le 5° bis du I, il est inséré un 5° ter ainsi rédigé : « 5° ter La préservation de l'accès ...
+Text Length: 148 characters
+Hierarchy Path: # TITRE III > Article 5 > 1° > a)
+Initialized: 2025-06-21T17:44:23.533299
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533302
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Après le 5° bis du I, il est inséré un 5° ter ainsi rédigé : « 5° ter La préservation de l'accès à la ressource en eau aux fins d'abreuvement ; »",
+    "chunk_text_length": 148,
+    "titre_text": "# TITRE III",
+    "article_label": "Article 5",
+    "article_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "L'article L. 211-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE III",
+        "Article 5",
+        "1°",
+        "a)"
+    ],
+    "start_pos": 22451,
+    "end_pos": 22602,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 211-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE III::Article 5::1°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) (Supprimé)
+Text Length: 13 characters
+Hierarchy Path: # TITRE III > Article 5 > 1° > b)
+Initialized: 2025-06-21T17:44:23.533303
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533306
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) (Supprimé)",
+    "chunk_text_length": 13,
+    "titre_text": "# TITRE III",
+    "article_label": "Article 5",
+    "article_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "L'article L. 211-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE III",
+        "Article 5",
+        "1°",
+        "b)"
+    ],
+    "start_pos": 22602,
+    "end_pos": 22616,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 211-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE III::Article 5::1° bis
+--------------------------------------------------------------------------------
+Text Preview: 1° bis (nouveau) Après l'article L. 211-1-1, il est inséré un article L. 211-1-2 ainsi rédigé : « Ar...
+Text Length: 688 characters
+Hierarchy Path: # TITRE III > Article 5 > 1° bis
+Initialized: 2025-06-21T17:44:23.533308
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533311
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° bis (nouveau) Après l'article L. 211-1-1, il est inséré un article L. 211-1-2 ainsi rédigé : « Art. L. 211-1-2. – Les ouvrages de stockage d'eau et les prélèvements sur les eaux superficielles ou souterraines associés qui poursuivent à titre principal une finalité agricole sont présumés d'intérêt général majeur dans les zones affectées d'un déficit quantitatif pérenne compromettant le potentiel de production agricole lorsqu'ils sont issus d'une démarche territoriale concertée sur la répartition de la ressource en eau entre l'ensemble des usagers, qu'ils s'accompagnent d'un engagement dans des pratiques sobres en eau et qu'ils concourent à un accès à l'eau pour ces usagers. » ;",
+    "chunk_text_length": 688,
+    "titre_text": "# TITRE III",
+    "article_label": "Article 5",
+    "article_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "1° bis",
+    "numbered_point_introductory_phrase": "Après l'article L. 211-1-1, il est inséré un article L. 211-1-2 ainsi rédigé : « Art. L. 211-1-2. – Les ouvrages de stockage d'eau et les prélèvements sur les eaux superficielles ou souterraines associés qui poursuivent à titre principal une finalité agricole sont présumés d'intérêt général majeur dans les zones affectées d'un déficit quantitatif pérenne compromettant le potentiel de production agricole lorsqu'ils sont issus d'une démarche territoriale concertée sur la répartition de la ressource en eau entre l'ensemble des usagers, qu'ils s'accompagnent d'un engagement dans des pratiques sobres en eau et qu'ils concourent à un accès à l'eau pour ces usagers. » ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE III",
+        "Article 5",
+        "1° bis"
+    ],
+    "start_pos": 22618,
+    "end_pos": 23308,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 211-1-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE III::Article 5::2° à 5°
+--------------------------------------------------------------------------------
+Text Preview: 2° à 5° (Supprimés)
+Text Length: 19 characters
+Hierarchy Path: # TITRE III > Article 5 > 2° à 5°
+Initialized: 2025-06-21T17:44:23.533313
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533316
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "2° à 5° (Supprimés)",
+    "chunk_text_length": 19,
+    "titre_text": "# TITRE III",
+    "article_label": "Article 5",
+    "article_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "2° à 5°",
+    "numbered_point_introductory_phrase": "(Supprimés)",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE III",
+        "Article 5",
+        "2° à 5°"
+    ],
+    "start_pos": 23308,
+    "end_pos": 23329,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE III::Article 5::6°
+--------------------------------------------------------------------------------
+Text Preview: 6° (nouveau) L'article L. 214-2 est complété par deux alinéas ainsi rédigés :
+
+	« Une zone humide, t...
+Text Length: 701 characters
+Hierarchy Path: # TITRE III > Article 5 > 6°
+Initialized: 2025-06-21T17:44:23.533318
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533321
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "6° (nouveau) L'article L. 214-2 est complété par deux alinéas ainsi rédigés :\n\n\t« Une zone humide, telle que définie à l'article L. 211-1, est considérée comme fortement modifiée lorsque l'usage qui en est régulièrement fait ne lui permet plus d'assurer l'essentiel des fonctions écosystémiques spécifiques caractérisant les zones humides.\n\n\t« Un décret en Conseil d'État détermine les conditions selon lesquelles les impacts des installations, ouvrages, travaux et activités mentionnés à l'article L. 214-1 sur une zone humide fortement modifiée sont suffisamment faibles pour justifier qu'ils ne soient pas soumis à autorisation ou déclaration au seul titre de la préservation des zones humides. » ;",
+    "chunk_text_length": 701,
+    "titre_text": "# TITRE III",
+    "article_label": "Article 5",
+    "article_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "6°",
+    "numbered_point_introductory_phrase": "L'article L. 214-2 est complété par deux alinéas ainsi rédigés :",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE III",
+        "Article 5",
+        "6°"
+    ],
+    "start_pos": 23329,
+    "end_pos": 24032,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE III::Article 5::7°
+--------------------------------------------------------------------------------
+Text Preview: 7° (nouveau) Après l'article L. 411-2-1, il est inséré un article L. 411-2-2 ainsi rédigé :
+
+	« Art....
+Text Length: 780 characters
+Hierarchy Path: # TITRE III > Article 5 > 7°
+Initialized: 2025-06-21T17:44:23.533323
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533326
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "7° (nouveau) Après l'article L. 411-2-1, il est inséré un article L. 411-2-2 ainsi rédigé :\n\n\t« Art. L. 411-2-2. – Sont présumés répondre à une raison impérative d'intérêt public majeur, au sens du c du 4° du I de l'article L. 411-2, les ouvrages de stockage d'eau et les prélèvements sur les eaux superficielles ou souterraines associés qui poursuivent à titre principal une finalité agricole dans les zones affectées d'un déficit quantitatif pérenne compromettant le potentiel de production agricole lorsqu'ils résultent d'une démarche territoriale concertée sur la répartition de la ressource en eau entre l'ensemble des usagers, qu'ils s'accompagnent d'un engagement des usagers dans des pratiques sobres en eau et qu'ils concourent à un accès à l'eau pour tous les usagers. »",
+    "chunk_text_length": 780,
+    "titre_text": "# TITRE III",
+    "article_label": "Article 5",
+    "article_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "7°",
+    "numbered_point_introductory_phrase": "Après l'article L. 411-2-1, il est inséré un article L. 411-2-2 ainsi rédigé :",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE III",
+        "Article 5",
+        "7°"
+    ],
+    "start_pos": 24032,
+    "end_pos": 24814,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 411-2-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 6::I::1°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) (nouveau) Au 1° du I, au début, après le mot : « Contribution », sont insérés les mots : « , sous...
+Text Length: 323 characters
+Hierarchy Path: # TITRE IV > Article 6 > I > 1° > a)
+Initialized: 2025-06-21T17:44:23.533328
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533331
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) (nouveau) Au 1° du I, au début, après le mot : « Contribution », sont insérés les mots : « , sous l'autorité du représentant de l'État dans le département, » et, après les mots : « administrative et », sont insérés les mots : « contribution, sous la direction du procureur de la République, à l'exercice des missions » ;",
+    "chunk_text_length": 323,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 6",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "L'article L. 131-9 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 6",
+        "I",
+        "1°",
+        "a)"
+    ],
+    "start_pos": 25070,
+    "end_pos": 25397,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 131-9"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 6::I::1°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le IV est complété par les mots : « , notamment en validant la programmation annuelle des contrôl...
+Text Length: 145 characters
+Hierarchy Path: # TITRE IV > Article 6 > I > 1° > b)
+Initialized: 2025-06-21T17:44:23.533333
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533336
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le IV est complété par les mots : « , notamment en validant la programmation annuelle des contrôles réalisés dans le cadre de ces missions » ;",
+    "chunk_text_length": 145,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 6",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "L'article L. 131-9 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 6",
+        "I",
+        "1°",
+        "b)"
+    ],
+    "start_pos": 25397,
+    "end_pos": 25546,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 131-9"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 6::I::1°::c)
+--------------------------------------------------------------------------------
+Text Preview: c) (nouveau)(Supprimé)
+Text Length: 22 characters
+Hierarchy Path: # TITRE IV > Article 6 > I > 1° > c)
+Initialized: 2025-06-21T17:44:23.533338
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533341
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "c) (nouveau)(Supprimé)",
+    "chunk_text_length": 22,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 6",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "L'article L. 131-9 est ainsi modifié :",
+    "lettered_subdivision_label": "c)",
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 6",
+        "I",
+        "1°",
+        "c)"
+    ],
+    "start_pos": 25546,
+    "end_pos": 25570,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 131-9"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 6::I::2°
+--------------------------------------------------------------------------------
+Text Preview: 2° (nouveau) À la première phrase du second alinéa de l'article L. 172-16, après le mot : « adressés...
+Text Length: 155 characters
+Hierarchy Path: # TITRE IV > Article 6 > I > 2°
+Initialized: 2025-06-21T17:44:23.533343
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533346
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "2° (nouveau) À la première phrase du second alinéa de l'article L. 172-16, après le mot : « adressés », sont insérés les mots : « par voie hiérarchique » ;",
+    "chunk_text_length": 155,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 6",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "À la première phrase du second alinéa de l'article L. 172-16, après le mot : « adressés », sont insérés les mots : « par voie hiérarchique » ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 6",
+        "I",
+        "2°"
+    ],
+    "start_pos": 25573,
+    "end_pos": 25731,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 6::I::3°
+--------------------------------------------------------------------------------
+Text Preview: 3° (nouveau) Après l'article L. 174-2, il est inséré un article L. 174-3 ainsi rédigé :
+
+		« Art. L....
+Text Length: 2461 characters
+Hierarchy Path: # TITRE IV > Article 6 > I > 3°
+Initialized: 2025-06-21T17:44:23.533348
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533351
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "3° (nouveau) Après l'article L. 174-2, il est inséré un article L. 174-3 ainsi rédigé :\n\n\t\t« Art. L. 174-3. – I. – Dans le cadre de leurs missions de police de l'environnement définies par le présent titre, les inspecteurs de l'environnement mentionnés à l'article L. 172-1 et les agents commissionnés des réserves naturelles nationales, régionales ou de Corse et les gardes du littoral peuvent procéder en tous lieux, au moyen de caméras individuelles, à un enregistrement audiovisuel de leurs interventions lorsque se produit ou est susceptible de se produire un incident, eu égard aux circonstances de l'intervention ou au comportement des personnes concernées.\n\n\t\t« II. – L'enregistrement n'est pas permanent.\n\t\t« Les enregistrements ont pour finalités la prévention des incidents au cours des interventions de ces agents, le constat des infractions et la poursuite de leurs auteurs par la collecte de preuves ainsi que la formation et la pédagogie des agents.\n\n\t\t« III. – Les caméras sont portées de façon apparente par les agents mentionnés au I. Un signal visuel spécifique indique si la caméra enregistre. Le déclenchement de l'enregistrement fait l'objet d'une information des personnes enregistrées, sauf si les circonstances l'interdisent. Une information générale du public sur l'emploi de ces caméras est organisée par les ministères chargés de l'agriculture et de l'environnement.\n\n\t\t« IV. – Les agents auxquels les caméras individuelles sont fournies ne peuvent avoir accès directement aux enregistrements auxquels ils procèdent.\n\n\t\t« Les enregistrements audiovisuels, sauf dans le cas où ils sont utilisés dans le cadre d'une procédure judiciaire, administrative ou disciplinaire, sont effacés au bout de trente jours.\n\n\t\t« Les caméras sont équipées de dispositifs techniques permettant de garantir l'intégrité des enregistrements jusqu'à leur effacement et la traçabilité des consultations lorsqu'il y est procédé dans le cadre de l'intervention.\n\n\t\t« Ces enregistrements sont soumis à la loi n° 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés, notamment en ce qui concerne le contrôle de la Commission nationale de l'informatique et des libertés et le droit d'accès aux enregistrements.\n\n\t\t« V. – Les modalités d'application du présent article et d'utilisation des données collectées sont précisées par un décret en Conseil d'État, pris après avis de la Commission nationale de l'informatique et des libertés. »",
+    "chunk_text_length": 2461,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 6",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Le code de l'environnement est ainsi modifié :",
+    "numbered_point_label": "3°",
+    "numbered_point_introductory_phrase": "Après l'article L. 174-2, il est inséré un article L. 174-3 ainsi rédigé :",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 6",
+        "I",
+        "3°"
+    ],
+    "start_pos": 25731,
+    "end_pos": 28195,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code de l'environnement",
+        "article": "L. 174-2"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 6::II
+--------------------------------------------------------------------------------
+Text Preview: II (nouveau). – Le 3° du I entre en vigueur à compter de la publication du décret prévu au V de l'ar...
+Text Length: 230 characters
+Hierarchy Path: # TITRE IV > Article 6 > II
+Initialized: 2025-06-21T17:44:23.533353
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533356
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "II (nouveau). – Le 3° du I entre en vigueur à compter de la publication du décret prévu au V de l'article L. 174-3 du code de l'environnement et, au plus tard, dans un délai d'un an à compter de la promulgation de la présente loi.",
+    "chunk_text_length": 230,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 6",
+    "article_introductory_phrase": "",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Le 3° du I entre en vigueur à compter de la publication du décret prévu au V de l'article L. 174-3 du code de l'environnement et, au plus tard, dans un délai d'un an à compter de la promulgation de la présente loi.",
+    "numbered_point_label": null,
+    "numbered_point_introductory_phrase": null,
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 6",
+        "II"
+    ],
+    "start_pos": 28195,
+    "end_pos": 28427,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 7::1°
+--------------------------------------------------------------------------------
+Text Preview: 1° À l'intitulé du chapitre VIII, les mots : « , notamment dans le cadre de la lutte biologique » so...
+Text Length: 197 characters
+Hierarchy Path: # TITRE IV > Article 7 > 1°
+Initialized: 2025-06-21T17:44:23.533358
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533361
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° À l'intitulé du chapitre VIII, les mots : « , notamment dans le cadre de la lutte biologique » sont remplacés par les mots : « et macro-organismes utilisés dans le cadre de la lutte autocide » ;",
+    "chunk_text_length": 197,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 7",
+    "article_introductory_phrase": "(nouveau)\n\nLe titre V du livre II du code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "À l'intitulé du chapitre VIII, les mots : « , notamment dans le cadre de la lutte biologique » sont remplacés par les mots : « et macro-organismes utilisés dans le cadre de la lutte autocide » ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 7",
+        "1°"
+    ],
+    "start_pos": 28533,
+    "end_pos": 28732,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 7::2°::a)
+--------------------------------------------------------------------------------
+Text Preview: a) Le premier alinéa est ainsi modifié : à la première phrase, après le mot : « végétaux », sont ins...
+Text Length: 308 characters
+Hierarchy Path: # TITRE IV > Article 7 > 2° > a)
+Initialized: 2025-06-21T17:44:23.533365
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533368
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "a) Le premier alinéa est ainsi modifié : à la première phrase, après le mot : « végétaux », sont insérés les mots : « ou d'un macro-organisme utilisé dans le cadre de la lutte autocide » ; à la seconde phrase, les mots : « cet organisme peut » sont remplacés par les mots : « ces macro-organismes peuvent » ;",
+    "chunk_text_length": 308,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 7",
+    "article_introductory_phrase": "(nouveau)\n\nLe titre V du livre II du code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 258-1 est ainsi modifié :",
+    "lettered_subdivision_label": "a)",
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 7",
+        "2°",
+        "a)"
+    ],
+    "start_pos": 28775,
+    "end_pos": 29096,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 258-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 7::2°::b)
+--------------------------------------------------------------------------------
+Text Preview: b) Le deuxième alinéa est ainsi modifié : à la première phrase, les mots : « d'un tel macro-organism...
+Text Length: 271 characters
+Hierarchy Path: # TITRE IV > Article 7 > 2° > b)
+Initialized: 2025-06-21T17:44:23.533370
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533373
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "b) Le deuxième alinéa est ainsi modifié : à la première phrase, les mots : « d'un tel macro-organisme » sont remplacés par les mots : « de tels macro-organismes » ; à la dernière phrase, les mots : « cet organisme » sont remplacés par les mots : « ces macro-organismes ».",
+    "chunk_text_length": 271,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 7",
+    "article_introductory_phrase": "(nouveau)\n\nLe titre V du livre II du code rural et de la pêche maritime est ainsi modifié :",
+    "major_subdivision_label": null,
+    "major_subdivision_introductory_phrase": null,
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "L'article L. 258-1 est ainsi modifié :",
+    "lettered_subdivision_label": "b)",
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 7",
+        "2°",
+        "b)"
+    ],
+    "start_pos": 29096,
+    "end_pos": 29378,
+    "inherited_target_article": {
+        "operation_type": {},
+        "code": "code rural et de la pêche maritime",
+        "article": "L. 258-1"
+    }
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 8::I::1°
+--------------------------------------------------------------------------------
+Text Preview: 1° Adapter l'échelle des peines et réexaminer leur nécessité, en tenant compte de ce que le manqueme...
+Text Length: 368 characters
+Hierarchy Path: # TITRE IV > Article 8 > I > 1°
+Initialized: 2025-06-21T17:44:23.533375
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533378
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "1° Adapter l'échelle des peines et réexaminer leur nécessité, en tenant compte de ce que le manquement a été commis à l'occasion de l'exécution d'obligations légales ou réglementaires relatives à la protection des végétaux, y compris en créant de nouvelles sanctions pénales et en substituant à des sanctions pénales existantes un régime de répression administrative ;",
+    "chunk_text_length": 368,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 8",
+    "article_introductory_phrase": "(nouveau)",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Dans les conditions prévues à l'article 38 de la Constitution, le Gouvernement est autorisé à prendre par voie d'ordonnance, dans un délai de douze mois à compter de la promulgation de la présente loi, toute mesure relevant du domaine de la loi concernant, en vue d'assurer l'efficacité et la cohérence de l'action des services de contrôle de l'État, le régime de prévention et de sanction des atteintes à la protection des végétaux prévu aux titres V et VII du livre II du code rural et de la pêche maritime pour :",
+    "numbered_point_label": "1°",
+    "numbered_point_introductory_phrase": "Adapter l'échelle des peines et réexaminer leur nécessité, en tenant compte de ce que le manquement a été commis à l'occasion de l'exécution d'obligations légales ou réglementaires relatives à la protection des végétaux, y compris en créant de nouvelles sanctions pénales et en substituant à des sanctions pénales existantes un régime de répression administrative ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 8",
+        "I",
+        "1°"
+    ],
+    "start_pos": 29926,
+    "end_pos": 30297,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 8::I::2°
+--------------------------------------------------------------------------------
+Text Preview: 2° Adapter le contenu et les modalités d'exécution des mesures de prévention, de surveillance et de ...
+Text Length: 209 characters
+Hierarchy Path: # TITRE IV > Article 8 > I > 2°
+Initialized: 2025-06-21T17:44:23.533380
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533383
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "2° Adapter le contenu et les modalités d'exécution des mesures de prévention, de surveillance et de lutte contre les dangers phytosanitaires, notamment en vue d'améliorer la lutte contre la flavescence dorée ;",
+    "chunk_text_length": 209,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 8",
+    "article_introductory_phrase": "(nouveau)",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Dans les conditions prévues à l'article 38 de la Constitution, le Gouvernement est autorisé à prendre par voie d'ordonnance, dans un délai de douze mois à compter de la promulgation de la présente loi, toute mesure relevant du domaine de la loi concernant, en vue d'assurer l'efficacité et la cohérence de l'action des services de contrôle de l'État, le régime de prévention et de sanction des atteintes à la protection des végétaux prévu aux titres V et VII du livre II du code rural et de la pêche maritime pour :",
+    "numbered_point_label": "2°",
+    "numbered_point_introductory_phrase": "Adapter le contenu et les modalités d'exécution des mesures de prévention, de surveillance et de lutte contre les dangers phytosanitaires, notamment en vue d'améliorer la lutte contre la flavescence dorée ;",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 8",
+        "I",
+        "2°"
+    ],
+    "start_pos": 30297,
+    "end_pos": 30509,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 8::I::3°
+--------------------------------------------------------------------------------
+Text Preview: 3° Abroger ou modifier les dispositions devenues inadaptées ou obsolètes.
+Text Length: 73 characters
+Hierarchy Path: # TITRE IV > Article 8 > I > 3°
+Initialized: 2025-06-21T17:44:23.533385
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533388
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "3° Abroger ou modifier les dispositions devenues inadaptées ou obsolètes.",
+    "chunk_text_length": 73,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 8",
+    "article_introductory_phrase": "(nouveau)",
+    "major_subdivision_label": "I",
+    "major_subdivision_introductory_phrase": "Dans les conditions prévues à l'article 38 de la Constitution, le Gouvernement est autorisé à prendre par voie d'ordonnance, dans un délai de douze mois à compter de la promulgation de la présente loi, toute mesure relevant du domaine de la loi concernant, en vue d'assurer l'efficacité et la cohérence de l'action des services de contrôle de l'État, le régime de prévention et de sanction des atteintes à la protection des végétaux prévu aux titres V et VII du livre II du code rural et de la pêche maritime pour :",
+    "numbered_point_label": "3°",
+    "numbered_point_introductory_phrase": "Abroger ou modifier les dispositions devenues inadaptées ou obsolètes.",
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 8",
+        "I",
+        "3°"
+    ],
+    "start_pos": 30509,
+    "end_pos": 30585,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+
+CHUNK: # TITRE IV::Article 8::II
+--------------------------------------------------------------------------------
+Text Preview: II. – Un projet de loi de ratification est déposé devant le Parlement dans un délai de trois mois à ...
+Text Length: 261 characters
+Hierarchy Path: # TITRE IV > Article 8 > II
+Initialized: 2025-06-21T17:44:23.533391
+
+  STEP 1 SPLIT
+  ------------------------------------------------------------
+  Timestamp: 2025-06-21T17:44:23.533394
+  Success: True
+  Processing Duration Seconds: 7.141337675206801e-05
+  Input Params: {
+    "legislative_text_length": 30846,
+    "legislative_text_preview": "N° 41\n\nSÉNAT\n\nSESSION ORDINAIRE DE 2024-2025\n\n27 janvier 2025\n\nPROPOSITION DE LOI\n\nvisant à lever le..."
+}
+  Output Result: {
+    "chunk_text": "II. – Un projet de loi de ratification est déposé devant le Parlement dans un délai de trois mois à compter de la publication de chaque ordonnance prévue par le I.\n\nDélibéré en séance publique, à Paris, le 27 janvier 2025.\n\nLe Président,\n\nSigné : Gérard LARCHER",
+    "chunk_text_length": 261,
+    "titre_text": "# TITRE IV",
+    "article_label": "Article 8",
+    "article_introductory_phrase": "(nouveau)",
+    "major_subdivision_label": "II",
+    "major_subdivision_introductory_phrase": "Un projet de loi de ratification est déposé devant le Parlement dans un délai de trois mois à compter de la publication de chaque ordonnance prévue par le I.",
+    "numbered_point_label": null,
+    "numbered_point_introductory_phrase": null,
+    "lettered_subdivision_label": null,
+    "hierarchy_path": [
+        "# TITRE IV",
+        "Article 8",
+        "II"
+    ],
+    "start_pos": 30585,
+    "end_pos": 30846,
+    "inherited_target_article": null
+}
+  Component Metadata: {
+    "component_name": "BillSplitter",
+    "total_chunks_created": 68
+}
+
+================================================================================
+

@@ -1,0 +1,3 @@
+# Article 38 - Paragraph_2
+
+2. Après avoir mis le demandeur en mesure de présenter des observations, que ce dernier communique également à l'État membre rapporteur ou à l'État membre examinant la demande, selon le cas, l'État membre évaluant l'équivalence établit, dans les soixante jours à compter de la réception de la demande, un rapport relatif à l'équivalence qu'il communique à la Commission, aux autres États membres et au demandeur.

@@ -1,0 +1,3 @@
+# Article 52 - Paragraph_1
+
+1. Un produit phytopharmaceutique qui est autorisé dans un État membre (État membre d'origine) peut, sous réserve de l'octroi d'un permis de commerce parallèle, être introduit, mis sur le marché ou utilisé dans un autre État membre (État membre d'introduction) si ce dernier établit que la composition du produit phytopharmaceutique est identique à celle d'un produit phytopharmaceutique déjà autorisé sur son territoire (produit de référence). La demande est adressée à l'autorité compétente de l'État membre d'introduction.

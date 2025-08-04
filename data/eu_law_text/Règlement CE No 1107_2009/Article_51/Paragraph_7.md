@@ -1,0 +1,3 @@
+# Article 51 - Paragraph_7
+
+7. Les demandeurs visés au paragraphe 1 peuvent également demander l'autorisation d'un produit phytopharmaceutique pour des utilisations mineures en application de l'article 40, paragraphe 1, à condition que le produit phytopharmaceutique concerné soit autorisé dans l'État membre. Les États membres autorisent ces utilisations conformément aux dispositions de l'article 41 à condition que ces utilisations soient également considérées comme mineures dans les États membres où la demande est faite.

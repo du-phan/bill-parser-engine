@@ -1,0 +1,3 @@
+# Article 3 - Point_12
+
+12) «lettre d'accès», tout document original par lequel le propriétaire de données protégées en vertu du présent règlement marque son accord sur l'utilisation de ces données, selon les conditions et modalités spécifiques, par l'autorité compétente en vue de l'autorisation d'un produit phytopharmaceutique ou de l'approbation d'une substance active, d'un synergiste ou d'un phytoprotecteur au profit d'un autre demandeur;

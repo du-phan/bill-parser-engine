@@ -1,0 +1,3 @@
+# Article 44 - Paragraph_4
+
+4. Lorsqu'un État membre retire ou modifie une autorisation en application du paragraphe 3, il en informe immédiatement le titulaire, les autres États membres, la Commission et l'Autorité. Les autres États membres appartenant à la même zone retirent ou modifient l'autorisation en conséquence en tenant compte des paramètres nationaux et des mesures d'atténuation des risques, à l'exception des cas où l'article 36, paragraphe 3, deuxième, troisième ou quatrième alinéa, a été appliqué. L'article 46 s'applique, le cas échéant.

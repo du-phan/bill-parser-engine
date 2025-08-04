@@ -1,0 +1,3 @@
+# Article 8 - Paragraph_5
+
+5. L'auteur de la demande joint au dossier la documentation scientifique accessible, telle que déterminée par l'Autorité, validée par la communauté scientifique et publiée au cours des dix dernières années ayant précédé la date de soumission du dossier, concernant les effets secondaires sur la santé, sur l'environnement et sur les espèces non visées de la substance active et de ses métabolites pertinents.

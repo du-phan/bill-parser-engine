@@ -1,0 +1,5 @@
+# Article 20 - Paragraph_2
+
+2. Si les raisons du non-renouvellement de l'approbation ne concernent pas la protection de la santé ou l'environnement, le règlement visé au paragraphe 1 prévoit un délai de grâce ne pouvant excéder six mois pour la vente et la distribution et un an supplémentaire pour l'élimination, le stockage et l'utilisation des stocks existants des produits phytopharmaceutiques concernés. Le délai de grâce pour la vente et la distribution tient compte de la période normale d'utilisation du produit phytopharmaceutique; cependant, le délai de grâce total ne peut dépasser dix-huit mois.
+
+En cas de retrait de l'approbation ou si l'approbation n'est pas renouvelée en raison de préoccupations immédiates concernant la santé humaine ou animale ou l'environnement, les produits phytopharmaceutiques concernés sont immédiatement retirés du marché.
