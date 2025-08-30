@@ -101,8 +101,21 @@ def _load_chunk(chunk_txt_path: Path) -> BillChunk:
         inferred_code = _extract_code(intro_np, intro_art, intro_ms)
 
         if inferred_article:
+            # Determine correct operation type based on context
+            operation_type = TargetOperationType.MODIFY  # Default
+            
+            # Check for INSERT patterns
+            all_intro_text = f"{intro_np} {intro_art} {intro_ms}"
+            if any(pattern in all_intro_text.lower() for pattern in [
+                "est complétée par un article", 
+                "il est inséré un article",
+                "il est ajouté un article",
+                "au début du chapitre"
+            ]):
+                operation_type = TargetOperationType.INSERT
+            
             bc.inherited_target_article = TargetArticle(
-                operation_type=TargetOperationType.MODIFY,
+                operation_type=operation_type,
                 code=inferred_code,
                 article=inferred_article,
                 confidence=1.0,

@@ -1,0 +1,7 @@
+{"event": "chunk_loaded", "payload": {"chunk_id": "# TITRE IV::Article 6::I::1°::b)", "hierarchy_path": ["# TITRE IV", "Article 6", "I", "1°", "b)"]}}
+{"event": "target_identified", "payload": {"operation_type": "MODIFY", "code": "code de l'environnement est ainsi modifié", "article": "L. 131-9", "confidence": 1.0}}
+{"event": "retrieval_done", "payload": {"meta": {"source": "local_fr", "success": true, "file": "data/fr_code_text/Code De l'environnement/article L131-9.md"}, "original_text_preview": "I. - -L'Office français de la biodiversité contribue, s'agissant des milieux terrestres, aquatiques et marins, à la surveillance, la préservation, la gestion et la restauration de la biodiversité a..."}}
+{"event": "reconstruct_done", "payload": {"deleted_or_replaced_text": "", "newly_inserted_text": "", "after_preview": "I. - -L'Office français de la biodiversité contribue, s'agissant des milieux terrestres, aquatiques et marins, à la surveillance, la préservation, la gestion et la restauration de la biodiversité a..."}}
+{"event": "locate_done", "payload": {"count": 0, "refs": []}}
+{"event": "link_done", "payload": {"count": 0, "links": []}}
+{"event": "resolve_done", "payload": {"counts": {"def": 0, "del": 0, "unres": 0}}}

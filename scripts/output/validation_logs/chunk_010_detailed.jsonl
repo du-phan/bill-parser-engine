@@ -1,0 +1,7 @@
+{"event": "chunk_loaded", "payload": {"chunk_id": "# TITRE Iᴱᴿ::Article 1::4°::a)", "hierarchy_path": ["# TITRE Iᴱᴿ", "Article 1", "", "4°", "a)"]}}
+{"event": "target_identified", "payload": {"operation_type": "MODIFY", "code": "code rural et de la pêche maritime est ainsi modifié", "article": "L. 254-2", "confidence": 1.0}}
+{"event": "retrieval_done", "payload": {"meta": {"source": "local_fr", "success": true, "file": "data/fr_code_text/Code Rural et de la pêche maritime/article L254-2.md"}, "original_text_preview": "I. - -L'agrément est délivré par l'autorité administrative à toute personne physique ou morale qui en fait la demande et qui justifie :\n\n1° De la souscription d'une police d'assurance couvrant sa r..."}}
+{"event": "reconstruct_done", "payload": {"deleted_or_replaced_text": "aux 1° et 2°", "newly_inserted_text": "au 1°", "after_preview": "I. - -L'agrément est délivré par l'autorité administrative à toute personne physique ou morale qui en fait la demande et qui justifie :\n\n1° De la souscription d'une police d'assurance couvrant sa r..."}}
+{"event": "locate_done", "payload": {"count": 2, "refs": [{"text": "aux 1° et 2°", "source": "DELETIONAL", "conf": 0.9}, {"text": "au 1°", "source": "DEFINITIONAL", "conf": 0.9}]}}
+{"event": "link_done", "payload": {"count": 2, "links": [{"text": "aux 1° et 2°", "obj": "personnes agréées", "conf": 0.9}, {"text": "au 1°", "obj": "activités", "conf": 0.9}]}}
+{"event": "resolve_done", "payload": {"counts": {"def": 0, "del": 1, "unres": 1}}}

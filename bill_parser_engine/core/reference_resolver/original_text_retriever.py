@@ -143,10 +143,7 @@ class OriginalTextRetriever:
             self.cache.set("original_text_retriever", cache_key_data, result_text)
             logger.info(f"✓ Cached article {article} for future use")
         
-        # Write-through local store for successful French code retrievals
-        if metadata.get("success", False) and metadata.get("source") in {"local", "local_fr", "local_fr_md", "local_fr_hierarchical"}:
-            self._persist_to_local_store(code, article, result_text, metadata)
-
+        # No write-through persistence - all legal text is stored offline in curated directories
         return result_text, metadata
     
     def fetch_article_for_target(self, target_article: TargetArticle) -> Tuple[str, Dict]:
@@ -259,26 +256,39 @@ class OriginalTextRetriever:
             return "", {"source": "eu_legal_text", "success": False, "error": f"Cannot parse article reference: {article}"}
         
         # Find and read the article file
-        article_content = self._read_eu_article_file(eu_dir_path, article_info)
+        article_content, is_specific_part_file = self._read_eu_article_file(eu_dir_path, article_info)
         if not article_content:
             return "", {"source": "eu_legal_text", "success": False, "error": f"Article file not found: {article_info}"}
         
-        # Extract specific content if needed
+        # Handle specific part extraction
         if article_info.get("specific_part"):
-            extracted_content = self._extract_eu_article_part(article_content, article_info, article)
-            if extracted_content:
-                logger.info(f"✓ Retrieved EU article {article} with specific part extraction")
-                return extracted_content, {
+            if is_specific_part_file:
+                # We already read the specific part file directly
+                logger.info(f"✓ Retrieved EU article {article} from direct specific part file")
+                return article_content, {
                     "source": "eu_legal_text", 
                     "success": True,
                     "directory": directory_name,
                     "article_info": article_info,
-                    "extraction_method": "llm"
+                    "extraction_method": "direct_file"
                 }
             else:
-                logger.warning(f"Failed to extract specific part from EU article {article}")
-                # Fall back to full article content
+                # Try LLM extraction from full article content
+                extracted_content = self._extract_eu_article_part(article_content, article_info, article)
+                if extracted_content:
+                    logger.info(f"✓ Retrieved EU article {article} with LLM-based specific part extraction")
+                    return extracted_content, {
+                        "source": "eu_legal_text", 
+                        "success": True,
+                        "directory": directory_name,
+                        "article_info": article_info,
+                        "extraction_method": "llm"
+                    }
+                else:
+                    logger.warning(f"Failed to extract specific part from EU article {article}")
+                    # Fall back to full article content
         
+        # Return full article content (either no specific part needed or LLM extraction failed)
         logger.info(f"✓ Retrieved EU article {article} (full content)")
         return article_content, {
             "source": "eu_legal_text", 
@@ -331,7 +341,7 @@ class OriginalTextRetriever:
         
         return None
     
-    def _read_eu_article_file(self, eu_dir_path: Path, article_info: Dict) -> Optional[str]:
+    def _read_eu_article_file(self, eu_dir_path: Path, article_info: Dict) -> Tuple[Optional[str], bool]:
         """
         Read the EU article file content.
         
@@ -340,17 +350,38 @@ class OriginalTextRetriever:
             article_info: Parsed article information
             
         Returns:
-            Article content or None if not found
+            Tuple of (article_content, is_specific_part_file)
+            - article_content: The file content or None if not found
+            - is_specific_part_file: True if we read a specific part file directly (no LLM extraction needed)
         """
         article_num = article_info["article_number"]
+        specific_part = article_info.get("specific_part")
+        part_type = article_info.get("part_type")
         
-        # Try article directory with overview.md first
+        # First, try to read specific part file directly if we have a specific part
+        if specific_part and part_type:
+            article_dir = eu_dir_path / f"Article_{article_num}"
+            if article_dir.exists():
+                # Try specific point file (e.g., Point_11.md)
+                if part_type.lower() == "point":
+                    point_file = article_dir / f"Point_{specific_part}.md"
+                    if point_file.exists():
+                        try:
+                            logger.info(f"✓ Reading specific EU point file: {point_file}")
+                            content = point_file.read_text(encoding='utf-8')
+                            return content, True  # True = specific part file read directly
+                        except Exception as e:
+                            logger.warning(f"Error reading {point_file}: {e}")
+        
+        # Fallback: Try article directory with overview.md 
         article_dir = eu_dir_path / f"Article_{article_num}"
         if article_dir.exists():
             overview_file = article_dir / "overview.md"
             if overview_file.exists():
                 try:
-                    return overview_file.read_text(encoding='utf-8')
+                    logger.info(f"✓ Reading EU overview file for LLM extraction: {overview_file}")
+                    content = overview_file.read_text(encoding='utf-8')
+                    return content, False  # False = full article, LLM extraction needed
                 except Exception as e:
                     logger.warning(f"Error reading {overview_file}: {e}")
         
@@ -358,7 +389,8 @@ class OriginalTextRetriever:
         article_file = eu_dir_path / f"Article_{article_num}.md"
         if article_file.exists():
             try:
-                return article_file.read_text(encoding='utf-8')
+                content = article_file.read_text(encoding='utf-8')
+                return content, False  # False = full article, LLM extraction needed
             except Exception as e:
                 logger.warning(f"Error reading {article_file}: {e}")
         
@@ -366,11 +398,12 @@ class OriginalTextRetriever:
         article_file = eu_dir_path / f"article_{article_num}.md"
         if article_file.exists():
             try:
-                return article_file.read_text(encoding='utf-8')
+                content = article_file.read_text(encoding='utf-8')
+                return content, False  # False = full article, LLM extraction needed
             except Exception as e:
                 logger.warning(f"Error reading {article_file}: {e}")
         
-        return None
+        return None, False
     
     def _extract_eu_article_part(self, article_content: str, article_info: Dict, original_ref: str) -> Optional[str]:
         """
@@ -438,12 +471,7 @@ Trouvez et extrayez le contenu complet de la partie "{specific_part}"."""
         logger.info(f"→ Fetching article {article} from {code} (local store)")
         cleaned_article = self._extract_base_article_identifier(article)
 
-        # 1) Prefer local write-through store (.txt/.json) if previously persisted
-        local_text, local_meta = self._try_local_store_read(code, cleaned_article)
-        if local_text:
-            return local_text, local_meta
-
-        # 2) Curated markdowns in data/fr_code_text/<Code Name>/
+        # Read from curated markdown files in data/fr_code_text/<Code Name>/
         md_path = self._resolve_existing_local_file(code, cleaned_article)
         if md_path and md_path.exists():
             try:
@@ -465,22 +493,22 @@ Trouvez et extrayez le contenu complet de la partie "{specific_part}"."""
             parent_article, subsection = self._parse_hierarchical_article(cleaned_article)
             logger.info(f"→ Trying local hierarchical fallback: {parent_article} → subsection {subsection}")
 
-            # Try local store for parent
-            parent_text, _ = self._try_local_store_read(code, parent_article)
-            if not parent_text:
-                parent_md = self._resolve_existing_local_file(code, parent_article)
-                if parent_md and parent_md.exists():
-                    try:
-                        parent_raw = parent_md.read_text(encoding='utf-8')
-                        parent_lines = parent_raw.split('\n')
-                        start = 0
-                        for i, line in enumerate(parent_lines):
-                            if line.strip() and not line.startswith('#') and not line.startswith('---'):
-                                start = i
-                                break
-                        parent_text = '\n'.join(parent_lines[start:]).strip()
-                    except Exception as e:
-                        logger.warning(f"Error reading parent curated file {parent_md}: {e}")
+            parent_text = None  # Initialize to prevent UnboundLocalError
+            # Try curated markdown for parent
+            parent_md = self._resolve_existing_local_file(code, parent_article)
+            if parent_md and parent_md.exists():
+                try:
+                    parent_raw = parent_md.read_text(encoding='utf-8')
+                    parent_lines = parent_raw.split('\n')
+                    start = 0
+                    for i, line in enumerate(parent_lines):
+                        if line.strip() and not line.startswith('#') and not line.startswith('---'):
+                            start = i
+                            break
+                    parent_text = '\n'.join(parent_lines[start:]).strip()
+                except Exception as e:
+                    logger.warning(f"Error reading parent curated file {parent_md}: {e}")
+                    parent_text = None
 
             if parent_text:
                 subsection_content = self._deterministic_carve_from_parent(parent_text, subsection)
@@ -687,13 +715,41 @@ Trouvez et extrayez le contenu complet de la sous-section "{subsection}"."""
 
     
 
-    # --- Local store (read-first, write-through) ---
+    # --- Obsolete cache methods removed - all legal text is now stored offline in curated directories ---
 
-    def _local_store_paths(self, code: str, article: str) -> Tuple[Path, Path]:
-        base_dir = Path("data/fr_code_text") / self._slugify_code_name(code)
-        base_dir.mkdir(parents=True, exist_ok=True)
-        file_stem = article.replace(" ", "_").replace("/", "-")
-        return base_dir / f"{file_stem}.txt", base_dir / f"{file_stem}.json"
+    def _map_to_curated_directory(self, code: str) -> Optional[str]:
+        """
+        Map a code name to one of the three curated directories.
+        Only these directories should be used - no automatic directory creation.
+        
+        Args:
+            code: Code name to map
+            
+        Returns:
+            Curated directory name or None if no match
+        """
+        code_normalized = self._normalize_code_key(code)
+        
+        # Curated directory mappings (exact names as they exist)
+        curated_mappings = {
+            "code rural et de la peche maritime": "Code Rural et de la pêche maritime",
+            "code de l'environnement": "Code De l'environnement", 
+            "code de la sante publique": "Code De la Santé Publique"
+        }
+        
+        # Direct mapping
+        if code_normalized in curated_mappings:
+            return curated_mappings[code_normalized]
+        
+        # Fuzzy matching for variations
+        for normalized_key, directory_name in curated_mappings.items():
+            # Handle variations like "code rural et de la pêche maritime est ainsi modifié"
+            if normalized_key in code_normalized or code_normalized in normalized_key:
+                logger.info(f"Mapped code '{code}' to curated directory '{directory_name}'")
+                return directory_name
+                
+        logger.warning(f"No curated directory mapping found for code: '{code}'")
+        return None
 
     def _slugify_code_name(self, code: str) -> str:
         s = self._normalize_code_key(code)
@@ -713,17 +769,8 @@ Trouvez et extrayez le contenu complet de la sous-section "{subsection}"."""
         return s
 
     def _try_local_store_read(self, code: str, article: str) -> Tuple[Optional[str], Dict]:
-        txt_path, meta_path = self._local_store_paths(code, article)
-        # Preferred write-through location (.txt)
-        if txt_path.exists():
-            try:
-                text = txt_path.read_text(encoding="utf-8")
-                meta = {"source": "local", "success": True, "meta_file": str(meta_path)}
-                return text, meta
-            except Exception as e:
-                logger.warning(f"Local store read failed: {e}")
-
-        # Heuristic: read from existing curated markdowns under data/fr_code_text/<Code Name>/article <ID>.md
+        # REMOVED: No more cache files - read directly from curated markdowns only
+        # Read from existing curated markdowns under data/fr_code_text/<Code Name>/article <ID>.md
         try:
             resolved = self._resolve_existing_local_file(code, article)
             if resolved and resolved.exists():
@@ -814,14 +861,7 @@ Trouvez et extrayez le contenu complet de la sous-section "{subsection}"."""
                 return matches[0]
         return None
 
-    def _persist_to_local_store(self, code: str, article: str, text: str, metadata: Dict) -> None:
-        try:
-            txt_path, meta_path = self._local_store_paths(code, article)
-            txt_path.write_text(text, encoding="utf-8")
-            meta = {"source": metadata.get("source"), "persisted_from": metadata.get("source"), "success": True}
-            meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception as e:
-            logger.warning(f"Local store write failed: {e}")
+    # REMOVED: _persist_to_local_store - all legal text is stored offline, no caching needed
     
     def clear_cache(self) -> int:
         """

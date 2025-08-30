@@ -1,0 +1,7 @@
+{"event": "chunk_loaded", "payload": {"chunk_id": "# TITRE IV::Article 8::III::2°::b)", "hierarchy_path": ["# TITRE IV", "Article 8", "III", "2°", "b)"]}}
+{"event": "target_identified", "payload": {"operation_type": "MODIFY", "code": "code rural et de la pêche maritime est ainsi modifié", "article": "L. 250-3", "confidence": 1.0}}
+{"event": "retrieval_done", "payload": {"meta": {"source": "local_fr", "success": true, "file": "data/fr_code_text/Code Rural et de la pêche maritime/article L250-3.md"}, "original_text_preview": "Pour l'exercice de leur mission, les agents habilités à procéder à l'inspection et au contrôle en vue d'assurer le respect des dispositions du présent titre, des dispositions réglementaires prises ..."}}
+{"event": "reconstruct_done", "payload": {"deleted_or_replaced_text": "son", "newly_inserted_text": "leur", "after_preview": "Pour l'exercice de leur mission, les agents habilités à procéder à l'inspection et au contrôle en vue d'assurer le respect des dispositions du présent titre, des dispositions réglementaires prises ..."}}
+{"event": "locate_done", "payload": {"count": 0, "refs": []}}
+{"event": "link_done", "payload": {"count": 0, "links": []}}
+{"event": "resolve_done", "payload": {"counts": {"def": 0, "del": 0, "unres": 0}}}

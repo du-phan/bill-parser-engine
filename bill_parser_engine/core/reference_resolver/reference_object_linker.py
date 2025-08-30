@@ -420,9 +420,30 @@ Utilisez l'appel de fonction pour fournir votre analyse complète.
 
     def _narrow_context_by_anchor(self, reference_text: str, context_text: str) -> Optional[str]:
         """Narrow context using structural anchors like 'du II', 'du 2° du II', 'premier alinéa'.
+        Enhanced with precision anchoring for definitional patterns.
 
         Returns a smaller window around the detected anchor to reduce ambiguity.
         """
+        # ENHANCED: Check for subject-definition patterns first (higher precision)
+        subject_definition_patterns = [
+            r"(?i)(le\s+\w+|la\s+\w+|les\s+\w+)\s+s'entend(?:ent)?\s+au\s+sens\s+de",
+            r"(?i)(le\s+\w+|la\s+\w+|les\s+\w+)\s+(?:est|sont)\s+défini(?:s|es?)?\s+(?:au\s+sens\s+de|par)",
+            r"(?i)pour\s+l'application\s+du\s+présent\s+\w+,?\s+(le\s+\w+|la\s+\w+|les\s+\w+)\s+s'entend(?:ent)?",
+        ]
+        
+        for pat in subject_definition_patterns:
+            m = re.search(pat, context_text)
+            if m:
+                # Check if our reference is nearby (within 200 chars of the subject)
+                ref_match = re.search(re.escape(reference_text[:50]), context_text, re.IGNORECASE)
+                if ref_match and abs(m.start() - ref_match.start()) < 200:
+                    logger.info(f"Found subject-definition pattern for ref: {reference_text[:50]}...")
+                    # Use tighter window (±150 chars) for precision
+                    start = max(0, m.start() - 150)
+                    end = min(len(context_text), m.end() + 150)
+                    return context_text[start:end]
+        
+        # Standard structural anchor patterns (existing logic)
         # Roman section pattern with optional suffix (bis, ter, ...)
         roman = r"[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?"
         # Point number pattern with optional suffix

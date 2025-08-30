@@ -16,10 +16,14 @@ Identifiez l'article juridique cible dans les fragments d'amendements législati
 - Combinaisons : "1° (Supprimé)", "a) (nouveau)"
 
 **OPÉRATIONS JURIDIQUES (ont un article cible) :**
-- "L'article X est ainsi modifié" → cible : X
-- "Au ... de l'article X" → cible : X  
-- "Après l'article X, il est inséré" → cible : nouvel article
-- "Les articles X et Y sont abrogés" → cible : X
+- "L'article X est ainsi modifié" → MODIFY cible : X
+- "Au ... de l'article X" → MODIFY cible : X  
+- "Après l'article X, il est inséré un article Y" → INSERT cible : Y
+- "La section X est complétée par un article Y" → INSERT cible : Y
+- "Il est ajouté un article Y" → INSERT cible : Y
+- "Au début du chapitre X, il est ajouté un article Y" → INSERT cible : Y
+- "Les articles X et Y sont abrogés" → ABROGATE cible : X
+- "L'article X devient l'article Y" → RENUMBER cible : Y
 - "Le VI est ainsi modifié" → utiliser le contexte
 
 **PROCESSUS :**
@@ -51,6 +55,10 @@ Opération avec contexte :
 Fragment : "b) Le VI est ainsi modifié"
 Contexte : "L'article L. 254-1 est ainsi modifié"
 → {"operation_type": "MODIFY", "code": "code rural et de la pêche maritime", "article": "L. 254-1", "confidence": 0.95, "raw_text": "Le VI est ainsi modifié"}
+
+Opération INSERT :
+Fragment : "1° B (nouveau) La section 1 du chapitre III du titre V du livre II est complétée par un article L. 253-1-1 ainsi rédigé"
+→ {"operation_type": "INSERT", "code": "code rural et de la pêche maritime", "article": "L. 253-1-1", "confidence": 0.98, "raw_text": "est complétée par un article L. 253-1-1"}
 
 **CONSIGNES :**
 - Ignorez d'abord tous les préfixes de versioning

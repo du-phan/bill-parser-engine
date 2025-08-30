@@ -1,0 +1,4 @@
+{"event": "chunk_loaded", "payload": {"chunk_id": "# TITRE II::Article 4::I::1°::a)", "hierarchy_path": ["# TITRE II", "Article 4", "I", "1°", "a)"]}}
+{"event": "target_identified", "payload": {"operation_type": "MODIFY", "code": "code rural et de la pêche maritime", "article": "L. 361-4-6", "confidence": 0.95}}
+{"event": "retrieval_done", "payload": {"meta": {"source": "local_fr", "success": false, "error": "Local article not found"}, "original_text_preview": ""}}
+{"event": "retrieval_failed", "payload": {"error": "Original text empty for non-INSERT operation"}}

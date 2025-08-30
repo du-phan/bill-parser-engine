@@ -9,6 +9,7 @@ with proper inheritance logic to handle complex French legislative patterns.
 """
 
 import json
+import logging
 import os
 import re
 from typing import List, Optional, Tuple
@@ -20,6 +21,8 @@ from bill_parser_engine.core.reference_resolver.config import MISTRAL_MODEL
 from bill_parser_engine.core.reference_resolver.cache_manager import SimpleCache, get_cache
 from bill_parser_engine.core.reference_resolver.rate_limiter import rate_limiter, call_mistral_with_messages
 from bill_parser_engine.core.reference_resolver.prompts import TARGET_ARTICLE_IDENTIFIER_SYSTEM_PROMPT
+
+logger = logging.getLogger(__name__)
 
 
 class TargetArticleIdentifier:
@@ -35,6 +38,32 @@ class TargetArticleIdentifier:
     Uses Mistral Chat API in JSON Mode for structured output with comprehensive
     inheritance logic to handle French legislative hierarchy patterns.
     """
+    
+    # Pre-compiled regex patterns for performance
+    _ARTICLE_PATTERNS = {
+        'explicit_modify': re.compile(r"(?i)(?:l\s*'\s*article|l'article|'article)\s+([LRD]\.\s*[\d][\d\-]*)\s+est\s+ainsi\s+modifié"),
+        'context_article': re.compile(r"(?i)\bà\s+l\s*'\s*article\s+([LRD]\.\s*[\d][\d\-]*)\b"),
+        'generic_article': re.compile(r"(?i)\b([LRD]\.\s*\d[\d\-]*)\b")
+    }
+    
+    _CODE_PATTERNS = {
+        'explicit_modify': re.compile(r"(?i)\b((?:le|la|l'|l')?\s*code\s+[^\n:]+?)\s+est\s+ainsi\s+modifié"),
+        'rural_code': re.compile(r"(?i)\b(code\s+rural\s+et\s+de\s+la\s+p[êe]che\s+maritime)\b")
+    }
+    
+    _INSERT_PATTERNS = {
+        'standard_insert': re.compile(r"(?i)il\s+est\s+inséré\s+un\s+article\s+([LRD]\.?\s*[\d][\d\-]*)"),
+        'completed_by': re.compile(r"(?i)est\s+complétée?\s+par\s+un\s+article\s+([LRD]\.?\s*[\d][\d\-]*)"),
+        'added_article': re.compile(r"(?i)il\s+est\s+ajouté\s+un\s+article\s+([LRD]\.?\s*[\d][\d\-]*)"),
+        'beginning_chapter': re.compile(r"(?i)au\s+début\s+du\s+chapitre[^,]*,\s+il\s+est\s+ajouté\s+un\s+article\s+([LRD]\.?\s*[\d][\d\-]*)"),
+        'phrase_added': re.compile(r"(?i)est\s+ajoutée\s+une\s+phrase"),
+        'after_section': re.compile(r"(?i)après\s+[^,]+,\s+il\s+est\s+inséré\s+un\s+([IVX]+(?:\s+[a-z]+)?)")
+    }
+    
+    _RENUMBER_PATTERNS = {
+        'becomes': re.compile(r"(?i)devient\s+le?\s*([LRD]\.?\s*[\d][\d\-]*)"),
+        'renumbered_as': re.compile(r"(?i)(?:est|sont)\s+renumérotés?\s+(?:en\s+tant\s+que|comme)\s*([LRD]\.?\s*[\d][\d\-]*)")  
+    }
     
     def __init__(self, api_key: Optional[str] = None, cache: Optional[SimpleCache] = None, use_cache: bool = True):
         """
@@ -208,35 +237,35 @@ class TargetArticleIdentifier:
                 ]
 
                 def _extract_article(s: str) -> Optional[str]:
-                    # Matches: L'article L. 254-1 est ainsi modifié / 'article L. 254-1 est ainsi modifié
-                    m = _re.search(r"(?i)(?:l\s*'\s*article|l'article|'article)\s+([LRD]\.\s*[\d][\d\-]*)\s+est\s+ainsi\s+modifié", s)
-                    if m:
-                        return _re.sub(r"\s+", " ", m.group(1).strip())
-                    # Generic: À l'article L. 254-1, ...
-                    m = _re.search(r"(?i)\bà\s+l\s*'\s*article\s+([LRD]\.\s*[\d][\d\-]*)\b", s)
-                    if m:
-                        return _re.sub(r"\s+", " ", m.group(1).strip())
-                    # Fallback: any explicit legal article marker like "L. 254-1" present
-                    m = _re.search(r"(?i)\b([LRD]\.\s*\d[\d\-]*)\b", s)
-                    if m:
-                        return _re.sub(r"\s+", " ", m.group(1).strip())
+                    # Use pre-compiled patterns for performance and comprehensive coverage
+                    for pattern_name, pattern in self._ARTICLE_PATTERNS.items():
+                        match = pattern.search(s)
+                        if match:
+                            return re.sub(r"\s+", " ", match.group(1).strip())
+                    
+                    # Also check for INSERT patterns that contain article identifiers
+                    insert_article = self._extract_insert_article(s)
+                    if insert_article:
+                        return insert_article
+                        
                     return None
 
                 def _extract_code(s: str) -> Optional[str]:
-                    # Matches: (Le|La|L’) code X est ainsi modifié
-                    m = _re.search(r"(?i)\b((?:le|la|l’|l')?\s*code\s+[^\n:]+?)\s+est\s+ainsi\s+modifié", s)
-                    if m:
-                        code = m.group(1)
+                    # Use pre-compiled patterns for performance  
+                    match = self._CODE_PATTERNS['explicit_modify'].search(s)
+                    if match:
+                        code = match.group(1)
                         # Normalize spaces and strip articles like leading 'le '
-                        code = _re.sub(r"^(?i)(le|la|l’|l')\s+", "", code).strip()
+                        code = re.sub(r"^(?i)(le|la|l'|l')\s+", "", code).strip()
                         # Ensure it starts with 'code '
                         if not code.lower().startswith("code "):
                             code = f"code {code}"
                         return code
-                    # Fallback: look for a well-known code mention even without the leading article
-                    m = _re.search(r"(?i)\b(code\s+rural\s+et\s+de\s+la\s+p[êe]che\s+maritime)\b", s)
-                    if m:
-                        return m.group(1).lower()
+                    
+                    # Fallback: look for a well-known code mention
+                    match = self._CODE_PATTERNS['rural_code'].search(s)
+                    if match:
+                        return match.group(1).lower()
                     return None
 
                 parsed_article: Optional[str] = None
@@ -255,13 +284,29 @@ class TargetArticleIdentifier:
                             parsed_code = "code rural et de la pêche maritime"
                             break
                 if parsed_article:
+                    # Determine operation type from context
+                    operation_type = TargetOperationType.MODIFY  # Default
+                    all_text = " ".join([intro for intro in candidates if intro])
+                    
+                    # Check for INSERT operations in intro phrases
+                    if self._is_new_article_creation(all_text):
+                        # For INSERT operations, extract the new article being created
+                        new_article = self._extract_insert_article(all_text)
+                        if new_article:
+                            parsed_article = new_article  # Use the extracted article
+                        operation_type = TargetOperationType.INSERT
+                    
+                    # Check for RENUMBER operations
+                    elif any(pattern.search(all_text) for pattern in self._RENUMBER_PATTERNS.values()):
+                        operation_type = TargetOperationType.RENUMBER
+                    
                     ta = TargetArticle(
-                        operation_type=TargetOperationType.MODIFY,
+                        operation_type=operation_type,
                         code=parsed_code,
                         article=parsed_article,
                         confidence=1.0,
                     )
-                    print(f"✓ Deterministic target from intro phrases: {ta.code} {ta.article}")
+                    logger.info(f"✓ Deterministic target from intro phrases: {ta.operation_type.value} {ta.code} {ta.article}")
                     return ta
             except Exception:
                 # Ignore and fall back to other deterministic logic / LLM path
@@ -281,32 +326,81 @@ class TargetArticleIdentifier:
                     confidence=1.0,
                 )
 
-            # If inherited suggests an INSERT-after pattern, try to extract the new article id from the text
+            # If inherited suggests an INSERT-after pattern, try to extract the new article id comprehensively
             if inherited.operation_type == TargetOperationType.INSERT:
-                # Look for "il est inséré un article L. 123-4(-x)?" in the chunk body
-                m = re.search(r"(?i)il\s+est\s+inséré\s+un\s+article\s+([LRD]\.?\s*[\d][\d\-]*)", text)
-                if m:
-                    new_article = re.sub(r"\s+", " ", m.group(1).strip())
+                all_text = f"{chunk.text or ''} {chunk.numbered_point_introductory_phrase or ''}"
+                extracted_article = self._extract_insert_article(all_text)
+                if extracted_article:
+                    logger.info(f"✓ Extracted INSERT article: {extracted_article} from deterministic patterns")
                     return TargetArticle(
                         operation_type=TargetOperationType.INSERT,
                         code=inherited.code,
-                        article=new_article,
+                        article=extracted_article,
                         confidence=1.0,
                     )
-                # Could be an intra-article insert (alinéa/word). In that case, the real target is the existing
-                # article referred by the parent intro (commonly expressed as MODIFY scope). Prefer MODIFY semantics
-                # so the retriever fetches the article text deterministically.
-                return TargetArticle(
-                    operation_type=TargetOperationType.MODIFY,
-                    code=inherited.code,
-                    article=inherited.article,
-                    confidence=1.0,
-                )
-        except Exception:
-            # Fall back silently to LLM path on any parsing error
+                
+                # If no specific article extracted, check if it's clearly a new article creation
+                if self._is_new_article_creation(all_text):
+                    logger.warning(f"INSERT operation detected but article not extracted from: {text[:100]}...")
+                    # Return the inherited target but keep INSERT operation type
+                    return TargetArticle(
+                        operation_type=TargetOperationType.INSERT,
+                        code=inherited.code,
+                        article=inherited.article,  # This will likely fail, but preserves the intent
+                        confidence=0.5,
+                    )
+                else:
+                    # This is likely an intra-article modification, use MODIFY semantics
+                    logger.info(f"✓ Converting INSERT to MODIFY for intra-article operation: {inherited.article}")
+                    return TargetArticle(
+                        operation_type=TargetOperationType.MODIFY,
+                        code=inherited.code,
+                        article=inherited.article,
+                        confidence=1.0,
+                    )
+        except Exception as e:
+            logger.warning(f"Error in deterministic target extraction: {e}")
             return None
 
         return None
+    
+    def _extract_insert_article(self, text: str) -> Optional[str]:
+        """Extract new article identifier from INSERT operation text using comprehensive patterns."""
+        if not text:
+            return None
+            
+        # Try all INSERT patterns to find the new article
+        for pattern_name, pattern in self._INSERT_PATTERNS.items():
+            match = pattern.search(text)
+            if match:
+                if pattern_name == 'phrase_added':
+                    # This is just text addition, not new article creation
+                    continue
+                    
+                article = re.sub(r"\s+", " ", match.group(1).strip())
+                logger.debug(f"✓ Found INSERT article '{article}' using pattern '{pattern_name}'")
+                return article
+                
+        return None
+    
+    def _is_new_article_creation(self, text: str) -> bool:
+        """Determine if the text describes creation of a new legal article."""
+        if not text:
+            return False
+            
+        # Indicators of new article creation
+        creation_indicators = [
+            r"(?i)il\s+est\s+(?:inséré|ajouté)\s+un\s+article",
+            r"(?i)est\s+complétée?\s+par\s+un\s+article",
+            r"(?i)au\s+début\s+du\s+chapitre[^,]*,\s+il\s+est\s+ajouté",
+            r"(?i)après\s+[^,]+,\s+il\s+est\s+inséré\s+un\s+article"
+        ]
+        
+        for pattern in creation_indicators:
+            if re.search(pattern, text):
+                return True
+                
+        return False
 
     def _create_user_prompt(self, chunk: BillChunk) -> str:
         """

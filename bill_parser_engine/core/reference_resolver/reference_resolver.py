@@ -229,7 +229,7 @@ class ReferenceResolver:
             )
             return None, {"error": "Classification failed"}
 
-        logger.info(f"Parsed reference: code='{code}', article='{article}'")
+        logger.info(f"🔍 DEBUG: About to retrieve content for code='{code}', article='{article}'")
 
         # Prefer after-state for references to the newly inserted target article (same chunk)
         try:
@@ -266,7 +266,9 @@ class ReferenceResolver:
         # Prefer deterministic retrieval path first (handles both French codes and EU files)
         logger.info(f"📚 Using OriginalTextRetriever for {ref.reference_text}")
         content_text, meta = self.retriever.fetch_article_text(code, article)
+        logger.info(f"🔍 DEBUG: Retrieval result - success: {meta.get('success')}, content length: {len(content_text) if content_text else 0}, source: {meta.get('source')}")
         if meta.get("success") and content_text:
+            logger.info(f"🔍 DEBUG: Successfully retrieved content from {meta.get('source')} - first 100 chars: '{content_text[:100]}...'")
             return content_text, meta
 
         # If deterministic retriever failed and this looks like an EU reference, try LLM-based file matching as fallback
@@ -363,8 +365,11 @@ class ReferenceResolver:
         Returns:
             A tuple of (code, article).
         """
+        logger.info(f"🔍 DEBUG: Parsing reference '{reference_text}'")
         contextual_code = target_article.code if target_article else ""
         parent_article = target_article.article if target_article else ""
+        if target_article:
+            logger.info(f"🔍 DEBUG: Target article context - code: '{contextual_code}', article: '{parent_article}'")
         cache_key_data = {
             "reference_text": reference_text,
             "contextual_code": contextual_code,
@@ -396,6 +401,8 @@ class ReferenceResolver:
         if result:
             code = result.get("code")
             article = result.get("article")
+            
+            logger.info(f"🔍 DEBUG: Parsed result - code: '{code}', article: '{article}'")
 
             if self.use_cache and code and article:
                 self.cache.set(
@@ -695,6 +702,9 @@ class ReferenceResolver:
         """
         Uses an LLM to extract a specific answer from a source text based on a question.
         """
+        logger.info(f"🔍 DEBUG: _extract_answer_from_content called for '{ref.reference_text}'")
+        logger.info(f"🔍 DEBUG: Question: '{ref.resolution_question}'")
+        logger.info(f"🔍 DEBUG: Source content length: {len(source_content)}")
         user_payload = {
             "source_text": source_content,
             "question": ref.resolution_question,
@@ -709,9 +719,13 @@ class ReferenceResolver:
             user_payload=user_payload,
             component_name="ReferenceResolver.extractor",
         )
-            
+        
+        logger.info(f"🔍 DEBUG: LLM extraction result: {result}")
+        
         if result:
-            return result.get("extracted_answer")
+            extracted = result.get("extracted_answer")
+            logger.info(f"🔍 DEBUG: Extracted answer: '{extracted}'")
+            return extracted
 
         return None
 
@@ -733,17 +747,29 @@ class ReferenceResolver:
             Either the extracted subsection or the original content if no subsection pattern found
         """
         try:
+            logger.info(f"🔍 DEBUG: _extract_subsection_if_applicable called for '{reference_text}'")
+            logger.info(f"🔍 DEBUG: Retrieval metadata: {retrieval_metadata}")
+            
+            # Skip subsection extraction for EU references that were already resolved to specific files
+            if (retrieval_metadata.get("extraction_method") == "direct_file" or 
+                retrieval_metadata.get("source") == "eu_file"):
+                logger.info(f"🔍 DEBUG: Skipping subsection extraction for EU reference with direct file access: {reference_text}")
+                return source_content
+            
             # Parse the reference to identify subsection patterns
             subsection_info = self._parse_subsection_pattern(reference_text)
+            logger.info(f"🔍 DEBUG: Subsection pattern parsing result: {subsection_info}")
             
             if not subsection_info:
-                logger.debug(f"No subsection pattern found in reference: {reference_text}")
+                logger.info(f"🔍 DEBUG: No subsection pattern found in reference: {reference_text}")
                 return source_content
             
             # Extract the specific subsection
+            logger.info(f"🔍 DEBUG: About to extract subsection from content (length: {len(source_content)})")
             extracted_content = self._extract_subsection_from_content(
                 source_content, subsection_info
             )
+            logger.info(f"🔍 DEBUG: Subsection extraction result - length: {len(extracted_content) if extracted_content else 0}")
             
             if extracted_content:
                 # Update metadata to reflect subsection extraction
@@ -813,27 +839,51 @@ class ReferenceResolver:
     def _parse_subsection_pattern_regex_only(self, reference_text: str) -> Optional[Dict]:
         """
         Regex-only variant used to avoid triggering LLM for DELETIONAL gating.
+        Enhanced with paragraph pattern recognition for complex subsection references.
         """
         roman = r"[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?"
+        
+        # French ordinal number mapping
+        french_ordinals = {
+            "premier": 1, "deuxième": 2, "troisième": 3, "quatrième": 4, 
+            "cinquième": 5, "sixième": 6, "septième": 7, "huitième": 8,
+            "neuvième": 9, "dixième": 10
+        }
+        ordinal_pattern = "|".join(french_ordinals.keys())
+        
         subsection_patterns = [
+            # Enhanced: Paragraph patterns (premier alinéa du VI)
+            rf'(?:au\s+)?({ordinal_pattern})\s+alinéa\s+du\s+({roman})',
+            # Existing patterns
             rf'au\s+(\d+)°\s+du\s+({roman})',
             rf'aux\s+(\d+)°\s+ou\s+(\d+)°\s+du\s+({roman})',
             rf'aux\s+(\d+)°\s+et\s+(\d+)°\s+du\s+({roman})',
             rf'([a-z])\)\s+du\s+(\d+)°\s+du\s+({roman})',
             rf'du\s+({roman})',
         ]
+        
         for pattern in subsection_patterns:
             match = re.search(pattern, reference_text, re.IGNORECASE)
             if match:
-                if pattern.startswith('au'):
+                # Handle paragraph patterns
+                if 'alinéa' in pattern:
+                    ordinal = match.group(1).lower()
+                    section = match.group(2)
+                    paragraph_num = french_ordinals.get(ordinal)
+                    if paragraph_num:
+                        logger.info(f"Recognized paragraph pattern: {ordinal} alinéa du {section} → paragraph {paragraph_num}")
+                        return {"section": section, "paragraph": paragraph_num, "type": "paragraph"}
+                # Handle existing patterns
+                elif pattern.startswith('au') and not 'alinéa' in pattern:
                     return {"section": match.group(2), "point": match.group(1), "type": "point"}
-                if pattern.startswith('aux') and 'ou' in pattern:
+                elif pattern.startswith('aux') and 'ou' in pattern:
                     return {"section": match.group(3), "points": [match.group(1), match.group(2)], "type": "multiple_points"}
-                if pattern.startswith('aux') and 'et' in pattern:
+                elif pattern.startswith('aux') and 'et' in pattern:
                     return {"section": match.group(3), "points": [match.group(1), match.group(2)], "type": "multiple_points"}
-                if pattern.startswith('([a-z]'):
+                elif pattern.startswith('([a-z]'):
                     return {"section": match.group(3), "point": match.group(2), "subpoint": match.group(1), "type": "subpoint"}
-                return {"section": match.group(1), "type": "section_only"}
+                elif pattern.startswith('du'):
+                    return {"section": match.group(1), "type": "section_only"}
         return None
 
     def _parse_subsection_pattern_llm(self, reference_text: str) -> Optional[Dict]:
@@ -923,9 +973,10 @@ class ReferenceResolver:
                 start_pos = match.start()
                 
                 # Find the end of this section (next section or end of content)
-                next_section_match = re.search(rf"(?m)^[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?\s*[\.\-–]\s", content[start_pos + 1:])
+                # Use word boundaries and avoid matching substrings of current section
+                next_section_match = re.search(rf"(?m)^\s*(?!{section}[^\w])([IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?)\s*[\.\-–]\s", content[start_pos + len(match.group()):])
                 if next_section_match:
-                    end_pos = start_pos + 1 + next_section_match.start()
+                    end_pos = start_pos + len(match.group()) + next_section_match.start()
                 else:
                     end_pos = len(content)
                 
@@ -938,7 +989,15 @@ class ReferenceResolver:
                     )
                     if point_content:
                         return point_content
-                # If we need a specific alinéa within this section
+                # If we need a specific paragraph (alinéa) within this section
+                if subsection_info.get("type") == "paragraph" and "paragraph" in subsection_info:
+                    paragraph_content = self._extract_alinea_from_text(
+                        section_content, subsection_info["paragraph"]
+                    )
+                    if paragraph_content:
+                        logger.info(f"✓ Extracted paragraph {subsection_info['paragraph']} from section {section}")
+                        return paragraph_content
+                # If we need a specific alinéa within this section (legacy support)
                 if subsection_info.get("type") == "alinea":
                     al_content = self._extract_alinea_from_text(section_content, subsection_info.get("alinea_index", 1))
                     if al_content:
@@ -949,13 +1008,31 @@ class ReferenceResolver:
         return None
 
     def _extract_alinea_from_text(self, text: str, alinea_index: int) -> Optional[str]:
-        """Extract the nth alinéa (paragraph). Uses blank-line separation; falls back to sentence split."""
+        """
+        Extract the nth alinéa (paragraph). 
+        In French legal terminology, alinéa refers to substantive paragraphs excluding section headers.
+        Uses blank-line separation; falls back to sentence split.
+        """
         try:
             paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
             if not paragraphs:
                 paragraphs = [p.strip() for p in re.split(r"(?<=[.!?])\s+\n?", text) if p.strip()]
-            if 1 <= alinea_index <= len(paragraphs):
-                return paragraphs[alinea_index - 1]
+            
+            # Filter out section headers (paragraphs starting with Roman numerals followed by punctuation)
+            substantive_paragraphs = []
+            for para in paragraphs:
+                # Skip section headers like "VI. –", "II -", etc.
+                if re.match(r'^\s*[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?\s*[\.\-–]\s', para):
+                    logger.info(f"Skipping section header paragraph: {para[:50]}...")
+                    continue
+                substantive_paragraphs.append(para)
+            
+            logger.info(f"Found {len(substantive_paragraphs)} substantive paragraphs (excluding headers)")
+            
+            if 1 <= alinea_index <= len(substantive_paragraphs):
+                selected_paragraph = substantive_paragraphs[alinea_index - 1]
+                logger.info(f"Selected alinéa {alinea_index}: {selected_paragraph[:100]}...")
+                return selected_paragraph
             return None
         except Exception:
             return None

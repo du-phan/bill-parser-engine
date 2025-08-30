@@ -1,0 +1,7 @@
+{"event": "chunk_loaded", "payload": {"chunk_id": "# TITRE III::Article 5::1°::a)", "hierarchy_path": ["# TITRE III", "Article 5", "", "1°", "a)"]}}
+{"event": "target_identified", "payload": {"operation_type": "MODIFY", "code": "code de l'environnement est ainsi modifié", "article": "L. 211-1", "confidence": 1.0}}
+{"event": "retrieval_done", "payload": {"meta": {"source": "local_fr", "success": true, "file": "data/fr_code_text/Code De l'environnement/article L211-1.md"}, "original_text_preview": "I. - -Les dispositions des chapitres Ier à VII du présent titre ont pour objet une gestion équilibrée et durable de la ressource en eau ; cette gestion prend en compte les adaptations nécessaires a..."}}
+{"event": "reconstruct_done", "payload": {"deleted_or_replaced_text": "", "newly_inserted_text": "5° ter La préservation de l'accès à la ressource en eau aux fins d'abreuvement ;", "after_preview": "I. - -Les dispositions des chapitres Ier à VII du présent titre ont pour objet une gestion équilibrée et durable de la ressource en eau ; cette gestion prend en compte les adaptations nécessaires a..."}}
+{"event": "locate_done", "payload": {"count": 0, "refs": []}}
+{"event": "link_done", "payload": {"count": 0, "links": []}}
+{"event": "resolve_done", "payload": {"counts": {"def": 0, "del": 0, "unres": 0}}}
