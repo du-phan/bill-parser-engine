@@ -5,7 +5,7 @@ Si, pour des raisons indépendantes de la volonté du demandeur, il apparaît qu
 
 Un règlement reportant l'expiration de l'approbation pendant une période suffisante pour permettre l'examen de la demande est adopté conformément à la procédure de réglementation avec contrôle visée à l'article 79, paragraphe 5, lorsque le demandeur n'a pu respecter le préavis de trois ans prévu à l'article 15, paragraphe 1, parce que l'inscription de la substance active à l'annexe I de la directive 91/414/CEE a expiré avant le 14 juin 2014.
 
-La durée de la prolongation est fixée sur la base des éléments suivants:
+L. - a durée de la prolongation est fixée sur la base des éléments suivants:
 
 a) le temps nécessaire à la communication des informations demandées;
 

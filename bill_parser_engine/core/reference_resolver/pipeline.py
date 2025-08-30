@@ -21,6 +21,7 @@ from bill_parser_engine.core.reference_resolver.reference_locator import Referen
 from bill_parser_engine.core.reference_resolver.reference_object_linker import ReferenceObjectLinker
 from bill_parser_engine.core.reference_resolver.reference_resolver import ReferenceResolver
 from bill_parser_engine.core.reference_resolver.cache_manager import get_mistral_cache
+from bill_parser_engine.core.reference_resolver.legal_state_synthesizer import LegalStateSynthesizer
 
 from bill_parser_engine.core.reference_resolver.models import (
     BillChunk, 
@@ -69,10 +70,12 @@ class BillProcessingPipeline:
         self.bill_splitter = BillSplitter()
         self.target_identifier = TargetArticleIdentifier(use_cache=use_cache)
         self.original_text_retriever = OriginalTextRetriever(use_cache=use_cache)
+        # Historical retrieval disabled; French codes use local store only
         self.text_reconstructor = LegalAmendmentReconstructor(use_cache=use_cache)
         self.reference_locator = ReferenceLocator(use_cache=use_cache)
         self.reference_object_linker = ReferenceObjectLinker(use_cache=use_cache)
         self.reference_resolver = ReferenceResolver(use_cache=use_cache)
+        self.legal_state_synthesizer = LegalStateSynthesizer()
         
         # Pipeline state and results
         self.legislative_text: Optional[str] = None
@@ -83,6 +86,7 @@ class BillProcessingPipeline:
         self.reference_location_results: List[Dict] = []
         self.reference_linking_results: List[Dict] = []
         self.reference_resolution_results: List[Dict] = []
+        self.legal_state_results: List[Dict] = []
         
         # Analysis results
         self.target_analysis: Dict = {}
@@ -91,6 +95,7 @@ class BillProcessingPipeline:
         self.reference_location_analysis: Dict = {}
         self.reference_linking_analysis: Dict = {}
         self.reference_resolution_analysis: Dict = {}
+        self.legal_state_analysis: Dict = {}
         
 
     def load_legislative_text(self, text: str) -> None:
@@ -170,10 +175,18 @@ class BillProcessingPipeline:
             
             try:
                 target_article = self.target_identifier.identify(chunk)
-                
-                # Skip chunks with pure versioning metadata (OTHER operation type)
+
+                # Skip chunks with pure versioning metadata or suppressed/no-op (OTHER operation type)
                 if target_article.operation_type == TargetOperationType.OTHER:
-                    logger.debug("Skipping chunk with pure versioning metadata: %s", chunk.chunk_id)
+                    logger.debug("Skipping chunk with OTHER (likely versioning/no-op): %s", chunk.chunk_id)
+                    continue
+
+                # Confidence gating and malformed guard: require code+article and minimum confidence
+                if (not target_article.code) or (not target_article.article) or (target_article.confidence is not None and target_article.confidence < 0.6):
+                    logger.warning(
+                        "Identification gated: code/article missing or low confidence for chunk %s (code=%s, article=%s, confidence=%s)",
+                        chunk.chunk_id, target_article.code, target_article.article, target_article.confidence
+                    )
                     continue
                 
                 result_entry = {
@@ -185,8 +198,8 @@ class BillProcessingPipeline:
                         "code": target_article.code,
                         "article": target_article.article,
                         "full_citation": f"{target_article.code}::{target_article.article}" if target_article.code and target_article.article else target_article.article,
-                        "confidence": 1.0,  # Default confidence since it's not tracked by TargetArticle
-                        "raw_text": chunk.text[:50] + "..." if len(chunk.text) > 50 else chunk.text  # Use chunk text as raw_text
+                        "confidence": (target_article.confidence if target_article.confidence is not None else 1.0),
+                        "raw_text": chunk.text[:50] + "..." if len(chunk.text) > 50 else chunk.text
                     }
                 }
                 
@@ -278,8 +291,10 @@ class BillProcessingPipeline:
                     logger.warning("Skipping malformed article: code=%s, article=%s", code, article)
                     continue
                 
-                # Fetch the original text
-                original_text, metadata = self.original_text_retriever.fetch_article_text(code, article)
+                # Fetch the original text (historical if configured)
+                original_text, metadata = self.original_text_retriever.fetch_article_text(
+                    code, article
+                )
                 
                 # Hierarchical fallback is now handled inside OriginalTextRetriever
                 
@@ -1120,12 +1135,8 @@ class BillProcessingPipeline:
         return reference_resolution_results
 
     def _analyze_reference_resolution_results(self, reference_resolution_results: List[Dict]) -> Dict:
-        """Analyze reference resolution results with proper categorization."""
-        # Categorize chunks by their actual status:
-        # - successful_processed: chunks processed without errors (with or without resolved references)
-        # - failed_processing: chunks with actual processing errors
-        # - skipped_no_refs: chunks intentionally skipped because no references were found
-        
+        """Analyze reference resolution results with detailed per-chunk and per-reference statistics."""
+        # Categorize chunks by their processing status
         successful_processed = []
         failed_processing = []
         skipped_no_refs = []
@@ -1135,71 +1146,105 @@ class BillProcessingPipeline:
                 # Actual processing error
                 failed_processing.append(result)
             elif result.get("skip_reason"):
-                # Intentionally skipped (usually no references found)
+                # Intentionally skipped (usually no references were found)
                 skipped_no_refs.append(result)
             else:
                 # Successfully processed (with or without resolved references)
                 successful_processed.append(result)
         
-        # Analyze resolved references from successfully processed chunks
+        # Detailed analysis of reference resolution within each chunk
         total_resolved = 0
+        total_unresolved = 0
         deletional_resolved = 0
         definitional_resolved = 0
-        unresolved_count = 0
         retrieval_sources = {}
+        
+        # Per-chunk analysis
+        chunks_with_all_refs_resolved = 0
+        chunks_with_partial_refs_resolved = 0
+        chunks_with_no_refs_resolved = 0
+        chunks_with_mixed_results = 0
         
         for result in successful_processed:
             resolution_result = result.get("resolution_result")
-            if resolution_result:
-                deletional_refs = resolution_result.get("resolved_deletional_references", [])
-                definitional_refs = resolution_result.get("resolved_definitional_references", [])
-                unresolved_refs = resolution_result.get("unresolved_references", [])
+            if not resolution_result:
+                chunks_with_no_refs_resolved += 1
+                continue
                 
-                total_resolved += len(deletional_refs) + len(definitional_refs)
-                deletional_resolved += len(deletional_refs)
-                definitional_resolved += len(definitional_refs)
-                unresolved_count += len(unresolved_refs)
-                
-                # Analyze retrieval sources
-                for ref in deletional_refs + definitional_refs:
-                    metadata = ref.get("retrieval_metadata", {})
-                    source = metadata.get("source", "unknown")
-                    retrieval_sources[source] = retrieval_sources.get(source, 0) + 1
+            deletional_refs = resolution_result.get("resolved_deletional_references", [])
+            definitional_refs = resolution_result.get("resolved_definitional_references", [])
+            unresolved_refs = resolution_result.get("unresolved_references", [])
+            
+            resolved_in_chunk = len(deletional_refs) + len(definitional_refs)
+            total_in_chunk = resolved_in_chunk + len(unresolved_refs)
+            
+            # Categorize chunk by resolution success
+            if total_in_chunk == 0:
+                chunks_with_no_refs_resolved += 1
+            elif resolved_in_chunk == total_in_chunk:
+                chunks_with_all_refs_resolved += 1
+            elif resolved_in_chunk > 0:
+                chunks_with_partial_refs_resolved += 1
+                if len(unresolved_refs) > 0:
+                    chunks_with_mixed_results += 1
+            else:
+                chunks_with_no_refs_resolved += 1
+            
+            # Aggregate reference counts
+            total_resolved += resolved_in_chunk
+            total_unresolved += len(unresolved_refs)
+            deletional_resolved += len(deletional_refs)
+            definitional_resolved += len(definitional_refs)
+            
+            # Analyze retrieval sources
+            for ref in deletional_refs + definitional_refs:
+                metadata = ref.get("retrieval_metadata", {})
+                source = metadata.get("source", "unknown")
+                retrieval_sources[source] = retrieval_sources.get(source, 0) + 1
         
-        # Calculate meaningful averages
-        chunks_with_resolved_refs = [r for r in successful_processed if r.get("resolution_result") and 
-                                   (len(r["resolution_result"].get("resolved_deletional_references", [])) + 
-                                    len(r["resolution_result"].get("resolved_definitional_references", []))) > 0]
-        
-        # Calculate meaningful success rates
+        # Calculate comprehensive success rates
         total_chunks = len(reference_resolution_results)
+        total_references = total_resolved + total_unresolved
+        
         processing_success_rate = len(successful_processed) / total_chunks if total_chunks else 0
-        chunks_with_resolved_refs_rate = len(chunks_with_resolved_refs) / total_chunks if total_chunks else 0
-        resolution_success_rate = total_resolved / (total_resolved + unresolved_count) if (total_resolved + unresolved_count) > 0 else 0
+        reference_resolution_success_rate = total_resolved / total_references if total_references > 0 else 0
+        
+        # Per-chunk success rates
+        chunks_with_any_resolved_rate = (chunks_with_all_refs_resolved + chunks_with_partial_refs_resolved) / len(successful_processed) if successful_processed else 0
+        chunks_with_all_resolved_rate = chunks_with_all_refs_resolved / len(successful_processed) if successful_processed else 0
         
         return {
             "total_chunks": total_chunks,
+            "total_references": total_references,
             "processing_results": {
                 "successful_processed": len(successful_processed),
                 "failed_processing": len(failed_processing),
                 "skipped_no_refs": len(skipped_no_refs),
-                "processing_success_rate": processing_success_rate,
-                "chunks_with_resolved_refs_rate": chunks_with_resolved_refs_rate
+                "processing_success_rate": processing_success_rate
             },
-            "resolution_stats": {
+            "chunk_resolution_analysis": {
+                "chunks_with_all_refs_resolved": chunks_with_all_refs_resolved,
+                "chunks_with_partial_refs_resolved": chunks_with_partial_refs_resolved,
+                "chunks_with_no_refs_resolved": chunks_with_no_refs_resolved,
+                "chunks_with_mixed_results": chunks_with_mixed_results,
+                "chunks_with_any_resolved_rate": chunks_with_any_resolved_rate,
+                "chunks_with_all_resolved_rate": chunks_with_all_resolved_rate
+            },
+            "reference_resolution_stats": {
                 "total_resolved": total_resolved,
+                "total_unresolved": total_unresolved,
                 "deletional_resolved": deletional_resolved,
                 "definitional_resolved": definitional_resolved,
-                "unresolved": unresolved_count,
-                "resolution_success_rate": resolution_success_rate,
-                "chunks_with_resolved_refs": len(chunks_with_resolved_refs),
-                "chunks_without_resolved_refs": len(successful_processed) - len(chunks_with_resolved_refs)
+                "reference_resolution_success_rate": reference_resolution_success_rate,
+                "deletional_success_rate": deletional_resolved / (deletional_resolved + sum(1 for r in successful_processed for ref in r.get("resolution_result", {}).get("unresolved_references", []) if "DELETIONAL" in str(ref.get("object", "")))) if (deletional_resolved + sum(1 for r in successful_processed for ref in r.get("resolution_result", {}).get("unresolved_references", []) if "DELETIONAL" in str(ref.get("object", "")))) > 0 else 0,
+                "definitional_success_rate": definitional_resolved / (definitional_resolved + sum(1 for r in successful_processed for ref in r.get("resolution_result", {}).get("unresolved_references", []) if "DEFINITIONAL" in str(ref.get("object", "")))) if (definitional_resolved + sum(1 for r in successful_processed for ref in r.get("resolution_result", {}).get("unresolved_references", []) if "DEFINITIONAL" in str(ref.get("object", "")))) > 0 else 0
             },
             "retrieval_analysis": {
                 "retrieval_sources": retrieval_sources,
                 "eu_file_access_count": retrieval_sources.get("eu_file", 0),
-                "french_api_count": retrieval_sources.get("french_api", 0),
-                "original_article_count": retrieval_sources.get("original_article_text", 0)
+                "local_fr_count": retrieval_sources.get("local_fr", 0),
+                "original_article_count": retrieval_sources.get("original_article_text", 0),
+                "cache_count": retrieval_sources.get("cache", 0)
             },
             "failed_chunks": [r["chunk_id"] for r in failed_processing],
             "skipped_chunks": [r["chunk_id"] for r in skipped_no_refs]
@@ -1225,6 +1270,7 @@ class BillProcessingPipeline:
         reference_location_results = self.step_5_locate_references()
         reference_linking_results = self.step_6_link_references()
         reference_resolution_results = self.step_7_resolve_references()
+        legal_state_results = self.step_8_synthesize_legal_states()
         
         # Compile comprehensive results
         pipeline_results = {
@@ -1246,11 +1292,254 @@ class BillProcessingPipeline:
             "reference_resolution_analysis": self.reference_resolution_analysis,
             "reference_location_results": reference_location_results,
             "reference_linking_results": reference_linking_results,
-            "reference_resolution_results": reference_resolution_results
+            "reference_resolution_results": reference_resolution_results,
+            "legal_state_analysis": self.legal_state_analysis,
+            "legal_state_results": legal_state_results
         }
         
         logger.info("Full pipeline execution complete")
         return pipeline_results
+
+    def step_8_synthesize_legal_states(self) -> List[Dict]:
+        """
+        Step 8: Synthesize annotated before/after fragments deterministically.
+
+        Uses the resolved references from Step 7 and reconstruction fragments
+        from Step 4 to render concise before/after states with footnote markers
+        and metadata for legal review.
+
+        Returns:
+            List of synthesis results per chunk
+
+        Raises:
+            ValueError: If required prior steps haven't been completed
+        """
+        if not self.reference_resolution_results:
+            raise ValueError("Reference resolution results must be completed first.")
+        if not self.reconstruction_results:
+            raise ValueError("Text reconstruction results must be completed first.")
+
+        logger.info("Step 8: Synthesizing annotated before/after fragments...")
+
+        # Build lookups we need
+        recon_lookup: Dict[str, ReconstructorOutput] = {}
+        for r in self.reconstruction_results:
+            chunk_id = r.get("chunk_id")
+            recon = r.get("reconstruction_result")
+            if not chunk_id or not recon:
+                continue
+            recon_lookup[chunk_id] = ReconstructorOutput(
+                deleted_or_replaced_text=recon.get("deleted_or_replaced_text", ""),
+                newly_inserted_text=recon.get("newly_inserted_text", ""),
+                intermediate_after_state_text=recon.get("intermediate_after_state_text", ""),
+            )
+
+        synthesis_results: List[Dict] = []
+
+        from bill_parser_engine.core.reference_resolver.legal_state_synthesizer import LegalStateSynthesizer
+        from bill_parser_engine.core.reference_resolver.models import (
+            LegalStateSynthesizerConfig,
+            ResolutionResult as ResolutionResultModel,
+            ResolvedReference as ResolvedReferenceModel,
+            LinkedReference as LinkedReferenceModel,
+        )
+
+        synthesizer = LegalStateSynthesizer(LegalStateSynthesizerConfig())
+
+        processed = 0
+        skipped = 0
+
+        # Build original text lookup (used to feed Step 8 so we always have Before context)
+        original_texts_lookup = self._create_original_texts_lookup()
+
+        for result in self.reference_resolution_results:
+            # Skip chunks without a resolution_result
+            if result.get("skip_reason") or result.get("error"):
+                skipped += 1
+                continue
+            res = result.get("resolution_result")
+            if not res:
+                skipped += 1
+                continue
+
+            chunk_id = result.get("chunk_id", "")
+            target_article_data = result.get("target_article") or {}
+            reconstruction_result = result.get("reconstruction_result") or {}
+
+            # Build minimal BillChunk (only fields needed for metadata)
+            # We keep text fields empty to avoid large memory use; synthesizer uses only chunk_id in metadata
+            chunk_obj = BillChunk(
+                text="",
+                titre_text="",
+                article_label=chunk_id,
+                article_introductory_phrase=None,
+                major_subdivision_label=None,
+                major_subdivision_introductory_phrase=None,
+                numbered_point_label=None,
+                numbered_point_introductory_phrase=None,
+                lettered_subdivision_label=None,
+                hierarchy_path=result.get("hierarchy_path", []),
+                chunk_id=chunk_id,
+                start_pos=0,
+                end_pos=0,
+            )
+
+            # TargetArticle
+            target_obj = None
+            if target_article_data.get("operation_type"):
+                target_obj = TargetArticle(
+                    operation_type=TargetOperationType[target_article_data["operation_type"]],
+                    code=target_article_data.get("code"),
+                    article=target_article_data.get("article"),
+                    confidence=target_article_data.get("confidence", 1.0),
+                )
+            else:
+                skipped += 1
+                continue
+
+            # ReconstructorOutput
+            recon_obj = recon_lookup.get(chunk_id)
+            if not recon_obj:
+                # Attempt to rebuild from current result if lookup missing
+                rr = reconstruction_result
+                recon_obj = ReconstructorOutput(
+                    deleted_or_replaced_text=(rr or {}).get("deleted_or_replaced_text", ""),
+                    newly_inserted_text=(rr or {}).get("newly_inserted_text", ""),
+                    intermediate_after_state_text=(rr or {}).get("intermediate_after_state_text", ""),
+                )
+
+            # Rebuild ResolutionResult dataclass with minimal data
+            deletional_rr: List[ResolvedReferenceModel] = []
+            for d in res.get("resolved_deletional_references", []):
+                linked = LinkedReferenceModel(
+                    reference_text=d.get("reference_text", ""),
+                    source=ReferenceSourceType.DELETIONAL,
+                    object=d.get("object", ""),
+                    agreement_analysis="",
+                    confidence=1.0,
+                    resolution_question="",
+                )
+                deletional_rr.append(
+                    ResolvedReferenceModel(
+                        linked_reference=linked,
+                        resolved_content=d.get("resolved_content", ""),
+                        retrieval_metadata=d.get("retrieval_metadata", {}),
+                    )
+                )
+
+            definitional_rr: List[ResolvedReferenceModel] = []
+            for d in res.get("resolved_definitional_references", []):
+                linked = LinkedReferenceModel(
+                    reference_text=d.get("reference_text", ""),
+                    source=ReferenceSourceType.DEFINITIONAL,
+                    object=d.get("object", ""),
+                    agreement_analysis="",
+                    confidence=1.0,
+                    resolution_question="",
+                )
+                definitional_rr.append(
+                    ResolvedReferenceModel(
+                        linked_reference=linked,
+                        resolved_content=d.get("resolved_content", ""),
+                        retrieval_metadata=d.get("retrieval_metadata", {}),
+                    )
+                )
+
+            resolution_obj = ResolutionResultModel(
+                resolved_deletional_references=deletional_rr,
+                resolved_definitional_references=definitional_rr,
+                resolution_tree={},
+                unresolved_references=[],
+            )
+
+            try:
+                # Provide original article text so Step 8 can always show before-context even for micro-edits
+                article_key = self._build_article_key(target_article_data.get("code"), target_article_data.get("article"))
+                original_text = original_texts_lookup.get(article_key, "")
+                synthesis = synthesizer.synthesize(
+                    chunk=chunk_obj, target=target_obj, recon=recon_obj, resolution=resolution_obj,
+                    original_article_text=original_text
+                )
+            except Exception as e:
+                logger.error("Synthesis failed for chunk %s: %s", chunk_id, e)
+                skipped += 1
+                continue
+
+            # Build result entry
+            entry = {
+                "chunk_id": chunk_id,
+                "target_article": target_article_data,
+                "before_state": {
+                    "text": synthesis.before_state.text,
+                    "annotations": [
+                        {
+                            "marker_index": a.marker_index,
+                            "reference_text": a.reference_text,
+                            "object": a.object,
+                            "resolved_content": a.resolved_content,
+                            "source": a.source.value,
+                            "start_offset": a.start_offset,
+                            "end_offset": a.end_offset,
+                            "retrieval_metadata": a.retrieval_metadata,
+                        }
+                        for a in synthesis.before_state.annotations
+                    ],
+                },
+                "after_state": {
+                    "text": synthesis.after_state.text,
+                    "annotations": [
+                        {
+                            "marker_index": a.marker_index,
+                            "reference_text": a.reference_text,
+                            "object": a.object,
+                            "resolved_content": a.resolved_content,
+                            "source": a.source.value,
+                            "start_offset": a.start_offset,
+                            "end_offset": a.end_offset,
+                            "retrieval_metadata": a.retrieval_metadata,
+                        }
+                        for a in synthesis.after_state.annotations
+                    ],
+                },
+                "metadata": synthesis.metadata,
+            }
+
+            synthesis_results.append(entry)
+            processed += 1
+
+        # Store and analyze
+        self.legal_state_results = synthesis_results
+        self.legal_state_analysis = self._analyze_legal_state_results(synthesis_results, processed, skipped)
+
+        logger.info(
+            "Step 8 completed: Synthesized %d chunks (skipped %d). Total annotations: before=%d, after=%d",
+            processed,
+            skipped,
+            sum(len(e["before_state"]["annotations"]) for e in synthesis_results),
+            sum(len(e["after_state"]["annotations"]) for e in synthesis_results),
+        )
+
+        return synthesis_results
+
+    def _analyze_legal_state_results(self, results: List[Dict], processed: int, skipped: int) -> Dict:
+        """Compute simple analysis stats for synthesized legal states."""
+        total_before_annotations = sum(len(r.get("before_state", {}).get("annotations", [])) for r in results)
+        total_after_annotations = sum(len(r.get("after_state", {}).get("annotations", [])) for r in results)
+        chunks_with_before = sum(1 for r in results if r.get("before_state", {}).get("annotations"))
+        chunks_with_after = sum(1 for r in results if r.get("after_state", {}).get("annotations"))
+
+        return {
+            "processed_chunks": processed,
+            "skipped_chunks": skipped,
+            "annotation_counts": {
+                "total_before_annotations": total_before_annotations,
+                "total_after_annotations": total_after_annotations,
+            },
+            "coverage": {
+                "chunks_with_before_annotations": chunks_with_before,
+                "chunks_with_after_annotations": chunks_with_after,
+            },
+        }
 
     def save_results(self, output_dir: Path, filename_prefix: str = "pipeline_results") -> Path:
         """

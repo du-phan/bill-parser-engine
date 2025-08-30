@@ -14,7 +14,7 @@ e) la classification et les phrases de risques ou les conseils de prudence prév
 ---
 
 
-L 309/30            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/30            FR                         Journal officiel de l'Union européenne                                24.11.2009
 
 f) l'utilisation ou les utilisations pour lesquelles le produit est autorisé;
 

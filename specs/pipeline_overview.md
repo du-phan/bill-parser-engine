@@ -1,6 +1,6 @@
 # Bill Parser Engine: Pipeline Overview & Current Status
 
-_Last updated: 2024-06-22_
+_Last updated: 2025-08-12_
 
 ## 1. Introduction: The Lawyer's Mental Model
 
@@ -65,6 +65,10 @@ Here is the status and role of each component in the pipeline.
 - **Testing**: Evidence of extensive testing with edge case handling
 - **Integration**: Seamlessly integrated with pipeline
 
+**Notes / Risks**
+
+- None critical identified. Design is rule-based and deterministic as intended.
+
 ---
 
 ### **Step 2: TargetArticleIdentifier**
@@ -87,6 +91,10 @@ Here is the status and role of each component in the pipeline.
 - **Data Model**: `TargetArticle` with proper operation type enumeration
 - **Integration**: Properly integrated with BillSplitter inheritance hints
 
+**Notes / Risks**
+
+- Works via Mistral JSON mode with inheritance logic. No blocking issues found.
+
 ---
 
 ### **Step 3: OriginalTextRetriever**
@@ -95,13 +103,13 @@ Here is the status and role of each component in the pipeline.
 - **Purpose**: To fetch the full, original text of the `TargetArticle` identified in the previous step. This is crucial because amendment text often refers to parts of the original law that are not explicitly quoted.
 - **Inputs**: A `TargetArticle` object.
 - **Outputs**: The original law article text (string) and retrieval metadata.
-- **Implementation**: A hybrid approach using the `pylegifrance` library first, with a fallback to web search. It is integrated with `cache_manager.py` for performance.
+- **Implementation**: Local-only retrieval for French codes under `data/fr_code_text/` and local EU law files under `data/eu_law_text/`, with deterministic/LLM subsection extraction when needed. Integrated with `cache_manager.py` for performance.
 
 **Status: ✅ FULLY IMPLEMENTED WITH COMPREHENSIVE FEATURES**
 
 - **Implementation Quality**: Excellent - Hybrid approach with multiple data sources
 - **Key Features**:
-  - Primary: pylegifrance API for French codes
+  - Primary: Local curated files for French codes (no external APIs)
   - EU Legal Texts: Local files from `/data/eu_law_text/` with LLM extraction
   - Hierarchical fallback: L. 118-1-2 → try L. 118-1 and extract subsection 2
   - Comprehensive code name mapping
@@ -109,6 +117,11 @@ Here is the status and role of each component in the pipeline.
   - Robust caching and error handling
 - **Data Sources**: Both French legal codes and EU regulations/directives
 - **Integration**: Properly handles TargetArticle objects and operation types
+
+**Notes / Risks**
+
+- Legifrance credentials are optional; without them, French code retrieval falls back to hierarchical extraction via LLM. That path is implemented but may be slower.
+- Logging mixes logger and print debug statements; standardize on structured logging.
 
 ---
 
@@ -138,6 +151,11 @@ _(Note: This corresponds to `TextReconstructor` in the spec)_
 - **Data Model**: `ReconstructorOutput` with proper three-field architecture for focused reference resolution
 - **Integration**: Properly integrated with all upstream components
 
+**Notes / Risks**
+
+- Centralized cache is wired, but in this module caching is temporarily disabled in code paths (explicitly bypassed) to force fresh processing. Re-enable caching once prompts are stable.
+- Result includes `last_detailed_result` for rich audit; good for downstream analytics.
+
 ---
 
 ### **Step 5: ReferenceLocator**
@@ -159,6 +177,10 @@ _(Note: This corresponds to `TextReconstructor` in the spec)_
   - Comprehensive caching
 - **Performance Revolution**: Achieves 38x efficiency gain through focused scanning
 - **Integration**: Properly consumes `ReconstructorOutput` and produces `LocatedReference` objects
+
+**Notes / Risks**
+
+- None critical. Focused scanning design is correctly reflected in code and data models.
 
 ---
 
@@ -182,6 +204,11 @@ _(Note: This corresponds to `TextReconstructor` in the spec)_
   - Confidence-based early termination and iterative refinement
 - **Data Model**: `LinkedReference` with grammatical object and resolution question
 - **Integration**: Properly handles context switching based on reference source type
+
+**Notes / Risks**
+
+- Iterative evaluator/optimizer pattern is implemented with early exit on high confidence. Good balance of quality and cost.
+- Caching is present; ensure cache-invalidation strategy when prompts change.
 
 ---
 
@@ -211,9 +238,16 @@ _(Note: This corresponds to `TextReconstructor` in the spec)_
   - Different strategies for DELETIONAL vs DEFINITIONAL references
   - Uses OriginalTextRetriever for external content fetching
   - LLM-based targeted extraction guided by resolution questions
+  - Guarded retry after large subsection carves (single retry) with configurable window size (`qa_retry_window_chars`, default 300)
+  - Deterministic-first retrieval: prefer `OriginalTextRetriever.fetch_article_text`; EU file matching via LLM is used only as a fallback when deterministic retrieval fails
   - Comprehensive caching and error handling
 - **Data Model**: `ResolutionResult` with resolved references and focused content
 - **Integration**: Properly handles both reference types and integrates with OriginalTextRetriever
+
+**Notes / Risks**
+
+- EU regulation access: the resolver now prefers deterministic retrieval via `OriginalTextRetriever` first; if content is not deterministically available, it falls back to scanning `data/eu_law_text/` with an LLM matcher (e.g., `Règlement CE No 1107_2009/Article_3/Point_11.md`). Maintain directory naming conventions.
+- For French internal references (e.g., "au 3° du II"), resolver uses the original or after-state article text as context (appropriate). The guarded retry mitigates occasional empty QA extractions after aggressive carves.
 
 ---
 
@@ -248,6 +282,7 @@ _(Note: This corresponds to `TextReconstructor` in the spec)_
 - Comprehensive error handling and caching throughout
 - Proper data models and type safety
 - Excellent integration between components
+- Improved robustness in Step 7 due to guarded retry after large subsection carves and deterministic-first retrieval ordering
 - Production-ready code quality
 
 **Critical Gap:**
@@ -257,3 +292,80 @@ _(Note: This corresponds to `TextReconstructor` in the spec)_
 
 **Recommendation:**
 The implementation is of exceptional quality for Steps 1-7, but Step 8 needs to be implemented to complete the pipeline and deliver the final `LegalAnalysisOutput` with resolved `BeforeState` and `AfterState` text fragments.
+
+---
+
+## 5. Orchestration, Outputs, and Observed Inconsistencies
+
+- **Pipeline Orchestrator**: `bill_parser_engine/core/reference_resolver/pipeline.py` orchestrates Steps 1–7. `run_full_pipeline()` returns results including reference resolution (Step 7).
+- **Result Saving**: `save_results()` currently persists through Step 6 only (linking) and omits Step 7 resolution data. Update to include resolution results and analyses.
+- **Tracing in Script**: `scripts/run_pipeline.py` references tracing APIs (`get_current_trace_status`, `export_traces_after_step`, `export_chunk_traces_to_file`, `run_full_pipeline_with_tracing`) that are not implemented in `pipeline.py`. Align the script with actual APIs or implement the tracing helpers.
+- **API Layer**: `bill_parser_engine/api/routes.py` is empty. There is no HTTP surface; current usage is via the CLI script.
+- **Logging**: Some modules mix `print` and `logger`. Standardize on logging with consistent levels and structured fields.
+- **Rate Limiting**: A shared, conservative limiter is implemented. Consider grouping and batching where possible to reduce latency while keeping within limits.
+
+---
+
+## 6. Prioritized Action Plan to Finish and Harden the System
+
+1. Implement Step 8: `LegalStateSynthesizer` (critical)
+
+- Inputs: `ResolutionResult`, `ReconstructorOutput`, (`BillChunk`, `TargetArticle` for context)
+- Outputs: `LegalAnalysisOutput` with `BeforeState` and `AfterState` strings (+ metadata)
+- Strategy: JSON-mode substitution with grammatical preservation (two calls: before/after). Handle long inserts gracefully. Validate full substitution coverage.
+- Add data models: `LegalState`, `LegalAnalysisOutput` in `models.py`.
+
+2. Wire Step 8 into the pipeline
+
+- Add `step_8_synthesize_states()` in `pipeline.py` and include it in `run_full_pipeline()` and `save_results()`.
+- Extend `save_results()` to persist Step 7 and Step 8 outputs.
+
+3. Fix orchestration inconsistencies
+
+- Either implement the tracing helpers referenced by `scripts/run_pipeline.py` or simplify the script to match the current `pipeline.py` API.
+- Ensure the script can accept a bill path argument so we can run on arbitrary files.
+
+4. Caching consistency + performance
+
+- Re-enable caching inside `LegalAmendmentReconstructor` (was temporarily disabled) and verify cache keys across components use stable prompt/version hashing.
+- Add a simple cache invalidation version flag per prompt set to allow safe prompt iteration.
+
+5. EU file resolution robustness
+
+- Keep the current LLM-based matcher, but add a fast deterministic path for the most common patterns (e.g., Article_X/Point_Y) when present.
+- Add guardrails when a file is missing to fall back to `overview.md` or the parent article.
+
+6. Logging and observability
+
+- Replace stray `print` statements with logger calls.
+- Add per-step duration metrics and error counts in orchestrator logs; expose a compact summary.
+
+7. Testing
+
+- Add unit tests for: BillSplitter edge-cases; TargetArticleIdentifier inheritance; OriginalTextRetriever fallbacks; InstructionDecomposer parsing patterns; ReferenceLocator focused scanning; ReferenceObjectLinker object correctness; ReferenceResolver EU/internal cases; LegalStateSynthesizer substitution.
+- Add an integration test that runs Steps 1–8 against a small sample extracted from the provided bill.
+
+8. Optional: Minimal API
+
+- Provide a thin FastAPI endpoint to submit bill text and return the final analysis JSON for interactive use.
+
+---
+
+## 7. Readiness to Analyze `duplomb_legislative_bill.md`
+
+- The stack can already process Steps 1–7. Implementing Step 8 will produce the final, lawyer-readable `BeforeState`/`AfterState` outputs.
+- To run locally post-Step 8:
+  - Add a CLI flag or modify `scripts/run_pipeline.py` to accept an arbitrary input path (e.g., the attached `/Users/duphan/Downloads/duplomb_legislative_bill.md`).
+  - Ensure `MISTRAL_API_KEY` is set; optionally set `LEGIFRANCE_CLIENT_ID` and `LEGIFRANCE_CLIENT_SECRET` for better French code retrieval.
+  - Verify EU resolution for references to `règlement (CE) n° 1107/2009` (repo contains structured articles/points already).
+
+---
+
+## 8. Quality Bar Assessment (High-level)
+
+- **Architecture**: Modular and SOLID. Clear separation of concerns. Data models are explicit and fit-for-purpose.
+- **Performance**: Focused scanning (Step 5) and question-guided extraction (Step 7) significantly reduce token usage; good centralized rate limiting.
+- **Maintainability**: Prompts centralized; caching centralized; robust logging patterns, with minor cleanup needed.
+- **Primary Gap**: Missing Step 8 prevents delivery of the core value (resolved `BeforeState`/`AfterState`).
+
+Delivering Step 8 and the orchestration fixes will complete the MVP needed to analyze the target bill end-to-end.

@@ -17,11 +17,12 @@ KEY FEATURES:
 """
 
 import logging
+import json
 import os
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 
 from bill_parser_engine.core.reference_resolver.models import (
     AmendmentOperation, 
@@ -270,7 +271,12 @@ class LegalAmendmentReconstructor:
 
             # Calculate processing metrics
             processing_time = int((time.time() - start_time) * 1000)
-            success = len(operations_failed) == 0 and validation.validation_status != "ERRORS"
+            # Stricter success semantics: all operations must have applied and validation must be VALID
+            success = (
+                len(operations_failed) == 0
+                and len(operations_applied) == len(operations)
+                and validation.validation_status == "VALID"
+            )
 
             # Extract focused output fragments from the 3-step process
             deleted_or_replaced_text = self._extract_deleted_or_replaced_text(operations_applied, original_law_article)
@@ -596,23 +602,139 @@ class LegalAmendmentReconstructor:
             ValueError: If inputs are invalid
             RuntimeError: If critical system components fail
         """
-        # Extract target article reference from the chunk
-        if amendment_chunk.target_article:
-            if amendment_chunk.target_article.code and amendment_chunk.target_article.article:
+        # Extract target article reference from the chunk (for logging)
+        if amendment_chunk.target_article and amendment_chunk.target_article.article:
+            if amendment_chunk.target_article.code:
                 target_article_reference = f"{amendment_chunk.target_article.code}::{amendment_chunk.target_article.article}"
-            elif amendment_chunk.target_article.article:
-                target_article_reference = amendment_chunk.target_article.article
             else:
-                target_article_reference = "unknown"
+                target_article_reference = amendment_chunk.target_article.article
         else:
             target_article_reference = "unknown"
         
-        # Use the 3-step architecture to generate focused output
-        return self.reconstruct_amendment(
-            original_law_article=original_law_article,
-            amendment_instruction=amendment_chunk.text,
-            target_article_reference=target_article_reference,
-            chunk_id=amendment_chunk.chunk_id
-        )
+        # Implementation mirrors reconstruct_amendment, with enrichment using chunk context before apply
+        if not amendment_chunk.text or not amendment_chunk.text.strip():
+            raise ValueError("Amendment instruction cannot be empty")
+
+        # INSERT may have empty base; keep as is
+        is_insert_operation = not original_law_article or not original_law_article.strip()
+        if is_insert_operation:
+            original_law_article = ""
+
+        start_time = time.time()
+        operations_applied: List[AmendmentOperation] = []
+        operations_failed: List[Tuple[AmendmentOperation, str]] = []
+        current_text = original_law_article
+
+        try:
+            # Step 1: Decompose
+            operations = self.decomposer.parse_instruction(amendment_chunk.text)
+            if not operations:
+                reconstructor_output = ReconstructorOutput("", "", original_law_article)
+                detailed_result = ReconstructionResult(
+                    success=False,
+                    final_text=original_law_article,
+                    operations_applied=[],
+                    operations_failed=[(None, "No operations could be extracted from instruction")],
+                    original_text_length=len(original_law_article),
+                    final_text_length=len(original_law_article),
+                    processing_time_ms=int((time.time() - start_time) * 1000),
+                    validation_warnings=["No operations found in instruction"],
+                )
+                self.last_detailed_result = detailed_result
+                return reconstructor_output
+
+            # Enrich operations with chunk scope (e.g., numbered point context)
+            operations = self._enrich_operations_with_chunk_context(operations, amendment_chunk)
+
+            # Step 2: Apply sequentially
+            for operation in operations:
+                result_op = self.applier.apply_single_operation(current_text, operation)
+                if result_op.success:
+                    current_text = result_op.modified_text
+                    operations_applied.append(operation)
+                else:
+                    operations_failed.append((operation, result_op.error_message or "Unknown error"))
+
+            # Step 3: Validate
+            validation = self.validator.validate_legal_coherence(
+                original_text=original_law_article, modified_text=current_text, operations=operations_applied
+            )
+
+            processing_time = int((time.time() - start_time) * 1000)
+            success = (
+                len(operations_failed) == 0
+                and len(operations_applied) == len(operations)
+                and validation.validation_status == "VALID"
+            )
+
+            deleted_or_replaced_text = self._extract_deleted_or_replaced_text(operations_applied, original_law_article)
+            newly_inserted_text = self._extract_newly_inserted_text(operations_applied)
+
+            self.last_detailed_result = ReconstructionResult(
+                success=success,
+                final_text=current_text,
+                operations_applied=operations_applied,
+                operations_failed=operations_failed,
+                original_text_length=len(original_law_article),
+                final_text_length=len(current_text),
+                processing_time_ms=processing_time,
+                validation_warnings=self._extract_validation_warnings(validation),
+            )
+
+            return ReconstructorOutput(
+                deleted_or_replaced_text=deleted_or_replaced_text,
+                newly_inserted_text=newly_inserted_text,
+                intermediate_after_state_text=current_text,
+            )
+
+        except Exception as e:
+            processing_time = int((time.time() - start_time) * 1000)
+            self.last_detailed_result = ReconstructionResult(
+                success=False,
+                final_text=original_law_article,
+                operations_applied=operations_applied,
+                operations_failed=operations_failed + [(None, f"Critical reconstruction failure: {e}")],
+                original_text_length=len(original_law_article),
+                final_text_length=len(original_law_article),
+                processing_time_ms=processing_time,
+                validation_warnings=[f"System error prevented full processing: {e}"],
+            )
+            return ReconstructorOutput("", "", original_law_article)
+
+    def _enrich_operations_with_chunk_context(
+        self, operations: List[AmendmentOperation], chunk: BillChunk
+    ) -> List[AmendmentOperation]:
+        """Augment operations with structured scope hints from chunk context (e.g., numbered point).
+        If chunk.numbered_point_introductory_phrase contains "Le N° de l'article ...", add point=N to position_hint JSON.
+        """
+        point_num: Optional[int] = None
+        intro = chunk.numbered_point_introductory_phrase or ""
+        import re as _re
+        m = _re.search(r"(?i)\ble\s+(\d+)°\b", intro)
+        if m:
+            try:
+                point_num = int(m.group(1))
+            except Exception:
+                point_num = None
+
+        enriched: List[AmendmentOperation] = []
+        for op in operations:
+            hint_obj: Dict[str, Any] = {}
+            # Load existing JSON hint if any
+            try:
+                if op.position_hint:
+                    parsed = json.loads(op.position_hint)
+                    if isinstance(parsed, dict):
+                        hint_obj = parsed
+            except Exception:
+                hint_obj = {}
+            # Attach point scope if available
+            if point_num is not None:
+                hint_obj.setdefault("point", point_num)
+            # Serialize back
+            if hint_obj:
+                op.position_hint = json.dumps(hint_obj, ensure_ascii=False)
+            enriched.append(op)
+        return enriched
 
  

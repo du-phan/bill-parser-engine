@@ -18,7 +18,7 @@ This article contains 4 parts:
 
 Sur demande, ils communiquent les informations contenues dans ces registres à l'autorité compétente. Les tiers, tels que l'industrie de l'eau potable, les distributeurs ou les habitants, peuvent demander à avoir accès à ces informations en s'adressant à l'autorité compétente.
 
-Les autorités compétentes donnent accès à ces informations conformément au droit national ou communautaire applicable.
+L. - es autorités compétentes donnent accès à ces informations conformément au droit national ou communautaire applicable.
 
 Au plus tard le 14 décembre 2012, la Commission présente un rapport au Parlement européen et au Conseil sur les coûts et les avantages de la traçabilité des informations depuis les utilisateurs jusqu'aux distributeurs concernant les utilisations de produits phytopharmaceutiques sur des produits agricoles, assorti, le cas échéant, de propositions législatives appropriées.
 

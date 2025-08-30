@@ -175,17 +175,13 @@ def main():
         print(f"   Please ensure they are set in {env_file}")
         sys.exit(1)
     
-    # Check optional Legifrance credentials
-    legifrance_available = os.getenv("LEGIFRANCE_CLIENT_ID") and os.getenv("LEGIFRANCE_CLIENT_SECRET")
-    if legifrance_available:
-        print("✓ Legifrance credentials available - will use API for retrieval")
-    else:
-        print("⚠ Legifrance credentials not available - will use fallback methods")
+    # No external Legifrance API needed; using local stores
+    print("✓ Using local stores for French/EU legal texts (no external API)")
     
     print("✓ Environment variables loaded")
     
     # Define paths
-    bill_file = project_root / "data" / "legal_bill" / "full_legislative_bill.md"
+    bill_file = project_root / "data" / "legal_bill" / "duplomb_legislative_bill.md"
     output_dir = project_root / "scripts" / "output"
     
     try:

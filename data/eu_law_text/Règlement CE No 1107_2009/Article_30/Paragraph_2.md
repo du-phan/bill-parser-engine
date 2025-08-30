@@ -4,4 +4,4 @@
 ---
 
 
-24.11.2009 | FR | Journal officiel de l'Union européenne | L 309/19
+24. 11.2009 | FR | Journal officiel de l'Union européenne | L 309/19

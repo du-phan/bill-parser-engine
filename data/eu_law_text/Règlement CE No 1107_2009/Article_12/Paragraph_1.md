@@ -4,6 +4,6 @@
 ---
 
 
-L'Autorité met le projet de rapport d'évaluation à la disposition du public après avoir laissé s'écouler deux semaines pour permettre au demandeur de demander, en application de l'article 63, que certaines parties du projet de rapport d'évaluation restent confidentielles.
+L. - 'Autorité met le projet de rapport d'évaluation à la disposition du public après avoir laissé s'écouler deux semaines pour permettre au demandeur de demander, en application de l'article 63, que certaines parties du projet de rapport d'évaluation restent confidentielles.
 
-L'Autorité autorise la présentation d'observations écrites pendant une période de soixante jours.
+L. - 'Autorité autorise la présentation d'observations écrites pendant une période de soixante jours.

@@ -17,7 +17,7 @@ This article contains 5 parts:
 
 1. Par dérogation à l'article 28, les expériences ou les essais effectués à des fins de recherche ou de développement impliquant l'émission dans l'environnement d'un produit phytopharmaceutique non autorisé ou impliquant l'utilisation non autorisée d'un produit phytopharmaceutique ne peuvent avoir lieu que si l'État membre sur le territoire duquel l'expérience ou l'essai doit être réalisé a évalué les données disponibles et délivré un permis pour effectuer des essais. Ce permis peut limiter les quantités à utiliser et les zones à traiter, et imposer des conditions supplémentaires destinées à prévenir les éventuels effets nocifs sur la santé humaine ou animale ou tout effet négatif inacceptable sur l'environnement, notamment la nécessité d'empêcher que des aliments pour animaux et des denrées alimentaires contenant des résidus entrent dans la chaîne alimentaire, sauf si une disposition correspondante a déjà été établie en vertu du règlement (CE) no 396/2005.
 
-L'État membre peut autoriser un programme d'expériences ou d'essais à l'avance ou le subordonner à l'obtention d'un permis pour chaque expérimentation ou essai.
+L. - 'État membre peut autoriser un programme d'expériences ou d'essais à l'avance ou le subordonner à l'obtention d'un permis pour chaque expérimentation ou essai.
 
 2. Une demande est introduite auprès de l'État membre sur le territoire duquel l'expérience ou l'essai doit être effectué. Elle est accompagnée d'un dossier contenant toutes les informations disponibles permettant d'évaluer les effets potentiels sur la santé humaine ou animale ou les incidences éventuelles sur l'environnement.
 

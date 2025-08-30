@@ -12,7 +12,7 @@ This article contains 4 parts:
 ## Full Content
 
 #### Article 49
-Mise sur le marché de semences traitées
+M. - ise sur le marché de semences traitées
 
 1. Les États membres n'interdisent pas la mise sur le marché et l'utilisation de semences traitées à l'aide de produits phytopharmaceutiques autorisés pour cette utilisation dans un État membre au moins.
 
@@ -24,4 +24,4 @@ Mise sur le marché de semences traitées
 ---
 
 
-L 309/26            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/26            FR                         Journal officiel de l'Union européenne                                24.11.2009

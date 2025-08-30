@@ -20,8 +20,8 @@ h) un échantillon du produit destiné à être introduit, si l'autorité compé
 
 i) le nom et le numéro d'enregistrement du produit de référence.
 
-Les exigences en matière d'informations peuvent être modifiées ou complétées et des détails supplémentaires ainsi que des exigences spécifiques sont définis dans le cas d'une demande concernant un produit phytopharmaceutique pour lequel un permis de commerce parallèle a déjà été accordé et dans le cas d'une demande concernant un produit phytopharmaceutique à usage personnel, selon la procédure de réglementation avec contrôle visée à l'article 79, paragraphe 4.
+L. - es exigences en matière d'informations peuvent être modifiées ou complétées et des détails supplémentaires ainsi que des exigences spécifiques sont définis dans le cas d'une demande concernant un produit phytopharmaceutique pour lequel un permis de commerce parallèle a déjà été accordé et dans le cas d'une demande concernant un produit phytopharmaceutique à usage personnel, selon la procédure de réglementation avec contrôle visée à l'article 79, paragraphe 4.
 ---
 
 
-L 309/28 | FR | Journal officiel de l'Union européenne | 24.11.2009
+L. - 309/28 | FR | Journal officiel de l'Union européenne | 24.11.2009

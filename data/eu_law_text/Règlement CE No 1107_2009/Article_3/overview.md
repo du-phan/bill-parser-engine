@@ -41,7 +41,7 @@ This article contains 33 parts:
 ## Full Content
 
 Article 3
-Définitions
+D. - éfinitions
 
 Aux fins du présent règlement, on entend par:
 
@@ -53,7 +53,7 @@ Aux fins du présent règlement, on entend par:
 
 4) «substance préoccupante», toute substance intrinsèquement capable de provoquer un effet néfaste pour l'homme, les animaux ou l'environnement et contenue ou produite dans un produit phytopharmaceutique à une concentration suffisante pour risquer de provoquer un tel effet.
 
-Les substances préoccupantes comprennent, sans se limiter à celles-ci, les substances satisfaisant aux critères fixés pour être classées dangereuses conformément au règlement (CE) n° 1272/2008 du Parlement européen et du Conseil du 16 décembre 2008 relatif à la classification, à l'étiquetage et à l'emballage des substances et des mélanges (¹) et contenues dans le produit phytopharmaceutique à une concentration justifiant que le produit soit considéré comme dangereux au sens de l'article 3 de la directive 1999/45/CE;
+L. - es substances préoccupantes comprennent, sans se limiter à celles-ci, les substances satisfaisant aux critères fixés pour être classées dangereuses conformément au règlement (CE) n° 1272/2008 du Parlement européen et du Conseil du 16 décembre 2008 relatif à la classification, à l'étiquetage et à l'emballage des substances et des mélanges (¹) et contenues dans le produit phytopharmaceutique à une concentration justifiant que le produit soit considéré comme dangereux au sens de l'article 3 de la directive 1999/45/CE;
 
 5) «végétaux», les plantes vivantes et les parties vivantes de plantes, y compris les fruits et légumes frais et les semences;
 
@@ -73,7 +73,7 @@ Les substances préoccupantes comprennent, sans se limiter à celles-ci, les sub
 ---
 
 
-L 309/8             FR                         Journal officiel de l'Union européenne                                  24.11.2009
+L. - 309/8             FR                         Journal officiel de l'Union européenne                                  24.11.2009
 
 12) «lettre d'accès», tout document original par lequel le propriétaire de données protégées en vertu du présent règlement marque son accord sur l'utilisation de ces données, selon les conditions et modalités spécifiques, par l'autorité compétente en vue de l'autorisation d'un produit phytopharmaceutique ou de l'approbation d'une substance active, d'un synergiste ou d'un phytoprotecteur au profit d'un autre demandeur;
 
@@ -122,7 +122,7 @@ L 309/8             FR                         Journal officiel de l'Union europ
 ---
 
 
-24.11.2009 | FR | Journal officiel de l'Union européenne | L 309/9
+24. 11.2009 | FR | Journal officiel de l'Union européenne | L 309/9
 
 28) «traitement après récolte», traitement de végétaux ou de produits végétaux après récolte dans un espace isolé où aucun écoulement n'est possible, par exemple, dans un entrepôt;
 

@@ -14,4 +14,4 @@ e) freiner ou prévenir une croissance indésirable des végétaux, à l'excepti
 ---
 
 
-Ces produits sont dénommés «produits phytopharmaceutiques».
+C. - es produits sont dénommés «produits phytopharmaceutiques».

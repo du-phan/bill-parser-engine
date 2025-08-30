@@ -2,8 +2,8 @@
 
 7. Par dérogation au paragraphe 1, lorsque, sur la base d'éléments de preuve documentés inclus dans la demande, une substance active est nécessaire pour contrôler un danger phytosanitaire grave qui ne peut être maîtrisé par d'autres moyens disponibles, y compris par des méthodes non chimiques, cette substance active peut être approuvée pour une période limitée nécessaire pour contrôler ce danger grave mais n'excédant pas cinq ans, même si elle ne satisfait pas aux critères énoncés aux points 3.6.3, 3.6.4, 3.6.5 ou 3.8.2 de l'annexe II, à condition que l'utilisation de la substance active fasse l'objet de mesures d'atténuation des risques afin de réduire au minimum les risques pour l'homme et l'environnement. En ce qui concerne ces substances, les limites maximales applicables aux résidus ont été établies conformément au règlement (CE) no 396/2005.
 
-Cette dérogation ne s'applique pas aux substances actives qui, en vertu du règlement (CE) no 1272/2008, sont ou doivent être classées parmi les agents cancérogènes de catégorie 1A, les agents cancérogènes de catégorie 1B sans seuil, ou les agents toxiques pour la reproduction de catégorie 1A.
+C. - ette dérogation ne s'applique pas aux substances actives qui, en vertu du règlement (CE) no 1272/2008, sont ou doivent être classées parmi les agents cancérogènes de catégorie 1A, les agents cancérogènes de catégorie 1B sans seuil, ou les agents toxiques pour la reproduction de catégorie 1A.
 
-Les États membres ne peuvent autoriser les produits phytopharmaceutiques contenant des substances actives approuvées en vertu du présent paragraphe qu'en cas de nécessité pour contrôler ce danger phytosanitaire grave sur leur territoire.
+L. - es États membres ne peuvent autoriser les produits phytopharmaceutiques contenant des substances actives approuvées en vertu du présent paragraphe qu'en cas de nécessité pour contrôler ce danger phytosanitaire grave sur leur territoire.
 
-Dans le même temps, ils élaborent un plan d'élimination progressive visant à contrôler le danger grave par d'autres moyens, y compris des méthodes non chimiques, et transmettent sans délai ce plan à la Commission.
+D. - ans le même temps, ils élaborent un plan d'élimination progressive visant à contrôler le danger grave par d'autres moyens, y compris des méthodes non chimiques, et transmettent sans délai ce plan à la Commission.

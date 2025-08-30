@@ -40,18 +40,24 @@ class SharedRateLimiter:
                     cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, min_delay_seconds: float = 2.5):
+    def __init__(self, min_delay_seconds: float = 6.0):
         """
         Initialize the rate limiter (only once due to singleton).
         
         Args:
-            min_delay_seconds: Minimum seconds between API calls (increased from 2.0 to 3.5)
+            min_delay_seconds: Minimum seconds between API calls (increased from 3.0 to 6.0 to prevent 429 errors)
         """
         # Use a simple flag to ensure init runs only once
         if not hasattr(self, 'call_lock'):
             self.min_delay_seconds = min_delay_seconds
             self.last_api_call = 0.0
             self.call_lock = threading.Lock()
+            
+            # Circuit breaker for rate limit protection
+            self.consecutive_rate_limit_errors = 0
+            self.circuit_breaker_threshold = 5  # Pause after 5 consecutive rate limit errors
+            self.circuit_breaker_pause_duration = 60.0  # Pause for 60 seconds
+            self.circuit_breaker_reset_time = 0.0
     
     def wait_if_needed(self, component_name: str = "Unknown") -> None:
         """
@@ -62,6 +68,18 @@ class SharedRateLimiter:
         """
         with self.call_lock:
             current_time = time.time()
+            
+            # Check circuit breaker first
+            if (self.consecutive_rate_limit_errors >= self.circuit_breaker_threshold and 
+                current_time < self.circuit_breaker_reset_time):
+                remaining_pause = self.circuit_breaker_reset_time - current_time
+                print(f"🚫 {component_name}: Circuit breaker active. Pausing for {remaining_pause:.1f}s...")
+                time.sleep(remaining_pause)
+                # Reset circuit breaker after pause
+                self.consecutive_rate_limit_errors = 0
+                self.circuit_breaker_reset_time = 0.0
+                print(f"✅ Circuit breaker reset. Resuming normal operation.")
+            
             time_since_last_call = current_time - self.last_api_call
             
             if time_since_last_call < self.min_delay_seconds:
@@ -82,6 +100,24 @@ class SharedRateLimiter:
         with self.call_lock:
             self.min_delay_seconds = new_delay_seconds
             print(f"📊 Rate limiter updated to {new_delay_seconds}s delay")
+
+    def reset_delay(self) -> None:
+        """
+        Reset the rate limiter to its default delay.
+        Useful when the system has been idle or after a long pause.
+        """
+        with self.call_lock:
+            self.min_delay_seconds = 6.0
+            print(f"🔄 Rate limiter reset to default 6.0s delay")
+
+    def get_current_delay(self) -> float:
+        """
+        Get the current delay setting.
+        
+        Returns:
+            Current delay in seconds
+        """
+        return self.min_delay_seconds
 
     def execute_with_retry(self, api_call: Callable[[], Any], component_name: str = "Unknown", max_retries: int = 3) -> Any:
         """
@@ -121,10 +157,20 @@ class SharedRateLimiter:
                 )
                 
                 if is_rate_limit_error and attempt < max_retries:
-                    # Calculate exponential backoff delay with jitter
-                    base_delay = 5.0  # Start with 5 seconds
-                    exponential_delay = base_delay * (2 ** attempt)
-                    jitter = random.uniform(0.5, 1.5)  # Add 50% jitter
+                    # Track consecutive rate limit errors for circuit breaker
+                    self.consecutive_rate_limit_errors += 1
+                    
+                    # Check if we should trigger circuit breaker
+                    if self.consecutive_rate_limit_errors >= self.circuit_breaker_threshold:
+                        self.circuit_breaker_reset_time = time.time() + self.circuit_breaker_pause_duration
+                        logger.error(f"{component_name}: Circuit breaker triggered after {self.consecutive_rate_limit_errors} consecutive rate limit errors. "
+                                   f"Pausing for {self.circuit_breaker_pause_duration}s.")
+                        print(f"🚫 Circuit breaker triggered! Pausing for {self.circuit_breaker_pause_duration}s...")
+                    
+                    # Calculate exponential backoff delay with jitter - MORE CONSERVATIVE
+                    base_delay = 5.0  # Increased from 3.0 to 5.0 seconds
+                    exponential_delay = base_delay * (2.0 ** attempt)  # Increased from 1.5** to 2.0**
+                    jitter = random.uniform(0.9, 1.1)  # Reduced jitter range for more predictability
                     retry_delay = exponential_delay * jitter
                     
                     logger.warning(f"{component_name}: Rate limit hit (attempt {attempt + 1}/{max_retries + 1}). "
@@ -133,13 +179,29 @@ class SharedRateLimiter:
                     
                     time.sleep(retry_delay)
                     
-                    # Also increase the global rate limit for subsequent calls
-                    new_delay = min(self.min_delay_seconds * 1.5, 10.0)  # Cap at 10 seconds
+                    # Also increase the global rate limit for subsequent calls - MORE AGGRESSIVE
+                    new_delay = min(self.min_delay_seconds * 1.5, 10.0)  # Increased multiplier from 1.3 to 1.5, cap from 8.0 to 10.0
                     if new_delay > self.min_delay_seconds:
                         self.update_delay(new_delay)
                         
                 else:
                     # Either not a rate limit error, or we've exhausted retries
+                    if is_rate_limit_error:
+                        # Track consecutive rate limit errors for circuit breaker
+                        self.consecutive_rate_limit_errors += 1
+                        
+                        # Check if we should trigger circuit breaker
+                        if self.consecutive_rate_limit_errors >= self.circuit_breaker_threshold:
+                            self.circuit_breaker_reset_time = time.time() + self.circuit_breaker_pause_duration
+                            logger.error(f"{component_name}: Circuit breaker triggered after {self.consecutive_rate_limit_errors} consecutive rate limit errors. "
+                                       f"Pausing for {self.circuit_breaker_pause_duration}s.")
+                            print(f"🚫 Circuit breaker triggered! Pausing for {self.circuit_breaker_pause_duration}s...")
+                        
+                        logger.error(f"{component_name}: All retries exhausted for rate limit error. Final delay: {self.min_delay_seconds}s")
+                        print(f"💥 {component_name}: All retries exhausted. Consider increasing delays or reducing API call frequency.")
+                    else:
+                        # Reset consecutive rate limit errors on successful call
+                        self.consecutive_rate_limit_errors = 0
                     break
         
         # If we get here, all retries failed
@@ -210,10 +272,27 @@ def call_mistral_json_model(
             return json.loads(content)
 
     except Exception as e:
-        logger.error(
-            f"Error during LLM call for component '{component_name}': {e}",
-            exc_info=True,
+        # Check if this is a rate limit error and provide specific feedback
+        error_message = str(e).lower()
+        is_rate_limit_error = (
+            "429" in error_message or 
+            "too many requests" in error_message or
+            "rate limit" in error_message or
+            "service tier capacity exceeded" in error_message
         )
+        
+        if is_rate_limit_error:
+            current_delay = rate_limiter.get_current_delay()
+            logger.error(
+                f"Rate limit error for component '{component_name}'. Current delay: {current_delay}s. "
+                f"Consider increasing delays or reducing API call frequency. Error: {e}"
+            )
+            print(f"💥 Rate limit error for {component_name}. Current delay: {current_delay}s")
+        else:
+            logger.error(
+                f"Error during LLM call for component '{component_name}': {e}",
+                exc_info=True,
+            )
 
     return None
 

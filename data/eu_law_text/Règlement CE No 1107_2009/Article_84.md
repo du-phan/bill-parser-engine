@@ -1,9 +1,9 @@
 ## Article 84
 ### Entrée en vigueur et application
 
-Le présent règlement entre en vigueur le vingtième jour suivant celui de sa publication au Journal officiel de l'Union européenne.
+L. - e présent règlement entre en vigueur le vingtième jour suivant celui de sa publication au Journal officiel de l'Union européenne.
 
-Le 14 juin 2011 au plus tard, la Commission arrête ce qui suit:
+L. - e 14 juin 2011 au plus tard, la Commission arrête ce qui suit:
 
 a) un règlement contenant la liste des substances actives déjà approuvées au moment de l'adoption du présent règlement;
 
@@ -15,9 +15,9 @@ d) un règlement concernant les principes uniformes d'évaluation des risques de
 
 e) un règlement contenant les exigences relatives à l'étiquetage des produits phytopharmaceutiques visées à l'article 65, paragraphe 1.
 
-Le présent règlement est applicable à partir du 14 juin 2011.
+L. - e présent règlement est applicable à partir du 14 juin 2011.
 
-Le présent règlement est obligatoire dans tous ses éléments et directement applicable dans tout État membre.
+L. - e présent règlement est obligatoire dans tous ses éléments et directement applicable dans tout État membre.
 
 Fait à Strasbourg, le 21 octobre 2009.
 
@@ -27,7 +27,7 @@ Fait à Strasbourg, le 21 octobre 2009.
 ---
 
 
-24.11.2009 FR Journal officiel de l'Union européenne L 309/39
+24. 11.2009 FR Journal officiel de l'Union européenne L 309/39
 
 # ANNEXE I
 
@@ -35,19 +35,19 @@ Fait à Strasbourg, le 21 octobre 2009.
 
 ### Zone A – Nord
 
-Les États membres suivants appartiennent à cette zone:
+L. - es États membres suivants appartiennent à cette zone:
 
-Danemark, Estonie, Lettonie, Lituanie, Finlande, Suède.
+D. - anemark, Estonie, Lettonie, Lituanie, Finlande, Suède.
 
 ### Zone B – Centre
 
-Les États membres suivants appartiennent à cette zone:
+L. - es États membres suivants appartiennent à cette zone:
 
 Belgique, République tchèque, Allemagne, Irlande, Luxembourg, Hongrie, Pays-Bas, Autriche, Pologne, Roumanie, Slovénie, Slovaquie, Royaume-Uni.
 
 ### Zone C – Sud
 
-Les États membres suivants appartiennent à cette zone:
+L. - es États membres suivants appartiennent à cette zone:
 
 Bulgarie, Grèce, Espagne, France, Italie, Chypre, Malte, Portugal.
 ---
@@ -59,25 +59,25 @@ Procédure et critères d'approbation des substances actives, phytoprotecteurs e
 
 ## 1. Évaluation
 
-### 1.1. 
+### 1.1.
 Pendant le processus d'évaluation et de décision prévu aux articles 4 à 21, l'État membre rapporteur et l'Autorité collaborent avec les demandeurs, afin de résoudre rapidement toute question relative au dossier, de déterminer d'emblée toute explication supplémentaire ou tout complément d'étude nécessaires en vue de l'évaluation appropriée de celui-ci, y compris les informations permettant d'éliminer la nécessité de restreindre l'approbation, de modifier quelque projet de condition d'utilisation du produit phytopharmaceutique que ce soit ou encore de modifier la nature ou la composition de celui-ci de manière à assurer une conformité parfaite aux exigences du présent règlement.
 
-### 1.2. 
-L'évaluation par l'Autorité et l'État membre rapporteur doit être fondée sur des principes scientifiques et sur les recommandations d'experts.
+### 1.2.
+L. - 'évaluation par l'Autorité et l'État membre rapporteur doit être fondée sur des principes scientifiques et sur les recommandations d'experts.
 
-### 1.3. 
+### 1.3.
 Pendant le processus d'évaluation et de décision prévu aux articles 4 à 21, les États membres et l'Autorité prennent en compte toute nouvelle recommandation adoptée au sein du Comité permanent de la chaîne alimentaire et de la santé animale dans le but d'affiner, le cas échéant, l'évaluation des risques.
 
 ## 2. Critères de décision généraux
 
-### 2.1. 
-L'article 4 n'est considéré comme appliqué que si, à la lumière du dossier soumis, l'autorisation est jugée possible dans au moins un État membre, pour au moins un produit phytopharmaceutique contenant la substance active visée et pour au moins une des utilisations représentatives.
+### 2.1.
+L. - 'article 4 n'est considéré comme appliqué que si, à la lumière du dossier soumis, l'autorisation est jugée possible dans au moins un État membre, pour au moins un produit phytopharmaceutique contenant la substance active visée et pour au moins une des utilisations représentatives.
 
 ### 2.2. Communication d'informations supplémentaires
 
 En principe, l'approbation d'une substance active, d'un phytoprotecteur ou d'un synergiste est subordonnée au dépôt d'un dossier complet.
 
-Dans certains cas exceptionnels, l'approbation de la substance active, du phytoprotecteur ou du synergiste peut être accordée bien que certaines informations n'aient pas encore été communiquées. Cette disposition s'applique:
+D. - ans certains cas exceptionnels, l'approbation de la substance active, du phytoprotecteur ou du synergiste peut être accordée bien que certaines informations n'aient pas encore été communiquées. Cette disposition s'applique:
 
 a) lorsque les exigences relatives aux données visées ont été modifiées ou précisées après le dépôt du dossier, ou
 
@@ -87,17 +87,17 @@ b) lorsque ces informations sont considérées comme étant de nature confirmati
 
 Si nécessaire, l'approbation peut être soumise aux conditions et restrictions visées à l'article 6.
 
-Lorsque l'État membre rapporteur estime que le dossier déposé est incomplet et que la substance active ne pourrait dès lors être approuvée qu'avec certaines restrictions, il se met en rapport avec le demandeur au début de la procédure pour obtenir un complément d'informations pouvant permettre l'élimination de ces restrictions.
+L. - orsque l'État membre rapporteur estime que le dossier déposé est incomplet et que la substance active ne pourrait dès lors être approuvée qu'avec certaines restrictions, il se met en rapport avec le demandeur au début de la procédure pour obtenir un complément d'informations pouvant permettre l'élimination de ces restrictions.
 
 ## 3. Critères d'approbation d'une substance active
 
 ### 3.1. Dossier
 
-Les dossiers soumis conformément à l'article 7, paragraphe 1, contiennent les informations nécessaires pour établir, le cas échéant, la dose journalière admissible (DJA), le niveau acceptable d'exposition de l'opérateur (NAEO) et la dose aiguë de référence (DARf).
+L. - es dossiers soumis conformément à l'article 7, paragraphe 1, contiennent les informations nécessaires pour établir, le cas échéant, la dose journalière admissible (DJA), le niveau acceptable d'exposition de l'opérateur (NAEO) et la dose aiguë de référence (DARf).
 
 Pour les substances actives, les phytoprotecteurs ou les synergistes dont une ou plusieurs utilisations représentatives incluent l'utilisation sur des cultures fourragères ou vivrières ou induisent indirectement la présence de résidus dans des denrées alimentaires ou des aliments pour animaux, le dossier déposé conformément à l'article 7, paragraphe 1, contient les informations nécessaires aux fins de l'évaluation des risques et de l'application des dispositions visées.
 
-Le dossier permet notamment de:
+L. - e dossier permet notamment de:
 
 a) définir tout résidu préoccupant;
 
@@ -105,7 +105,7 @@ b) prévoir de manière fiable la présence de résidus dans les denrées alimen
 ---
 
 
-24.11.2009 | FR | Journal officiel de l'Union européenne | L 309/41
+24. 11.2009 | FR | Journal officiel de l'Union européenne | L 309/41
 
 c) prévoir de manière fiable, le cas échéant, la limite de résidus correspondante, reflétant les effets des opérations de transformation et/ou de mélange;
 
@@ -113,7 +113,7 @@ d) définir une limite maximale de résidus selon les méthodes appropriées gé
 
 e) définir, le cas échéant, des facteurs de concentration ou de dilution liés aux opérations de transformation et/ou de mélange.
 
-Le dossier déposé conformément à l'article 7, paragraphe 1, doit permettre d'estimer, le cas échéant, le devenir et la dispersion de la substance active dans l'environnement et ses répercussions sur les espèces non ciblées.
+L. - e dossier déposé conformément à l'article 7, paragraphe 1, doit permettre d'estimer, le cas échéant, le devenir et la dispersion de la substance active dans l'environnement et ses répercussions sur les espèces non ciblées.
 
 ### 3.2. Efficacité
 
@@ -121,7 +121,7 @@ Une substance active seule ou associée à un phytoprotecteur ou à un synergist
 
 ### 3.3. Importance des métabolites
 
-Le cas échéant, la documentation soumise doit permettre d'établir l'importance des métabolites du point de vue toxicologique, écotoxicologique ou environnemental.
+L. - e cas échéant, la documentation soumise doit permettre d'établir l'importance des métabolites du point de vue toxicologique, écotoxicologique ou environnemental.
 
 ### 3.4. Composition de la substance active, du phytoprotecteur ou du synergiste
 
@@ -145,31 +145,31 @@ Le cas échéant, la documentation soumise doit permettre d'établir l'importanc
 ---
 
 
-L 309/42 | FR | Journal officiel de l'Union européenne | 24.11.2009
+L. - 309/42 | FR | Journal officiel de l'Union européenne | 24.11.2009
 
-3.6.3. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé(e) que si, sur la base de l'évaluation de tests de carcinogénicité effectués conformément aux exigences en matière de données pour les substances actives, les phytoprotecteurs ou les synergistes et d'autres données et informations disponibles, notamment une analyse de la documentation scientifique examinée par l'Autorité, il/elle n'est pas – ou ne doit pas être - classé(e) cancérogène de catégorie 1A ou 1B conformément aux dispositions du règlement (CE) n° 1272/2008, à moins que l'exposition de l'homme à cette substance active, ce phytoprotecteur ou ce synergiste contenu dans un produit phytopharmaceutique ne soit négligeable dans les conditions d'utilisation réalistes proposées, c'est-à-dire si le produit est mis en œuvre dans des systèmes fermés ou dans d'autres conditions excluant tout contact avec l'homme et si les résidus de la substance active, du phytoprotecteur ou du synergiste en question dans les denrées alimentaires et les aliments pour animaux ne dépassent pas la valeur par défaut fixée conformément à l'article 18, paragraphe 1, point b), du règlement (CE) n° 396/2005.
+3. 6.3. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé(e) que si, sur la base de l'évaluation de tests de carcinogénicité effectués conformément aux exigences en matière de données pour les substances actives, les phytoprotecteurs ou les synergistes et d'autres données et informations disponibles, notamment une analyse de la documentation scientifique examinée par l'Autorité, il/elle n'est pas – ou ne doit pas être - classé(e) cancérogène de catégorie 1A ou 1B conformément aux dispositions du règlement (CE) n° 1272/2008, à moins que l'exposition de l'homme à cette substance active, ce phytoprotecteur ou ce synergiste contenu dans un produit phytopharmaceutique ne soit négligeable dans les conditions d'utilisation réalistes proposées, c'est-à-dire si le produit est mis en œuvre dans des systèmes fermés ou dans d'autres conditions excluant tout contact avec l'homme et si les résidus de la substance active, du phytoprotecteur ou du synergiste en question dans les denrées alimentaires et les aliments pour animaux ne dépassent pas la valeur par défaut fixée conformément à l'article 18, paragraphe 1, point b), du règlement (CE) n° 396/2005.
 
-3.6.4. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé(e) que si, sur la base de l'évaluation de tests de toxicité pour la reproduction effectués conformément aux exigences en matière de données pour les substances actives, les phytoprotecteurs ou les synergistes et d'autres données et informations disponibles, notamment une analyse de la documentation scientifique examinée par l'Autorité, il/elle n'est pas – ou ne doit pas être – classé(e) toxique pour la reproduction de catégorie 1A ou 1B conformément aux dispositions du règlement (CE) n° 1272/2008, à moins que l'exposition de l'homme à cette substance active, ce phytoprotecteur ou ce synergiste contenu dans un produit phytopharmaceutique ne soit négligeable dans les conditions d'utilisation réalistes proposées, c'est-à-dire si le produit est mis en œuvre dans des systèmes fermés ou dans d'autres conditions excluant tout contact avec l'homme et si les résidus de la substance active, du phytoprotecteur ou du synergiste en question dans les denrées alimentaires et les aliments pour animaux ne dépassent pas la valeur par défaut fixée conformément à l'article 18, paragraphe 1, point b), du règlement (CE) n° 396/2005.
+3. 6.4. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé(e) que si, sur la base de l'évaluation de tests de toxicité pour la reproduction effectués conformément aux exigences en matière de données pour les substances actives, les phytoprotecteurs ou les synergistes et d'autres données et informations disponibles, notamment une analyse de la documentation scientifique examinée par l'Autorité, il/elle n'est pas – ou ne doit pas être – classé(e) toxique pour la reproduction de catégorie 1A ou 1B conformément aux dispositions du règlement (CE) n° 1272/2008, à moins que l'exposition de l'homme à cette substance active, ce phytoprotecteur ou ce synergiste contenu dans un produit phytopharmaceutique ne soit négligeable dans les conditions d'utilisation réalistes proposées, c'est-à-dire si le produit est mis en œuvre dans des systèmes fermés ou dans d'autres conditions excluant tout contact avec l'homme et si les résidus de la substance active, du phytoprotecteur ou du synergiste en question dans les denrées alimentaires et les aliments pour animaux ne dépassent pas la valeur par défaut fixée conformément à l'article 18, paragraphe 1, point b), du règlement (CE) n° 396/2005.
 
-3.6.5. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé(e) que si, sur la base de l'évaluation d'essais fondés sur des lignes directrices adoptées au niveau communautaire ou international ou d'autres données et informations disponibles, notamment une analyse de la documentation scientifique examinée par l'Autorité, il/elle n'est pas considéré(e) comme ayant des effets perturbateurs endocriniens pouvant être néfastes pour l'homme, à moins que l'exposition de l'homme à cette substance active, ce phytoprotecteur ou ce synergiste contenu dans un produit phytopharmaceutique ne soit négligeable dans les conditions d'utilisation réalistes proposées, c'est-à-dire si le produit est mis en œuvre dans des systèmes fermés ou dans d'autres conditions excluant tout contact avec l'homme et si les résidus de la substance active, du phytoprotecteur ou du synergiste en question dans les denrées alimentaires et les aliments pour animaux ne dépassent pas la valeur par défaut fixée conformément à l'article 18, paragraphe 1, point b), du règlement (CE) n° 396/2005.
+3. 6.5. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé(e) que si, sur la base de l'évaluation d'essais fondés sur des lignes directrices adoptées au niveau communautaire ou international ou d'autres données et informations disponibles, notamment une analyse de la documentation scientifique examinée par l'Autorité, il/elle n'est pas considéré(e) comme ayant des effets perturbateurs endocriniens pouvant être néfastes pour l'homme, à moins que l'exposition de l'homme à cette substance active, ce phytoprotecteur ou ce synergiste contenu dans un produit phytopharmaceutique ne soit négligeable dans les conditions d'utilisation réalistes proposées, c'est-à-dire si le produit est mis en œuvre dans des systèmes fermés ou dans d'autres conditions excluant tout contact avec l'homme et si les résidus de la substance active, du phytoprotecteur ou du synergiste en question dans les denrées alimentaires et les aliments pour animaux ne dépassent pas la valeur par défaut fixée conformément à l'article 18, paragraphe 1, point b), du règlement (CE) n° 396/2005.
 
-Le 14 décembre 2013 au plus tard, la Commission présente au comité permanent de la chaîne alimentaire et de la santé animale, des propositions de mesures concernant les critères scientifiques spécifiques pour la détermination des propriétés de perturbation endocrinienne devant être adoptées conformément à la procédure de réglementation avec contrôle visée à l'article 79, paragraphe 4.
+L. - e 14 décembre 2013 au plus tard, la Commission présente au comité permanent de la chaîne alimentaire et de la santé animale, des propositions de mesures concernant les critères scientifiques spécifiques pour la détermination des propriétés de perturbation endocrinienne devant être adoptées conformément à la procédure de réglementation avec contrôle visée à l'article 79, paragraphe 4.
 
-Dans l'attente de l'adoption de ces critères, les substances qui, en vertu des dispositions du règlement (CE) n° 1272/2008, sont ou doivent être classées parmi les agents cancérogènes de catégorie 2 et toxiques pour la reproduction de catégorie 2 sont considérées comme ayant des effets perturbateurs endocriniens.
+D. - ans l'attente de l'adoption de ces critères, les substances qui, en vertu des dispositions du règlement (CE) n° 1272/2008, sont ou doivent être classées parmi les agents cancérogènes de catégorie 2 et toxiques pour la reproduction de catégorie 2 sont considérées comme ayant des effets perturbateurs endocriniens.
 
 En outre, les substances telles que celles qui, en vertu des dispositions du règlement (CE) n° 1272/2008 sont – ou doivent être – classées parmi les agents toxiques pour la reproduction de catégorie 2 et qui ont des effets toxiques sur les organes endocriniens, peuvent être considérées comme ayant de tels effets perturbateurs endocriniens.
 
-3.7. Devenir et comportement dans l'environnement
+3. 7. Devenir et comportement dans l'environnement
 
-3.7.1. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé que s'il n'est pas considéré comme un polluant organique persistant.
+3. 7.1. Une substance active, un phytoprotecteur ou un synergiste n'est approuvé que s'il n'est pas considéré comme un polluant organique persistant.
 
 Une substance qui satisfait aux trois critères énoncés aux points ci-dessous est un polluant organique persistant (POP).
 
-3.7.1.1. Persistance
+3. 7.1.1. Persistance
 
 Une substance active, un phytoprotecteur ou un synergiste satisfait au critère de persistance lorsqu'il est prouvé que dans l'eau, le temps nécessaire à sa dégradation de 50 % (DT50) est supérieur à deux mois, que, dans le sol, il est supérieur à six mois ou que, dans les sédiments, il est supérieur à six mois.
 
-3.7.1.2. Bioaccumulation
+3. 7.1.2. Bioaccumulation
 
 Une substance active, un phytoprotecteur ou un synergiste satisfait au critère de la bioaccumulation lorsqu'il est prouvé:
 
@@ -207,13 +207,13 @@ Une substance active, un phytoprotecteur ou un synergiste satisfait au critère 
 
 - la demi-vie dans le sol est supérieure à cent vingt jours.
 
-L'évaluation de la persistance dans l'environnement est fondée sur les données disponibles concernant la demi-vie, collectées dans les conditions appropriées, qui sont décrites par le demandeur.
+L. - 'évaluation de la persistance dans l'environnement est fondée sur les données disponibles concernant la demi-vie, collectées dans les conditions appropriées, qui sont décrites par le demandeur.
 
 #### 3.7.2.2. Bioaccumulation
 
 Une substance active, un phytoprotecteur ou un synergiste satisfait au critère de bioaccumulation lorsque le facteur de bioconcentration est supérieur à 2 000.
 
-L'évaluation de la bioaccumulation est fondée sur les données concernant la bioconcentration mesurée chez des espèces aquatiques. Les données utilisées peuvent concerner des espèces d'eau douce et des espèces d'eau de mer.
+L. - 'évaluation de la bioaccumulation est fondée sur les données concernant la bioconcentration mesurée chez des espèces aquatiques. Les données utilisées peuvent concerner des espèces d'eau douce et des espèces d'eau de mer.
 
 #### 3.7.2.3. Toxicité
 
@@ -231,7 +231,7 @@ Une substance qui satisfait aux deux critères énoncés aux points ci-dessous e
 ---
 
 
-L 309/44 | FR | Journal officiel de l'Union européenne | 24.11.2009
+L. - 309/44 | FR | Journal officiel de l'Union européenne | 24.11.2009
 
 ### 3.7.3.1. Persistance
 
@@ -249,13 +249,13 @@ Une substance active, un phytoprotecteur ou un synergiste satisfait au critère 
 
 ### 3.8. Écotoxicologie
 
-#### 3.8.1. 
+#### 3.8.1.
 Une substance active, un phytoprotecteur ou un synergiste n'est approuvé que si l'évaluation des risques démontre que ceux-ci sont acceptables, selon les critères établis par les principes uniformes d'évaluation et d'autorisation des produits phytopharmaceutiques visés à l'article 29, paragraphe 6, dans les conditions réalistes d'utilisation proposées pour les produits phytopharmaceutiques contenant la substance active, le phytoprotecteur ou le synergiste en question. L'évaluation doit tenir compte de la gravité des effets, du degré d'incertitude des données et du nombre de groupes d'organismes que la substance active, le phytoprotecteur ou le synergiste est susceptible d'altérer lors de l'utilisation prévue.
 
-#### 3.8.2. 
+#### 3.8.2.
 Une substance active, un phytoprotecteur ou un synergiste n'est approuvé que si, sur la base de l'évaluation d'essais fondés sur des lignes directrices adoptées au niveau communautaire ou au niveau international, elle n'est pas considérée comme ayant des effets perturbateurs endocriniens pouvant être néfastes pour les organismes non ciblés, à moins que l'exposition des organismes non ciblés à cette substance active contenue dans un produit phytopharmaceutique ne soit négligeable dans les conditions d'utilisation réalistes proposées.
 
-#### 3.8.3. 
+#### 3.8.3.
 Une substance active, un phytoprotecteur ou un synergiste n'est approuvé que s'il est établi, au terme d'une évaluation des risques appropriée sur la base de lignes directrices pour les essais adoptées au niveau communautaire ou au niveau international, que l'utilisation des produits phytopharmaceutiques contenant cette substance active, ce phytoprotecteur ou ce synergiste, dans les conditions d'utilisation proposées:
 
 — entraînera une exposition négligeable des abeilles, ou
@@ -320,11 +320,11 @@ Elle n'est en outre pas considérée comme une substance active à faible risque
 ---
 
 
-L 309/46            FR                       Journal officiel de l'Union européenne                                  24.11.2009
+L. - 309/46            FR                       Journal officiel de l'Union européenne                                  24.11.2009
 
 ANNEXE III
 
-Liste de coformulants ne pouvant pas entrer dans la composition des produits phytopharmaceutiques visés à l'article 27
+L. - iste de coformulants ne pouvant pas entrer dans la composition des produits phytopharmaceutiques visés à l'article 27
 ---
 
 
@@ -334,9 +334,9 @@ Liste de coformulants ne pouvant pas entrer dans la composition des produits phy
 
 ### 1. Conditions de l'évaluation comparative
 
-Lorsqu'il est envisagé de refuser ou de retirer l'autorisation d'un produit phytopharmaceutique en faveur d'un produit phytopharmaceutique de remplacement ou d'une méthode non chimique de prévention ou de lutte, dénommée «substitution», le produit de remplacement doit, à la lumière des connaissances scientifiques et techniques, présenter des risques sensiblement moins élevés pour la santé ou l'environnement. Une évaluation de la solution de remplacement est effectuée pour démontrer qu'elle peut ou non être utilisée avec les mêmes effets sur l'organisme cible et sans inconvénients économiques ou pratiques notables pour l'utilisateur.
+L. - orsqu'il est envisagé de refuser ou de retirer l'autorisation d'un produit phytopharmaceutique en faveur d'un produit phytopharmaceutique de remplacement ou d'une méthode non chimique de prévention ou de lutte, dénommée «substitution», le produit de remplacement doit, à la lumière des connaissances scientifiques et techniques, présenter des risques sensiblement moins élevés pour la santé ou l'environnement. Une évaluation de la solution de remplacement est effectuée pour démontrer qu'elle peut ou non être utilisée avec les mêmes effets sur l'organisme cible et sans inconvénients économiques ou pratiques notables pour l'utilisateur.
 
-Les autres conditions de refus ou de retrait d'une autorisation sont les suivantes:
+L. - es autres conditions de refus ou de retrait d'une autorisation sont les suivantes:
 
 a) la substitution n'est appliquée que lorsque d'autres méthodes ou la diversité chimique des substances actives sont de nature à limiter l'apparition d'une résistance dans l'organisme cible;
 
@@ -352,11 +352,11 @@ Pour l'environnement, le cas échéant, un rapport toxicité/exposition (TER) é
 
 ### 3. Inconvénients pratiques ou économiques significatifs
 
-L'inconvénient pratique ou économique significatif pour l'utilisateur se définit comme une atteinte quantifiable importante aux pratiques de travail ou aux activités commerciales entraînant l'incapacité de conserver un contrôle suffisant de l'organisme cible. Cette atteinte importante résulte, par exemple, de l'absence d'infrastructures techniques permettant d'utiliser la solution de remplacement ou du caractère économiquement irréaliste de telles infrastructures.
+L. - 'inconvénient pratique ou économique significatif pour l'utilisateur se définit comme une atteinte quantifiable importante aux pratiques de travail ou aux activités commerciales entraînant l'incapacité de conserver un contrôle suffisant de l'organisme cible. Cette atteinte importante résulte, par exemple, de l'absence d'infrastructures techniques permettant d'utiliser la solution de remplacement ou du caractère économiquement irréaliste de telles infrastructures.
 
-Lorsqu'une évaluation comparative met en évidence que les restrictions et/ou les interdictions d'utilisation d'un produit phytopharmaceutique peuvent entraîner de tels inconvénients, il en est tenu compte au cours du processus de décision. Cette décision est motivée.
+L. - orsqu'une évaluation comparative met en évidence que les restrictions et/ou les interdictions d'utilisation d'un produit phytopharmaceutique peuvent entraîner de tels inconvénients, il en est tenu compte au cours du processus de décision. Cette décision est motivée.
 
-L'évaluation comparative tient compte des utilisations mineures autorisées.
+L. - 'évaluation comparative tient compte des utilisations mineures autorisées.
 ---
 
 
@@ -408,7 +408,7 @@ L'évaluation comparative tient compte des utilisations mineures autorisées.
 ---
 
 
-24.11.2009          FR                        Journal officiel de l'Union européenne                                  L 309/49
+24. 11.2009          FR                        Journal officiel de l'Union européenne                                  L 309/49
 
 | Actes modifiant la directive 91/414/CEE | Date limite de transposition |
 | --------------------------------------- | ---------------------------- |
@@ -457,7 +457,7 @@ L'évaluation comparative tient compte des utilisations mineures autorisées.
 ---
 
 
-L 309/50            FR                         Journal officiel de l'Union européenne                                   24.11.2009
+L. - 309/50            FR                         Journal officiel de l'Union européenne                                   24.11.2009
 
 | Actes modifiant la directive 91/414/CEE | Date limite de transposition |
 | --------------------------------------- | ---------------------------- |

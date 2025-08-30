@@ -1,6 +1,6 @@
 # Article 63 - Paragraph_2
 
-2.    Est en principe considérée comme portant atteinte à la protection des intérêts commerciaux ou de la vie privée et de l'intégrité des personnes concernées la divulgation des informations suivantes:
+2. Est en principe considérée comme portant atteinte à la protection des intérêts commerciaux ou de la vie privée et de l'intégrité des personnes concernées la divulgation des informations suivantes:
 
 a) la méthode de fabrication;
 

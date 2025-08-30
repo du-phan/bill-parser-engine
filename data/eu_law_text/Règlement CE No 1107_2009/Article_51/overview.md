@@ -42,7 +42,7 @@ En cas de refus de la part du titulaire de l'autorisation, les États membres ve
 ---
 
 
-La publication officielle ou, le cas échéant, l'étiquetage comporte une référence à la responsabilité de la personne qui utilise le produit phytopharmaceutique en cas de manque d'efficacité ou de phytotoxicité du produit dans le cadre de l'utilisation mineure autorisée. L'extension de l'autorisation pour une utilisation mineure est indiquée séparément sur l'étiquette.
+L. - a publication officielle ou, le cas échéant, l'étiquetage comporte une référence à la responsabilité de la personne qui utilise le produit phytopharmaceutique en cas de manque d'efficacité ou de phytotoxicité du produit dans le cadre de l'utilisation mineure autorisée. L'extension de l'autorisation pour une utilisation mineure est indiquée séparément sur l'étiquette.
 
 6. Il y a lieu d'identifier spécifiquement les extensions se fondant sur le présent article et d'attirer l'attention sur les limitations de responsabilité.
 

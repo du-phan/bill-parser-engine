@@ -1,7 +1,7 @@
 ## Article 6
 ### Conditions et restrictions
 
-L'approbation peut être subordonnée à des conditions et restrictions telles que:
+L. - 'approbation peut être subordonnée à des conditions et restrictions telles que:
 
 a) le degré de pureté minimal de la substance active;
 

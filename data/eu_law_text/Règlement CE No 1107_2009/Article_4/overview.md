@@ -16,11 +16,11 @@ This article contains 7 parts:
 
 ##### Article 4
 
-Critères d'approbation des substances actives
+C. - ritères d'approbation des substances actives
 
 1. Une substance active est approuvée conformément à l'annexe II s'il est prévisible, eu égard à l'état actuel des connaissances scientifiques et techniques, que, compte tenu des critères d'approbation énoncés aux points 2 et 3 de cette annexe, les produits phytopharmaceutiques contenant cette substance active satisfont aux conditions prévues aux paragraphes 2 et 3.
 
-L'évaluation de la substance active vise en premier lieu à déterminer s'il est satisfait aux critères d'approbation énoncés aux points 3.6.2 à 3.6.4 et 3.7 de l'annexe II. Si tel est le cas, l'évaluation se poursuit pour déterminer s'il est satisfait aux autres critères d'approbation énoncés aux points 2 et 3 de l'annexe II.
+L. - 'évaluation de la substance active vise en premier lieu à déterminer s'il est satisfait aux critères d'approbation énoncés aux points 3.6.2 à 3.6.4 et 3.7 de l'annexe II. Si tel est le cas, l'évaluation se poursuit pour déterminer s'il est satisfait aux autres critères d'approbation énoncés aux points 2 et 3 de l'annexe II.
 
 2. Les résidus des produits phytopharmaceutiques, résultant d'une application conforme aux bonnes pratiques phytosanitaires et dans des conditions réalistes d'utilisation, satisfont aux conditions suivantes:
 
@@ -28,7 +28,7 @@ a) ils n'ont pas d'effet nocif sur la santé des êtres humains, y compris les g
 
 b) ils n'ont pas d'effet inacceptable sur l'environnement.
 
-Il existe des méthodes d'usage courant permettant de mesurer les résidus qui sont significatifs du point de vue toxicologique, écotoxicologique, environnemental ou de l'eau potable. Les normes analytiques doivent être généralement disponibles.
+I. - l existe des méthodes d'usage courant permettant de mesurer les résidus qui sont significatifs du point de vue toxicologique, écotoxicologique, environnemental ou de l'eau potable. Les normes analytiques doivent être généralement disponibles.
 
 3. Un produit phytopharmaceutique, dans des conditions d'application conformes aux bonnes pratiques phytosanitaires et dans des conditions réalistes d'utilisation, satisfait aux conditions suivantes:
 
@@ -42,7 +42,7 @@ d) il ne provoque ni souffrances ni douleurs inutiles chez les animaux vertébr�
 ---
 
 
-L 309/10            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/10            FR                         Journal officiel de l'Union européenne                                24.11.2009
 
 e) il n'a pas d'effet inacceptable sur l'environnement, compte tenu particulièrement des éléments suivants, lorsque les méthodes d'évaluation scientifiques de ces effets, acceptées par l'Autorité, sont disponibles:
 
@@ -60,8 +60,8 @@ e) il n'a pas d'effet inacceptable sur l'environnement, compte tenu particulièr
 
 7. Par dérogation au paragraphe 1, lorsque, sur la base d'éléments de preuve documentés inclus dans la demande, une substance active est nécessaire pour contrôler un danger phytosanitaire grave qui ne peut être maîtrisé par d'autres moyens disponibles, y compris par des méthodes non chimiques, cette substance active peut être approuvée pour une période limitée nécessaire pour contrôler ce danger grave mais n'excédant pas cinq ans, même si elle ne satisfait pas aux critères énoncés aux points 3.6.3, 3.6.4, 3.6.5 ou 3.8.2 de l'annexe II, à condition que l'utilisation de la substance active fasse l'objet de mesures d'atténuation des risques afin de réduire au minimum les risques pour l'homme et l'environnement. En ce qui concerne ces substances, les limites maximales applicables aux résidus ont été établies conformément au règlement (CE) no 396/2005.
 
-Cette dérogation ne s'applique pas aux substances actives qui, en vertu du règlement (CE) no 1272/2008, sont ou doivent être classées parmi les agents cancérogènes de catégorie 1A, les agents cancérogènes de catégorie 1B sans seuil, ou les agents toxiques pour la reproduction de catégorie 1A.
+C. - ette dérogation ne s'applique pas aux substances actives qui, en vertu du règlement (CE) no 1272/2008, sont ou doivent être classées parmi les agents cancérogènes de catégorie 1A, les agents cancérogènes de catégorie 1B sans seuil, ou les agents toxiques pour la reproduction de catégorie 1A.
 
-Les États membres ne peuvent autoriser les produits phytopharmaceutiques contenant des substances actives approuvées en vertu du présent paragraphe qu'en cas de nécessité pour contrôler ce danger phytosanitaire grave sur leur territoire.
+L. - es États membres ne peuvent autoriser les produits phytopharmaceutiques contenant des substances actives approuvées en vertu du présent paragraphe qu'en cas de nécessité pour contrôler ce danger phytosanitaire grave sur leur territoire.
 
-Dans le même temps, ils élaborent un plan d'élimination progressive visant à contrôler le danger grave par d'autres moyens, y compris des méthodes non chimiques, et transmettent sans délai ce plan à la Commission.
+D. - ans le même temps, ils élaborent un plan d'élimination progressive visant à contrôler le danger grave par d'autres moyens, y compris des méthodes non chimiques, et transmettent sans délai ce plan à la Commission.

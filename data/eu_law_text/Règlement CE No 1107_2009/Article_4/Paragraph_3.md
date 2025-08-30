@@ -12,7 +12,7 @@ d) il ne provoque ni souffrances ni douleurs inutiles chez les animaux vertébr�
 ---
 
 
-L 309/10            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/10            FR                         Journal officiel de l'Union européenne                                24.11.2009
 
 e) il n'a pas d'effet inacceptable sur l'environnement, compte tenu particulièrement des éléments suivants, lorsque les méthodes d'évaluation scientifiques de ces effets, acceptées par l'Autorité, sont disponibles:
 

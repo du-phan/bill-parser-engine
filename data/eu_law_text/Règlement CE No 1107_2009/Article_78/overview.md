@@ -34,7 +34,7 @@ h) l'inscription des coformulants à l'annexe III comme le prévoit l'article 27
 ---
 
 
-L 309/36            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/36            FR                         Journal officiel de l'Union européenne                                24.11.2009
 
 i) la prolongation de la date d'application du présent règlement aux autorisations provisoires visées à l'article 30, paragraphe 3;
 

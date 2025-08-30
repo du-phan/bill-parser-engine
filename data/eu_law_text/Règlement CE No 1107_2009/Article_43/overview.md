@@ -29,7 +29,7 @@ c) la preuve que les nouvelles données soumises font à la suite de des exigenc
 ---
 
 
-L 309/24            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/24            FR                         Journal officiel de l'Union européenne                                24.11.2009
 
 d) toute information nécessaire pour démontrer que le produit phytopharmaceutique satisfait aux exigences énoncées dans le règlement concernant le renouvellement de l'approbation de la substance active, du phytoprotecteur ou du synergiste qu'il contient;
 

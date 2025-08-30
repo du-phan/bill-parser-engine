@@ -6,10 +6,11 @@ into atomic operations with precise type identification and sequencing.
 """
 
 import json
+import re
 import logging
 import os
 import time
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from mistralai import Mistral
 
@@ -101,6 +102,9 @@ class InstructionDecomposer:
             
             result_data = json.loads(response_content)
             operations = self._parse_response(result_data, amendment_instruction)
+
+            # Normalization: enrich operations with structured, machine-usable position hints
+            operations = self._normalize_operations(operations, amendment_instruction)
             
             processing_time = int((time.time() - start_time) * 1000)
             logger.info("Decomposed into %d operations", len(operations))
@@ -167,11 +171,16 @@ Fournissez votre analyse au format JSON spécifié, en identifiant toutes les op
                 except ValueError:
                     raise ValueError(f"Invalid operation_type: {operation_type_str}")
                 
-                # Extract and validate fields based on operation type
+                # Extract and normalize fields based on operation type
                 target_text = op_data.get("target_text")
                 replacement_text = op_data.get("replacement_text")
-                
-                # Validate operation-specific requirements
+
+                # Corrective downgrade: REPLACE without target_text → REWRITE
+                if operation_type == OperationType.REPLACE and (not target_text) and replacement_text:
+                    logger.warning("Downgrading operation %d from REPLACE to REWRITE due to missing target_text", i)
+                    operation_type = OperationType.REWRITE
+
+                # Validate operation-specific requirements (after potential downgrade)
                 self._validate_operation_fields(operation_type, target_text, replacement_text, i)
                 
                 # Create operation
@@ -187,8 +196,9 @@ Fournissez votre analyse au format JSON spécifié, en identifiant toutes les op
                 operations.append(operation)
                 
             except Exception as e:
-                logger.error("Failed to parse operation %d: %s", i, e)
-                raise ValueError(f"Invalid operation data at index {i}: {e}")
+                # Skip invalid operations instead of aborting the entire decomposition
+                logger.error("Skipping invalid operation %d: %s", i, e)
+                continue
         
         # Sort by sequence order
         operations.sort(key=lambda op: op.sequence_order)
@@ -201,6 +211,197 @@ Fournissez votre analyse au format JSON spécifié, en identifiant toutes les op
             expected_order += 1
         
         return operations
+
+    # --- Normalization helpers ---
+    _ORDINAL_TO_INDEX = {
+        "premier": 1, "première": 1,
+        "deuxième": 2, "second": 2, "seconde": 2,
+        "troisième": 3,
+        "quatrième": 4,
+        "cinquième": 5,
+        "sixième": 6,
+        "septième": 7,
+        "huitième": 8,
+        "neuvième": 9,
+        "dixième": 10,
+    }
+
+    _STRUCTURAL_ANCHOR_PATTERNS = [
+        # Après le 5° bis du I
+        re.compile(r"(?i)après\s+le\s+(?P<point>\d+)°(?:\s+(?P<point_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+        # Avant le 3° du II
+        re.compile(r"(?i)avant\s+le\s+(?P<point>\d+)°(?:\s+(?P<point_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+        # Au 3° du II (generic in-place scope)
+        re.compile(r"(?i)au\s+(?P<point>\d+)°(?:\s+(?P<point_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|décies))?\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|décies))?\b"),
+        # À la fin du III / Au début du II
+        re.compile(r"(?i)à\s+la\s+fin\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+        re.compile(r"(?i)au\s+début\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+    ]
+
+    def _normalize_operations(self, operations: List[AmendmentOperation], instruction: str) -> List[AmendmentOperation]:
+        """
+        Convert natural-language hints into structured, machine-usable anchors encoded as JSON in position_hint.
+        - Ordinal alinéa → REWRITE with {"type":"alinea","index":N|"last"|"prev"}
+        - Token micro-insert → {"type":"token","after_word"|"before_word":"X","scope":"sentence"}
+        - Structural anchors (points/sections) → {"type":"structure", ... , "placement":"after|before|at_end|at_start"}
+        - Sentence scoping → add {"sentence_position":"first|second|last"}
+        """
+        normalized: List[AmendmentOperation] = []
+        instr = (instruction or "").replace("’", "'")
+
+        # Pre-detect instruction-level anchors
+        alinea_anchor = self._detect_alinea_anchor(instr)
+        sentence_position = self._detect_sentence_position(instr)
+        structural_anchor = self._detect_structural_anchor(instr)
+        token_anchor = self._detect_token_anchor(instr)
+        relative_alinea = self._detect_relative_alinea(instr)
+
+        for op in operations:
+            pos_data: Dict[str, Any] = {}
+
+            # Prefer explicit token anchor for micro-inserts
+            if token_anchor is not None and op.operation_type in (OperationType.INSERT, OperationType.REPLACE, OperationType.ADD, OperationType.REWRITE):
+                # Keep explicit token keys (after_word/after_words/before_word/before_words)
+                pos_data.update(token_anchor)
+                # Prefer scope at sentence level for micro-edits
+                pos_data["scope"] = pos_data.get("scope", "sentence")
+                # Heuristic: if instruction mentions rewriting the end of an alinéa, set token_action
+                if re.search(r"(?i)la\s+fin\s+du\s+.*alinéa", instr):
+                    pos_data["token_action"] = pos_data.get("token_action", "replace_tail")
+
+            # Ordinal alinéa normalization
+            if self._looks_like_alinea_target(op, instr) or alinea_anchor or relative_alinea:
+                # Convert REPLACE of a full alinéa label into REWRITE of that alinéa
+                if op.operation_type == OperationType.REPLACE and self._is_full_alinea_target(op.target_text or ""):
+                    op.operation_type = OperationType.REWRITE
+                    op.target_text = None
+                # Store explicit alinéa index
+                if alinea_anchor and "index" in alinea_anchor:
+                    pos_data["alinea_index"] = alinea_anchor["index"]
+                elif relative_alinea:
+                    pos_data["alinea_index"] = relative_alinea
+
+            # Structural anchor (points/sections)
+            if structural_anchor is not None:
+                pos_data = {**pos_data, **structural_anchor}
+
+            # Sentence-level scoping
+            if sentence_position is not None:
+                pos_data.setdefault("sentence_position", sentence_position)
+
+            # Deterministic inference for common micro-edit form:
+            # "Après le mot : « X », la fin du Nᵉ alinéa est ainsi rédigée : « Y »"
+            if ("après le mot" in instr.lower() or "après les mots" in instr.lower()) and "la fin du" in instr.lower() and "alinéa" in instr.lower():
+                pos_data.setdefault("token_action", "replace_tail")
+                if alinea_anchor and "index" in alinea_anchor:
+                    pos_data.setdefault("alinea_index", alinea_anchor["index"])
+
+            # If we collected any structured data, encode into position_hint
+            if pos_data:
+                try:
+                    op.position_hint = json.dumps(pos_data, ensure_ascii=False)
+                except Exception:
+                    # Fallback to string format if JSON encoding fails
+                    op.position_hint = ", ".join(f"{k}={v}" for k, v in pos_data.items())
+
+            normalized.append(op)
+
+        return normalized
+
+    def _looks_like_alinea_target(self, op: AmendmentOperation, instruction: str) -> bool:
+        if not op:
+            return False
+        text = (op.target_text or "") + " " + (op.position_hint or "") + " " + instruction
+        return bool(re.search(r"(?i)\balinéa\b", text))
+
+    def _detect_alinea_anchor(self, instruction: str) -> Optional[Dict[str, Any]]:
+        # Examples: "Le cinquième alinéa", "Le premier alinéa", "Au deuxième alinéa"
+        m = re.search(r"(?i)(?:le|au|du)\s+([a-zéèêîôûàç]+)\s+alinéa", instruction)
+        if m:
+            word = m.group(1).lower()
+            index = self._ORDINAL_TO_INDEX.get(word)
+            if index:
+                return {"type": "alinea", "index": index}
+        # "dernier alinéa"
+        if re.search(r"(?i)dernier\s+alinéa", instruction):
+            return {"type": "alinea", "index": "last"}
+        return None
+
+    def _detect_relative_alinea(self, instruction: str) -> Optional[str]:
+        # e.g., "l'alinéa précédent"
+        if re.search(r"(?i)alinéa\s+précédent", instruction):
+            return "prev"
+        return None
+
+    def _is_full_alinea_target(self, target_text: str) -> bool:
+        """Return True if target_text denotes a full alinéa selection like 'Le cinquième alinéa'."""
+        if not target_text:
+            return False
+        t = target_text.strip().lower()
+        # Normalize apostrophes
+        t = t.replace("’", "'")
+        # Match forms like 'Le cinquième alinéa', 'Le premier alinéa'
+        m = re.match(r"^(?:le|la)\s+([a-zéèêîôûàç]+)\s+alinéa\s*$", t)
+        if not m:
+            return False
+        word = m.group(1)
+        # Only ordinal words, not 'précédent'
+        return word in self._ORDINAL_TO_INDEX or word == "dernier"
+
+    def _detect_sentence_position(self, instruction: str) -> Optional[str]:
+        s = instruction.lower()
+        if "première phrase" in s:
+            return "first"
+        if "seconde phrase" in s or "deuxième phrase" in s:
+            return "second"
+        if "dernière phrase" in s:
+            return "last"
+        if "début de la première phrase" in s:
+            return "first_start"
+        if "à la fin de la dernière phrase" in s:
+            return "last_end"
+        return None
+
+    def _detect_structural_anchor(self, instruction: str) -> Optional[Dict[str, Any]]:
+        for pat in self._STRUCTURAL_ANCHOR_PATTERNS:
+            m = pat.search(instruction)
+            if m:
+                d = {k: v for k, v in m.groupdict().items() if v}
+                placement = ""
+                p = pat.pattern.lower()
+                if p.startswith("(?i)après"):
+                    placement = "after"
+                elif p.startswith("(?i)avant"):
+                    placement = "before"
+                elif "à\\s+la\\s+fin" in p:
+                    placement = "at_end"
+                elif "au\\s+début" in p:
+                    placement = "at_start"
+                # Generic in-place scoping like "au 3° du II"
+                elif re.search(r"\(\?i\)au\\s+\(\?P<point>", p):
+                    placement = "at"
+                d["type"] = "structure"
+                d["placement"] = placement
+                return d
+        return None
+
+    def _detect_token_anchor(self, instruction: str) -> Optional[Dict[str, Any]]:
+        # Après le mot : « X »
+        m = re.search(r"(?i)après\s+le\s+mot\s*:\s*«\s*([^»]+)\s*»", instruction)
+        if m:
+            return {"after_word": m.group(1).strip()}
+        # Après les mots : « X »
+        m = re.search(r"(?i)après\s+les\s+mots\s*:\s*«\s*([^»]+)\s*»", instruction)
+        if m:
+            return {"after_words": m.group(1).strip()}
+        # Avant le mot / Avant les mots
+        m = re.search(r"(?i)avant\s+le\s+mot\s*:\s*«\s*([^»]+)\s*»", instruction)
+        if m:
+            return {"before_word": m.group(1).strip()}
+        m = re.search(r"(?i)avant\s+les\s+mots\s*:\s*«\s*([^»]+)\s*»", instruction)
+        if m:
+            return {"before_words": m.group(1).strip()}
+        return None
 
     def _validate_operation_fields(self, operation_type: OperationType, target_text: Optional[str], 
                                    replacement_text: Optional[str], index: int) -> None:
@@ -229,7 +430,6 @@ Fournissez votre analyse au format JSON spécifié, en identifiant toutes les op
         instruction_lower = instruction.lower()
         
         # Remove versioning metadata prefixes (e.g., "1°", "a)", "b) (supprimé)", "c) (nouveau)")
-        import re
         # Pattern to match versioning prefixes like "1°", "a)", "b) (supprimé)", "c) (nouveau)", etc.
         versioning_pattern = r'^[a-z]*\d*[°)]*\s*(?:\([^)]*\))?\s*'
         cleaned_instruction = re.sub(versioning_pattern, '', instruction, flags=re.IGNORECASE).strip()
@@ -299,7 +499,6 @@ Fournissez votre analyse au format JSON spécifié, en identifiant toutes les op
 
     def _parse_multi_step_instruction(self, instruction: str) -> List[AmendmentOperation]:
         """Parse multi-step instructions with bullet points (–)."""
-        import re
         
         # Split by bullet points
         bullet_pattern = r'–\s*'
@@ -365,7 +564,6 @@ Fournissez votre analyse au format JSON spécifié, en identifiant toutes les op
 
     def _parse_large_replacement_instruction(self, instruction: str) -> List[AmendmentOperation]:
         """Parse large replacement instructions like 'Le I est remplacé par des I à I ter ainsi rédigés'."""
-        import re
         
         # Pattern to extract what is being replaced
         replace_pattern = r'(.*?)\s+est\s+remplacé\s+par.*?ainsi\s+rédigés?\s*:\s*«\s*(.*?)\s*»'

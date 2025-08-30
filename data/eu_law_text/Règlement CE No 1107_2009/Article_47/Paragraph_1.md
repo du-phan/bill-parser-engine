@@ -12,4 +12,4 @@ d) il ne provoque pas de souffrances ou de douleurs inacceptables chez les vert�
 
 e) il est conforme à l'article 29, paragraphe 1, points b), c) et f) à i).
 
-Ces produits sont dénommés «produits phytopharmaceutiques à faible risque».
+C. - es produits sont dénommés «produits phytopharmaceutiques à faible risque».

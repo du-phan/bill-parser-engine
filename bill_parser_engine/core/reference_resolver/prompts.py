@@ -852,6 +852,33 @@ Retournez un objet JSON avec DEUX champs :
     "article": "L. 254-1 (aux 1° ou 2° du II)"
   }
 
+**Exemple 5 : Règlement UE avec "au sens du X de l'article Y"**
+- `reference_text`: "au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009"
+- `contextual_code`: "code rural et de la pêche maritime"
+- **Sortie** :
+  {
+    "code": "règlement (CE) n° 1107/2009",
+    "article": "11 de l'article 3"
+  }
+
+**Exemple 6 : Règlement UE avec "au sens de l'article X"**
+- `reference_text`: "au sens de l'article 23 du règlement (CE) n° 1107/2009"
+- `contextual_code`: "code rural et de la pêche maritime"
+- **Sortie** :
+  {
+    "code": "règlement (CE) n° 1107/2009",
+    "article": "23"
+  }
+
+**Exemple 7 : Règlement UE avec "du même règlement"**
+- `reference_text`: "au sens de l'article 47 du même règlement"
+- `contextual_code`: "code rural et de la pêche maritime"
+- **Sortie** :
+  {
+    "code": "règlement (CE) n° 1107/2009",
+    "article": "47"
+  }
+
 **RÈGLES CRITIQUES :**
 - Ne laissez JAMAIS le champ `code` vide si un article est identifié. Utilisez le `contextual_code`.
 - L'identifiant de l'`article` doit être aussi précis que possible.
@@ -910,6 +937,92 @@ Retournez un objet JSON avec les informations de hiérarchie structurées :
 - Pour les sous-points, incluez à la fois "point" et "subpoint"
 - Le champ "type" indique la nature de la référence
 - Si aucun pattern de sous-section n'est détecté, retournez null
+"""
+
+EU_FILE_MATCHER_SYSTEM_PROMPT = """
+Vous êtes un expert en correspondance de références juridiques européennes avec une structure de fichiers spécifique.
+
+**TÂCHE :**
+À partir d'une référence juridique européenne et de la structure de fichiers disponible, identifiez le fichier exact contenant le contenu référencé.
+
+**STRUCTURE DE FICHIERS EU DISPONIBLE :**
+{eu_file_structure}
+
+**TYPES DE RÉFÉRENCES À RECONNAÎTRE :**
+
+1. **Références à des points spécifiques** :
+   - "au sens du 11 de l'article 3" → Article_3/Point_11.md
+   - "au 5° de l'article 23" → Article_23/Point_5.md
+   - "le 2 de l'article 47" → Article_47/Point_2.md
+
+2. **Références à des articles complets** :
+   - "au sens de l'article 23" → Article_23/overview.md
+   - "de l'article 47" → Article_47/overview.md
+   - "du même règlement" → utilisez le contexte pour déterminer l'article
+
+3. **Références contextuelles** :
+   - "du même règlement" → si le contexte mentionne un article, utilisez cet article
+   - "précité" → utilisez le contexte pour déterminer l'article
+
+**PROCESSUS D'ANALYSE :**
+1. Identifiez le type de référence (point spécifique vs article complet)
+2. Extrayez le numéro d'article et le point (si applicable)
+3. Vérifiez que le fichier existe dans la structure
+4. Déterminez le chemin exact du fichier
+
+**SORTIE JSON :**
+{{
+  "file_path": "chemin/vers/le/fichier.md",
+  "file_type": "point|overview|article",
+  "article_number": "3",
+  "point_number": "11",
+  "confidence": 0.95,
+  "explanation": "Explication de la correspondance"
+}}
+
+**EXEMPLES :**
+
+**Exemple 1 : Point spécifique**
+- Référence : "au sens du 11 de l'article 3 du règlement (CE) n° 1107/2009"
+- Sortie : {{
+  "file_path": "Règlement CE No 1107_2009/Article_3/Point_11.md",
+  "file_type": "point",
+  "article_number": "3",
+  "point_number": "11",
+  "confidence": 0.98,
+  "explanation": "Référence directe au point 11 de l'article 3"
+}}
+
+**Exemple 2 : Article complet**
+- Référence : "au sens de l'article 23 du règlement (CE) n° 1107/2009"
+- Sortie : {{
+  "file_path": "Règlement CE No 1107_2009/Article_23/overview.md",
+  "file_type": "overview",
+  "article_number": "23",
+  "point_number": null,
+  "confidence": 0.95,
+  "explanation": "Référence à l'article 23 complet"
+}}
+
+**Exemple 3 : Même règlement**
+- Référence : "au sens de l'article 47 du même règlement"
+- Contexte : "article 23 du règlement (CE) n° 1107/2009"
+- Sortie : {{
+  "file_path": "Règlement CE No 1107_2009/Article_47/overview.md",
+  "file_type": "overview",
+  "article_number": "47",
+  "point_number": null,
+  "confidence": 0.90,
+  "explanation": "Référence au même règlement, article 47"
+}}
+
+**RÈGLES CRITIQUES :**
+- Vérifiez que le fichier existe dans la structure fournie
+- Pour les points, utilisez le format Point_X.md
+- Pour les articles complets, utilisez overview.md
+- Si le fichier n'existe pas, retournez null
+- La confiance doit refléter la certitude de la correspondance
+- Expliquez toujours le raisonnement de la correspondance
 """
 
 SUBSECTION_EXTRACTION_SYSTEM_PROMPT = """

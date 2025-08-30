@@ -15,7 +15,7 @@ This article contains 6 parts:
 
 Article 33
 
-Demande d'autorisation ou modification d'une autorisation
+D. - emande d'autorisation ou modification d'une autorisation
 
 1. Tout demandeur souhaitant mettre un produit phytopharmaceutique sur le marché est tenu d'introduire une demande d'autorisation ou de modification d'une autorisation en personne ou par l'intermédiaire d'un représentant auprès de chaque État membre dans lequel le produit phytopharmaceutique est destiné à être mis sur le marché.
 
@@ -23,7 +23,7 @@ Demande d'autorisation ou modification d'une autorisation
 ---
 
 
-L 309/20 | FR | Journal officiel de l'Union européenne | 24.11.2009
+L. - 309/20 | FR | Journal officiel de l'Union européenne | 24.11.2009
 
 a) une liste des utilisations envisagées dans chacune des zones mentionnées à l'annexe I et des États membres dans lesquels l'intéressé a introduit une demande ou entend en introduire une;
 
@@ -51,9 +51,9 @@ g) un projet d'étiquetage.
 
 4. Au moment de soumettre sa demande, le demandeur peut demander, en application de l'article 63, que certaines informations, y compris certaines parties du dossier, qu'il sépare physiquement, soient traitées de façon confidentielle.
 
-Le demandeur présente en même temps la liste complète des études soumises en application de l'article 8, paragraphe 2, et une liste des rapports d'essais et d'études pour lesquels des demandes visant à obtenir la protection des données ont été introduites conformément à l'article 59.
+L. - e demandeur présente en même temps la liste complète des études soumises en application de l'article 8, paragraphe 2, et une liste des rapports d'essais et d'études pour lesquels des demandes visant à obtenir la protection des données ont été introduites conformément à l'article 59.
 
-Dans le cadre d'une demande d'accès aux informations, l'État membre examinant la demande détermine quelles informations doivent rester confidentielles.
+D. - ans le cadre d'une demande d'accès aux informations, l'État membre examinant la demande détermine quelles informations doivent rester confidentielles.
 
 5. À la requête de l'État membre, le demandeur présente sa demande dans les langues nationales ou officielles dudit État membre ou dans l'une de ces langues.
 

@@ -4,4 +4,4 @@
 
 Une demande collective peut être introduite par une association de producteurs désignée par les producteurs aux fins du respect du présent règlement.
 
-La demande est examinée par l'État membre proposé par le demandeur, à moins qu'un autre État membre n'accepte de s'en charger.
+L. - a demande est examinée par l'État membre proposé par le demandeur, à moins qu'un autre État membre n'accepte de s'en charger.

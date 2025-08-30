@@ -1,0 +1,21 @@
+{
+  "chunk_id": "# TITRE Iᴱᴿ::Article 2::II::3°",
+  "hierarchy_path": [
+    "# TITRE Iᴱᴿ",
+    "Article 2",
+    "II",
+    "3°"
+  ],
+  "text": "3° L'article L. 253-8-3 est abrogé ;\n\n",
+  "titre_text": "# TITRE Iᴱᴿ",
+  "article_label": "Article 2",
+  "article_introductory_phrase": "",
+  "major_subdivision_label": "II",
+  "major_subdivision_introductory_phrase": "– Le code rural et de la pêche maritime est ainsi modifié :",
+  "numbered_point_label": "3°",
+  "numbered_point_introductory_phrase": "L'article L. 253-8-3 est abrogé ;",
+  "lettered_subdivision_label": null,
+  "structural_anchor_hint": null,
+  "start_pos": 16511,
+  "end_pos": 16549
+}

@@ -10,7 +10,7 @@ This article contains 2 parts:
 ## Full Content
 
 #### Article 48
-Mise sur le marché et utilisation de produits phytopharmaceutiques contenant un organisme génétiquement modifié
+M. - ise sur le marché et utilisation de produits phytopharmaceutiques contenant un organisme génétiquement modifié
 
 1. Outre l'évaluation prévue dans le présent chapitre, un produit phytopharmaceutique qui contient un organisme entrant dans le champ d'application de la directive 2001/18/CE fait l'objet d'un examen concernant la modification génétique, conformément à ladite directive.
 

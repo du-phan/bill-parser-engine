@@ -24,4 +24,4 @@ c) l'autorisation a été accordée par un État membre pour une utilisation en 
 
 2. Lorsqu'un produit phytopharmaceutique n'est pas autorisé dans un État membre, aucune demande d'autorisation n'y ayant été présentée, les organismes officiels ou scientifiques travaillant dans le domaine agricole ou les organisations agricoles professionnelles peuvent, au titre de la procédure de reconnaissance mutuelle visée au paragraphe 1, demander, avec l'accord du titulaire de l'autorisation, une autorisation pour le même produit phytopharmaceutique, la même utilisation et une utilisation selon les mêmes pratiques agricoles dans cet État membre. Dans ce cas, le demandeur doit démontrer que l'utilisation d'un tel produit phytopharmaceutique est d'intérêt général pour l'État membre d'introduction.
 
-Lorsque le titulaire de l'autorisation refuse de donner son accord, l'autorité compétente de l'État membre concerné peut accepter la demande pour des raisons d'intérêt général.
+L. - orsque le titulaire de l'autorisation refuse de donner son accord, l'autorité compétente de l'État membre concerné peut accepter la demande pour des raisons d'intérêt général.

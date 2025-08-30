@@ -1,0 +1,21 @@
+{
+  "chunk_id": "# TITRE II::Article 4::I::2°",
+  "hierarchy_path": [
+    "# TITRE II",
+    "Article 4",
+    "I",
+    "2°"
+  ],
+  "text": "2° Après le mot : « article », la fin du III est supprimée.\n\n",
+  "titre_text": "# TITRE II",
+  "article_label": "Article 4",
+  "article_introductory_phrase": "",
+  "major_subdivision_label": "I",
+  "major_subdivision_introductory_phrase": "– L'article L. 361-4-6 du code rural et de la pêche maritime est ainsi modifié :",
+  "numbered_point_label": "2°",
+  "numbered_point_introductory_phrase": "Après le mot : « article », la fin du III est supprimée.",
+  "lettered_subdivision_label": null,
+  "structural_anchor_hint": null,
+  "start_pos": 24007,
+  "end_pos": 24068
+}

@@ -12,11 +12,11 @@ This article contains 3 parts:
 
 Article 63
 
-Confidentialité
+C. - onfidentialité
 
-1.    Toute personne demandant que les informations soumises en application du présent règlement soient traitées de façon confidentielle est tenue d'apporter une preuve vérifiable démontrant que la divulgation de ces informations pourrait porter atteinte à ses intérêts commerciaux ou à la protection de sa vie privée et de son intégrité.
+1. Toute personne demandant que les informations soumises en application du présent règlement soient traitées de façon confidentielle est tenue d'apporter une preuve vérifiable démontrant que la divulgation de ces informations pourrait porter atteinte à ses intérêts commerciaux ou à la protection de sa vie privée et de son intégrité.
 
-2.    Est en principe considérée comme portant atteinte à la protection des intérêts commerciaux ou de la vie privée et de l'intégrité des personnes concernées la divulgation des informations suivantes:
+2. Est en principe considérée comme portant atteinte à la protection des intérêts commerciaux ou de la vie privée et de l'intégrité des personnes concernées la divulgation des informations suivantes:
 
 a) la méthode de fabrication;
 
@@ -32,10 +32,10 @@ f) les informations sur la composition complète d'un produit phytopharmaceutiqu
 
 g) le nom et l'adresse des personnes pratiquant des essais sur les vertébrés.
 
-3.    Le présent article s'entend sans préjudice de la directive 2003/4/CE du Parlement européen et du Conseil du 28 janvier 2003 concernant l'accès du public à l'information en matière d'environnement (¹).
+3. Le présent article s'entend sans préjudice de la directive 2003/4/CE du Parlement européen et du Conseil du 28 janvier 2003 concernant l'accès du public à l'information en matière d'environnement (¹).
 
 (¹) JO L 41 du 14.2.2003, p. 26.
 
-CHAPITRE VII
+C. - HAPITRE VII
 
 EMBALLAGE ET ETIQUETAGE DES PRODUITS PHYTOPHARMACEUTIQUES ET DES ADJUVANTS ET PUBLICITE FAITE A LEUR EGARD

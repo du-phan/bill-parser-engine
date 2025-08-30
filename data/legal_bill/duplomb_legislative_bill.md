@@ -1,10 +1,10 @@
 # TITRE Iᴱᴿ
 
-METTRE FIN AUX SURTRANSPOSITIONS ET SURREGLEMENTATIONS FRANÇAISES EN MATIERE DE PRODUITS PHYTOSANITAIRES
+M. – ETTRE FIN AUX SURTRANSPOSITIONS ET SURREGLEMENTATIONS FRANÇAISES EN MATIERE DE PRODUITS PHYTOSANITAIRES
 
-## Article 1ᵉʳ
+## Article 1
 
-Le code rural et de la pêche maritime est ainsi modifié :
+L. – e code rural et de la pêche maritime est ainsi modifié :
 
 2° L'article L. 254-1 est ainsi modifié :
 
@@ -16,7 +16,7 @@ b) Le VI est ainsi rédigé :
 
 « Les informations fournies à leurs clients par les producteurs pour l'enrobage des semences ne sont pas concernées par cette incompatibilité. » ;
 
-3° (Supprimé)
+3° Est supprimé.
 
 3° bis L'article L. 254-1-1 est ainsi modifié :
 
@@ -122,9 +122,9 @@ b) Le VI est ainsi rédigé :
 
 9° À la seconde phrase de l'article L. 510-2, les mots : « les modalités d'application du second alinéa de l'article L. 254-1-2 et prévoit » sont supprimés.
 
-Article 2
+## Article 2
 
-II. – Le code rural et de la pêche maritime est ainsi modifié :
+II. – – Le code rural et de la pêche maritime est ainsi modifié :
 
 1° AA (nouveau) Au début du chapitre III du titre V du livre II, il est ajouté un article L. 253-1 A ainsi rédigé :
 
@@ -194,13 +194,13 @@ g) (nouveau) Le IV est complété par un alinéa ainsi rédigé :
 
     « V. – Un décret précise les conditions d'application du présent article, notamment les modalités de fonctionnement et la composition du comité mentionné au I. »
 
-## TITRE II
+# TITRE II
 
 # SIMPLIFIER L'ACTIVITE DES ELEVEURS
 
 ## Article 3
 
-I. – Le code de l'environnement est ainsi modifié :
+I. – – Le code de l'environnement est ainsi modifié :
 
 3° bis L'article L. 181-10-1 est ainsi modifié :
 
@@ -212,7 +212,7 @@ b) Le 1° du III est ainsi rédigé :
 
     « Par dérogation, pour les projets destinés à l'élevage de bovins, de porcs ou de volailles soumis à la procédure d'autorisation environnementale en raison des activités d'élevage, la réunion publique est remplacée par une permanence organisée par le commissaire enquêteur ou la commission d'enquête. Le pétitionnaire peut néanmoins demander au commissaire enquêteur ou à la commission d'enquête le maintien de l'organisation d'une réunion publique ; »
 
-b bis) Le 4° du même III est complété par deux phrases ainsi rédigées : « Ces réponses, à l'exception de la réponse à l'avis de l'autorité environnementale, sont facultatives. Les réponses aux observations et aux propositions du public peuvent être transmises et publiées en une fois, au plus tard à la fin de la consultation du public ; »
+b) (bis) Le 4° du même III est complété par deux phrases ainsi rédigées : « Ces réponses, à l'exception de la réponse à l'avis de l'autorité environnementale, sont facultatives. Les réponses aux observations et aux propositions du public peuvent être transmises et publiées en une fois, au plus tard à la fin de la consultation du public ; »
 
 c) Le 5° dudit III est ainsi rédigé :
 
@@ -236,7 +236,7 @@ b) Après le I bis, il est inséré un I ter ainsi rédigé :
 
 ## Article 4
 
-I. – L'article L. 361-4-6 du code rural et de la pêche maritime est ainsi modifié :
+I. – – L'article L. 361-4-6 du code rural et de la pêche maritime est ainsi modifié :
 
 1° Le premier alinéa du II est ainsi modifié :
 
@@ -258,13 +258,13 @@ b) Est ajoutée une phrase ainsi rédigée : « Lorsque les indices portent sur 
 
 2° Après le mot : « article », la fin du III est supprimée.
 
-## TITRE III
+# TITRE III
 
 # FACILITER LA CONCILIATION ENTRE LES BESOINS EN EAU DES ACTIVITES AGRICOLES ET LA NECESSAIRE PROTECTION DE LA RESSOURCE
 
 ## Article 5
 
-Le code de l'environnement est ainsi modifié :
+L. – e code de l'environnement est ainsi modifié :
 
 1° L'article L. 211-1 est ainsi modifié :
 
@@ -290,9 +290,9 @@ c) Il est ajouté un IV ainsi rédigé :
 
 ## MIEUX ACCOMPAGNER LES CONTROLES ET DISPOSITIONS DIVERSES RELATIVES AUX SUITES LIEES AUX INSPECTIONS ET CONTROLES EN MATIERE AGRICOLE
 
-### Article 6
+## Article 6
 
-I. – Le livre Ier du code de l'environnement est ainsi modifié :
+I. – – Le livre Ier du code de l'environnement est ainsi modifié :
 
 1° L'article L. 131-9 est ainsi modifié :
 
@@ -324,7 +324,7 @@ b) Le IV est complété par les mots : « , notamment en approuvant la programma
 
 ## Article 7
 
-Le chapitre VIII du titre V du livre II du code rural et de la pêche maritime est ainsi modifié :
+L. – e chapitre VIII du titre V du livre II du code rural et de la pêche maritime est ainsi modifié :
 
 1° À la fin de l'intitulé, les mots : « , notamment dans le cadre de la lutte biologique » sont supprimés ;
 
@@ -348,7 +348,7 @@ c) (nouveau) Avant le dernier alinéa, il est inséré un alinéa ainsi rédigé
 
 ## Article 8
 
-III. – Le code rural et de la pêche maritime est ainsi modifié :
+III. – – Le code rural et de la pêche maritime est ainsi modifié :
 
 1° Au premier alinéa du I de l'article L. 250-1, après le mot : « européenne, », sont insérés les mots : « le II de l'article L. 201-4 du présent code, » ;
 

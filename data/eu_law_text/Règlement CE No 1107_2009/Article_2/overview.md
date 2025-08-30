@@ -11,7 +11,7 @@ This article contains 3 parts:
 ## Full Content
 
 Article 2
-Champ d'application
+C. - hamp d'application
 
 1. Le présent règlement s'applique aux produits, sous la forme dans laquelle ils sont livrés à l'utilisateur, composés de substances actives, phytoprotecteurs ou synergistes, ou en contenant, et destinés à l'un des usages suivants:
 
@@ -27,7 +27,7 @@ e) freiner ou prévenir une croissance indésirable des végétaux, à l'excepti
 ---
 
 
-Ces produits sont dénommés «produits phytopharmaceutiques».
+C. - es produits sont dénommés «produits phytopharmaceutiques».
 
 2. Le présent règlement s'applique aux substances, y compris les micro-organismes, exerçant une action générale ou spécifique sur les organismes nuisibles ou sur les végétaux, parties de végétaux ou produits végétaux, ci-après dénommées «substances actives».
 

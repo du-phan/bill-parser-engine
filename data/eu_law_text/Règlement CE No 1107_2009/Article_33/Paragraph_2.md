@@ -4,7 +4,7 @@
 ---
 
 
-L 309/20 | FR | Journal officiel de l'Union européenne | 24.11.2009
+L. - 309/20 | FR | Journal officiel de l'Union européenne | 24.11.2009
 
 a) une liste des utilisations envisagées dans chacune des zones mentionnées à l'annexe I et des États membres dans lesquels l'intéressé a introduit une demande ou entend en introduire une;
 

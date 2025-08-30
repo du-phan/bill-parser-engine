@@ -4,7 +4,7 @@ Data models for the reference resolver.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 
 # --- Enums ---
@@ -27,6 +27,9 @@ class TargetArticle:
     operation_type: TargetOperationType
     code: Optional[str]
     article: Optional[str]
+    confidence: Optional[float] = None
+    # Optional reason for OTHER classification (e.g., 'suppressed_enumeration')
+    reason: Optional[str] = None
 
 @dataclass
 class ReconstructorOutput:
@@ -163,6 +166,10 @@ class BillChunk:
     end_pos: int
     target_article: Optional[TargetArticle] = None
     inherited_target_article: Optional[TargetArticle] = None
+    # Optional structured hint parsed from phrases like
+    # "Après le 5° bis du I", "Avant le 3° du II", "À la fin du III", etc.
+    # Used by the reconstructor to deterministically locate anchors in the original text.
+    structural_anchor_hint: Optional[Dict[str, str]] = None
 
 
 # Clean Architecture Models
@@ -212,3 +219,43 @@ class ReconstructionResult:
     final_text_length: int
     processing_time_ms: int
     validation_warnings: List[str] 
+
+
+# --- Legal State Synthesis (Step 8) Models ---
+
+@dataclass
+class LegalReferenceAnnotation:
+    """Annotation for a resolved reference within a synthesized legal fragment."""
+    marker_index: int
+    reference_text: str
+    object: str
+    resolved_content: str
+    source: ReferenceSourceType
+    start_offset: int
+    end_offset: int
+    retrieval_metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class LegalState:
+    """Represents an annotated legal fragment (before/after)."""
+    text: str
+    annotations: List[LegalReferenceAnnotation]
+
+
+@dataclass
+class LegalAnalysisOutput:
+    """Combined before/after states for a chunk with synthesis metadata."""
+    before_state: LegalState
+    after_state: LegalState
+    metadata: Dict[str, Any]
+
+
+@dataclass
+class LegalStateSynthesizerConfig:
+    """Configuration knobs for deterministic synthesis rendering."""
+    render_mode: str = "footnote"          # footnote | inline | none
+    max_resolved_chars: int = 400
+    annotate_all_occurrences: bool = False
+    normalize_matching: bool = True
+    footnote_prefix: str = ""

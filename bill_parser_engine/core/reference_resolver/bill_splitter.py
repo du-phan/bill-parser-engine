@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional
+from typing import List, Optional, Dict
 from .models import BillChunk, TargetArticle, TargetOperationType
 
 class BillSplitter:
@@ -26,14 +26,36 @@ class BillSplitter:
     - If the regex approach becomes unmaintainable, consider a state machine or parser combinator approach, but avoid LLMs for splitting (for auditability and reproducibility).
     - Always keep fallback logic robust: legal text can be unpredictable.
     """
-    # TITRE: e.g. # TITRE Iᴱᴿ
-    TITRE_RE = re.compile(r"^#\s*TITRE\s+([IVXLCDMᴱᴿ]+)", re.MULTILINE)
-    # Article: e.g. ## Article 1ᵉʳ
-    ARTICLE_RE = re.compile(r"^##\s*Article\s+([\w\dᵉʳ]+)", re.MULTILINE)
+    # TITRE: allow 1-3 leading #'s to accommodate formatting inconsistencies (e.g., '# TITRE I', '## TITRE II')
+    TITRE_RE = re.compile(r"^#{1,3}\s*TITRE\s+([IVXLCDMᴱᴿ]+)", re.MULTILINE)
+    # Article: allow optional leading #'s; match only at start of line to avoid in-text 'article L. ...'
+    ARTICLE_RE = re.compile(r"^(?:#{1,3}\s*)?Article\s+([\w\dᵉʳ]+)\s*$", re.MULTILINE)
     # Major subdivision: e.g. I., II (nouveau)., I et II.
-    MAJOR_SUBDIV_RE = re.compile(r"^([IVXLCDM]+(?:\s*et\s*[IVXLCDM]+)*(?:\s*\(nouveau\))?)\.\s*[–-]?(.*)", re.MULTILINE)
-    # Numbered point: e.g. 1°, 2° bis, 1°A, 1° à 3° (Supprimés), with optional leading whitespace
-    NUMBERED_POINT_RE = re.compile(r"^[ \t]*(\d+°[A-Z]?(?:\s*(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|décies))?(?:\s*à\s*\d+°[A-Z]?(?:\s*(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|décies))?)?(?:\s*\(nouveau\))?)\s*(.*)", re.MULTILINE)
+    # Allow leading whitespace before Roman numeral headers (e.g., "  III. – …").
+    # Accept optional suffixes (bis/ter/…/decies) per roman, dot after numeral, optional dash after dot.
+    MAJOR_SUBDIV_RE = re.compile(
+        r"^[ \t]*(" 
+        r"[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?"
+        r"(?:\s*et\s*[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?)*"
+        r"(?:\s*\(nouveau\))?"
+        r")\.\s*(?:[–-]\s*)?(.*)",
+        re.MULTILINE,
+    )
+    # Numbered point: supports both legal degree-form (e.g., 1°, 2° bis) and Arabic numeral with dot (e.g., 1., 2.)
+    # The Arabic numeral branch intentionally comes last in alternation inside the same capture group to avoid overmatching
+    # when degree-form is present. Group 1 captures the label, group 2 captures the remaining line content.
+    # Tighten Arabic-numbered points to reduce false positives from raw/unformatted inputs.
+    # Require that after "N." comes a common legislative lead-in token (Au, À, Après, L', Le, La, Les, etc.).
+    NUMBERED_POINT_RE = re.compile(
+        r"^[ \t]*(" 
+        r"(?:\d+°(?:\s*[A-Z]+)?(?:\s*(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|décies))?" 
+        r"(?:\s*à\s*\d+°(?:\s*[A-Z]+)?(?:\s*(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|décies))?)?" 
+        r"(?:\s*\(nouveau\))?)"
+        r"|(?:\d+\.(?:\s*\(nouveau\))?))\s+"
+        r"(?=(?:Au|À|Après|L'|Le|La|Les|Est|Sont|Il|Elle|Un|Une|Dans|Aux|Au)\b)"
+        r"(.*)",
+        re.MULTILINE,
+    )
     
     # NEW: Lettered subdivision pattern - handles a), b), aa), aaa), "aa, a et b)", etc.
     # This regex only captures the label, content extraction is handled separately
@@ -47,6 +69,40 @@ class BillSplitter:
         r"^[ \t]*[-–]\s*(.*)",
         re.MULTILINE
     )
+
+    # Minimal structural anchor phrase patterns (used to guide reconstruction)
+    _ANCHOR_PATTERNS: List[re.Pattern] = [
+        # Après le 5° bis du I
+        re.compile(r"(?i)après\s+le\s+(?P<point>\d+)°(?:\s+(?P<point_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+        # Avant le 3° du II
+        re.compile(r"(?i)avant\s+le\s+(?P<point>\d+)°(?:\s+(?P<point_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+        # À la fin du III / Au début du II
+        re.compile(r"(?i)à\s+la\s+fin\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+        re.compile(r"(?i)au\s+début\s+du\s+(?P<section>[IVXLCDM]+)(?:\s+(?P<section_suffix>bis|ter|quater|quinquies|sexies|septies|octies|nonies|d[ée]cies))?\b"),
+    ]
+
+    @staticmethod
+    def _parse_structural_anchor_hint(text: str) -> Optional[Dict[str, str]]:
+        if not text:
+            return None
+        for pat in BillSplitter._ANCHOR_PATTERNS:
+            m = pat.search(text)
+            if m:
+                groups = m.groupdict()
+                hint: Dict[str, str] = {k: v for k, v in groups.items() if v}
+                # Placement based on which regex matched
+                pattern = pat.pattern.lower()
+                if pattern.startswith("(?i)après"):
+                    hint["placement"] = "after"
+                elif pattern.startswith("(?i)avant"):
+                    hint["placement"] = "before"
+                elif "à\\s+la\\s+fin" in pattern:
+                    hint["placement"] = "at_end"
+                elif "au\\s+début" in pattern:
+                    hint["placement"] = "at_start"
+                hint["raw"] = m.group(0)
+                return hint
+        return None
 
     @staticmethod
     def _normalize_label(label: str) -> str:
@@ -118,6 +174,10 @@ class BillSplitter:
             (r"L'article\s+(L\.\s*[\d\-]+)\s+est\s+ainsi\s+modifié", TargetOperationType.MODIFY),
             # Pattern 1b: "'article L. 254-1 est ainsi modifié" (missing leading L)
             (r"'article\s+(L\.\s*[\d\-]+)\s+est\s+ainsi\s+modifié", TargetOperationType.MODIFY),
+            # Pattern 1c: "Le 3° de l'article L. 271-5 est ainsi modifié"
+            (r"Le\s*\d+°\s+de\s+l'article\s+(L\.\s*[\d\-]+)\s+est\s+ainsi\s+modifié", TargetOperationType.MODIFY),
+            # Pattern 1d: "À l'article L. 250-10, ..." (generic operations at article scope)
+            (r"À\s+l'article\s+(L\.\s*[\d\-]+)\b", TargetOperationType.MODIFY),
             # Pattern 2: "Après l'article L. 254-1, il est inséré"
             (r"Après\s+l'article\s+(L\.\s*[\d\-]+),\s+il\s+est\s+inséré", TargetOperationType.INSERT),
             # Pattern 2b: "Après 'article L. 254-1, il est inséré" (missing leading L)
@@ -143,20 +203,8 @@ class BillSplitter:
         return None
 
     def _consolidate_hyphenated_operations(self, lettered_subdiv_content: str) -> str:
-        """Consolidate hyphenated sub-operations into coherent text."""
-        lines = lettered_subdiv_content.split('\n')
-        consolidated_lines = []
-
-        for line in lines:
-            line = line.strip()
-            if self.HYPHENATED_OPERATION_RE.match(line):
-                # This is a hyphenated sub-operation
-                operation_text = self.HYPHENATED_OPERATION_RE.match(line).group(1)
-                consolidated_lines.append(operation_text)
-            else:
-                consolidated_lines.append(line)
-
-        return ' '.join(filter(None, consolidated_lines))
+        """Preserve original content to maintain exact positional fidelity."""
+        return lettered_subdiv_content
 
     def _split_lettered_subdivisions(self, numbered_point_content: str, inherited_target: Optional[TargetArticle], 
                                    context_info: dict) -> List[BillChunk]:
@@ -165,7 +213,11 @@ class BillSplitter:
 
         if not lettered_subdivs:
             # No lettered subdivisions - return numbered point as single chunk
-            return self._create_single_numbered_point_chunk(numbered_point_content, inherited_target, context_info)
+            chunks = self._create_single_numbered_point_chunk(numbered_point_content, inherited_target, context_info)
+            # Attach structural anchor hint to the sole chunk if present in context
+            if context_info.get('structural_anchor_hint') and chunks:
+                chunks[0].structural_anchor_hint = context_info['structural_anchor_hint']
+            return chunks
 
         chunks = []
         for idx, subdiv_match in enumerate(lettered_subdivs):
@@ -173,7 +225,8 @@ class BillSplitter:
             subdiv_label = subdiv_match.group(1).strip()
             subdiv_start = subdiv_match.start()
             subdiv_end = lettered_subdivs[idx + 1].start() if idx + 1 < len(lettered_subdivs) else len(numbered_point_content)
-            subdiv_content = numbered_point_content[subdiv_start:subdiv_end].strip()
+            # Preserve exact substring (including blank lines) for positional fidelity
+            subdiv_content = numbered_point_content[subdiv_start:subdiv_end]
 
             # Handle hyphenated sub-operations within lettered subdivisions
             subdiv_content = self._consolidate_hyphenated_operations(subdiv_content)
@@ -197,7 +250,8 @@ class BillSplitter:
                 chunk_id=chunk_id,
                 start_pos=context_info['base_start_pos'] + subdiv_start,
                 end_pos=context_info['base_start_pos'] + subdiv_end,
-                inherited_target_article=inherited_target
+                inherited_target_article=inherited_target,
+                structural_anchor_hint=context_info.get('structural_anchor_hint')
             )
             chunks.append(chunk)
 
@@ -207,7 +261,8 @@ class BillSplitter:
                                            context_info: dict) -> List[BillChunk]:
         """Create a single chunk for a numbered point without lettered subdivisions."""
         chunk = BillChunk(
-            text=numbered_point_content.strip(),
+            # Preserve original content without stripping to maintain exact match with source slice
+            text=numbered_point_content,
             titre_text=context_info['titre_text'],
             article_label=context_info['article_label'],
             article_introductory_phrase=context_info['article_introductory_phrase'],
@@ -276,7 +331,6 @@ class BillSplitter:
                                     np_start = ms_match.start() + np_match.start()
                                     np_end = ms_match.start() + (ms_numbered_points[n_idx+1].start() if n_idx+1 < len(ms_numbered_points) else len(ms_block))
                                     chunk_text = ms_block[np_match.start():ms_numbered_points[n_idx+1].start()] if n_idx+1 < len(ms_numbered_points) else ms_block[np_match.start():]
-                                    chunk_text = chunk_text.strip()
                                     numbered_point_label_raw = np_match.group(1).strip()
                                     numbered_point_label = self._normalize_label(numbered_point_label_raw)
                                     numbered_point_intro = np_match.group(2).strip() if len(np_match.group(2).strip()) > 0 else None
@@ -299,6 +353,10 @@ class BillSplitter:
                                         'base_end_pos': t_end + a_end + ms_start + np_end
                                     }
                                     
+                                    # Parse structural anchor hints from the intro phrase and pass via context
+                                    anchor_hint = self._parse_structural_anchor_hint(numbered_point_intro or "")
+                                    context_info['structural_anchor_hint'] = anchor_hint
+
                                     lettered_chunks = self._split_lettered_subdivisions(chunk_text, inherited_target, context_info)
                                     chunks.extend(lettered_chunks)
                             else:
@@ -318,6 +376,7 @@ class BillSplitter:
                                     chunk_id="::".join(filter(None, [titre_text, article_label, single_ms_label])),
                                     start_pos=t_end + a_end + ms_start,
                                     end_pos=t_end + a_end + ms_end,
+                                    structural_anchor_hint=self._parse_structural_anchor_hint(ms_intro)
                                 ))
                     continue
                 # 6. If no major subdivisions, try direct numbered points at the article level
@@ -327,7 +386,6 @@ class BillSplitter:
                         np_start = intro_end + np_match.start()
                         np_end = intro_end + (numbered_points[idx+1].start() if idx+1 < len(numbered_points) else len(rest))
                         chunk_text = rest[np_match.start():numbered_points[idx+1].start()] if idx+1 < len(numbered_points) else rest[np_match.start():]
-                        chunk_text = chunk_text.strip()
                         numbered_point_label_raw = np_match.group(1).strip()
                         numbered_point_label = self._normalize_label(numbered_point_label_raw)
                         numbered_point_intro = np_match.group(2).strip() if len(np_match.group(2).strip()) > 0 else None
@@ -349,7 +407,8 @@ class BillSplitter:
                             'base_start_pos': t_end + a_end + np_start,
                             'base_end_pos': t_end + a_end + np_end
                         }
-                        
+                        # Anchor hint from the numbered point intro
+                        context_info['structural_anchor_hint'] = self._parse_structural_anchor_hint(numbered_point_intro or "")
                         lettered_chunks = self._split_lettered_subdivisions(chunk_text, inherited_target, context_info)
                         chunks.extend(lettered_chunks)
                     continue
@@ -376,5 +435,6 @@ class BillSplitter:
                         chunk_id=chunk_id,
                         start_pos=t_end + a_end,
                         end_pos=t_end + a_end + len(article_block),
+                        structural_anchor_hint=self._parse_structural_anchor_hint(article_intro)
                     ))
         return chunks 

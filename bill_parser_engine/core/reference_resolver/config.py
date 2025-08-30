@@ -1,1 +1,1 @@
-MISTRAL_MODEL = "magistral-medium-2506"  #"mistral-medium-2505"#
+MISTRAL_MODEL = "mistral-medium-2508"#"magistral-medium-2507"  #"mistral-medium-2505"#

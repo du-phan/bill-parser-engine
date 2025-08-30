@@ -79,7 +79,7 @@ b) Dans tous les autres cas, ouvrages servant au transvasement de ressources hyd
    lorsque le débit annuel moyen, sur plusieurs années, du bassin de prélèvement dépasse 2 000 hectomètres cubes
    et que le volume des eaux transvasées dépasse 5 % de ce débit.
 
-Dans les deux cas, les transvasements d'eau potable amenée par canalisation sont exclus.
+D. - ans les deux cas, les transvasements d'eau potable amenée par canalisation sont exclus.
 
 13. Installations de traitement des eaux résiduaires d'une capacité supérieure à 150 000 équivalents-habitants, telles que
 définies à l'article 2, point 6, de la directive 91/271/CEE du Conseil du 21 mai 1991 relative au traitement des eaux
@@ -107,7 +107,7 @@ b) de 3 000 emplacements pour porcs de production (de plus de 30 kilogrammes); o
 c) de 900 emplacements pour truies.
 
 (¹) Aux fins de la présente directive, on entend par «aéroport»: un aéroport qui correspond à la définition donnée par la convention de
-   Chicago de 1944 constituant l'Organisation de l'aviation civile internationale (annexe 14).
+   C. - hicago de 1944 constituant l'Organisation de l'aviation civile internationale (annexe 14).
 (²) Aux fins de la présente directive, on entend par «voie rapide»: une voie qui correspond à la définition donnée par l'accord européen du
    15 novembre 1975 sur les grandes routes de trafic international.
 (³) JO L 312 du 22.11.2008, p. 3.

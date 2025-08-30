@@ -1,27 +1,25 @@
 """
-OriginalTextRetriever: Fetch current legal text for target articles using multiple sources.
+OriginalTextRetriever: Fetch current legal text for target articles using local sources.
 
 This component retrieves the current legal text of target articles identified by 
 TargetArticleIdentifier. This is critical because reference objects may only be visible 
 in the original law, not in the amendment text.
 
 Features:
-- Primary: pylegifrance API with proper error handling (for French codes)
-- EU Legal Texts: Local files from /data/eu_law_text/ with LLM extraction
-- Hierarchical fallback: L. 118-1-2 → try L. 118-1 and extract subsection 2 using LLM
+- French Codes: Local files under data/fr_code_text/ (no external APIs)
+- EU Legal Texts: Local files under data/eu_law_text/ with optional LLM subsection extraction
+- Hierarchical fallback: L. 118-1-2 → try L. 118-1 and extract subsection 2 (deterministic first)
 - Caching: Uses standardized cache_manager.py for efficiency
 - INSERT handling: Return empty string for INSERT operations
 """
 
 import os
 import re
+import unicodedata
 import logging
 import json
 from typing import Tuple, Dict, Optional, List
 from pathlib import Path
-
-from pylegifrance import recherche_code
-from pylegifrance.models.constants import CodeNom
 
 try:
     from mistralai import Mistral
@@ -41,9 +39,9 @@ logger = logging.getLogger(__name__)
 
 class OriginalTextRetriever:
     """
-    Fetches the current/existing text of target articles from multiple sources:
-    1. French legal codes via pylegifrance API
-    2. EU legal texts from local files (/data/eu_law_text/)
+    Fetches the current/existing text of target articles from local sources:
+    1. French legal codes from data/fr_code_text/
+    2. EU legal texts from data/eu_law_text/
     
     This is critical because reference objects may only be visible in the original law,
     not in the amendment text. Without this context, the ReferenceObjectLinker cannot
@@ -76,29 +74,6 @@ class OriginalTextRetriever:
                 logger.warning("MISTRAL_API_KEY not found - LLM extraction will be disabled")
             if not Mistral:
                 logger.warning("mistralai package not available - LLM extraction will be disabled")
-        
-        # Code name mapping for pylegifrance
-        self.code_name_mapping = {
-            "code rural et de la pêche maritime": CodeNom.CREDLPM,
-            "code de l'environnement": CodeNom.CENV,
-            "code civil": CodeNom.CCIV,
-            "code pénal": CodeNom.CPEN,
-            "code de la santé publique": CodeNom.CSP,
-            "code du travail": CodeNom.CTRAV,
-            "code de commerce": CodeNom.CCOM,
-            "code de la consommation": CodeNom.CCONSO,
-            "code de la construction et de l'habitation": CodeNom.CDLCED,
-            "code forestier": CodeNom.CF,
-            "code général des collectivités territoriales": CodeNom.CGCT,
-            "code général des impôts": CodeNom.CGDI,
-            "code de la propriété intellectuelle": CodeNom.CPI,
-            "code de la route": CodeNom.CDLR,
-            "code de la sécurité sociale": CodeNom.CSS,
-            "code des assurances": CodeNom.CASSUR,
-            "code monétaire et financier": CodeNom.CMEF,
-            "code de procédure civile": CodeNom.CPRCIV,
-            "code de procédure pénale": CodeNom.CPP,
-        }
         
         # EU legal text directory mapping
         self.eu_text_base_path = Path("data/eu_law_text")
@@ -146,12 +121,16 @@ class OriginalTextRetriever:
                 return cached_result, {"source": "cache", "success": True}
         
         logger.info(f"→ Fetching article {article} from {code}")
+
+        # Structural guard: avoid calling external APIs for structural nodes
+        if re.search(r"\b(titre|livre|chapitre|section)\b", article, re.IGNORECASE):
+            return "", {"source": "none", "success": False, "error": "Structural node provided as article"}
         
         # Detect if this is an EU legal text reference
         if self._is_eu_legal_reference(code):
             result_text, metadata = self._fetch_eu_legal_text(code, article)
         else:
-            # Use pylegifrance for French codes
+            # Local-only retrieval for French codes (no external APIs)
             result_text, metadata = self._fetch_french_code_text(code, article)
         
         # Cache successful results (if enabled)
@@ -164,6 +143,10 @@ class OriginalTextRetriever:
             self.cache.set("original_text_retriever", cache_key_data, result_text)
             logger.info(f"✓ Cached article {article} for future use")
         
+        # Write-through local store for successful French code retrievals
+        if metadata.get("success", False) and metadata.get("source") in {"local", "local_fr", "local_fr_md", "local_fr_hierarchical"}:
+            self._persist_to_local_store(code, article, result_text, metadata)
+
         return result_text, metadata
     
     def fetch_article_for_target(self, target_article: TargetArticle) -> Tuple[str, Dict]:
@@ -176,9 +159,26 @@ class OriginalTextRetriever:
         Returns:
             Tuple of (article_text, retrieval_metadata)
         """
-        # Handle INSERT operations - return empty text
+        # Handle INSERT operations
         if target_article.operation_type == TargetOperationType.INSERT:
-            logger.info(f"INSERT operation for {target_article.article} - returning empty text")
+            # Distinguish between new-article insertion vs intra-article insertion.
+            # If the (code, article) already exists in Legifrance, treat as intra-article insert and fetch it.
+            # Otherwise, return empty for a truly new article.
+            try:
+                if target_article.code and target_article.article:
+                    existing_text, meta = self.fetch_article_text(target_article.code, target_article.article)
+                    if existing_text and existing_text.strip():
+                        logger.info(
+                            f"INSERT on existing article detected for {target_article.article} - returning current text for intra-article insertion"
+                        )
+                        meta = dict(meta or {})
+                        meta.update({"source": "insert_existing_article", "success": True})
+                        return existing_text, meta
+            except Exception as e:
+                # Non-fatal; fall back to empty new-article case
+                logger.debug(f"INSERT existence probe failed: {e}")
+
+            logger.info(f"INSERT operation for {target_article.article} - returning empty text (new article)")
             return "", {"source": "insert_operation", "success": True, "note": "Empty text for INSERT operation"}
         
         if not target_article.code or not target_article.article:
@@ -428,63 +428,76 @@ Trouvez et extrayez le contenu complet de la partie "{specific_part}"."""
     
     def _fetch_french_code_text(self, code: str, article: str) -> Tuple[str, Dict]:
         """
-        Fetch French legal code text using pylegifrance API with hierarchical fallback.
+        Fetch French legal code text from local curated store only (no external APIs).
         
-        Args:
-            code: French legal code name
-            article: Article identifier
-            
-        Returns:
-            Tuple of (article_text, retrieval_metadata)
+        Strategy:
+        1) Try read-through store under data/fr_code_text/<slugified>/<article>.txt
+        2) Try curated markdowns under data/fr_code_text/<Code Name>/ (article <ID>.md)
+        3) If hierarchical (e.g., L. 118-1-2), read parent locally and deterministically carve subsection
         """
-        # Try pylegifrance API for the full article first
-        try:
-            content = self._call_pylegifrance_api(code, article)
-            if content:
-                logger.info(f"✓ Retrieved article {article} from pylegifrance")
-                return content, {"source": "pylegifrance", "success": True}
-        except Exception as e:
-            logger.warning(f"pylegifrance failed for {code} {article}: {e}")
-        
-        # Try hierarchical fallback if the article has multiple hierarchy levels
-        if self._should_try_hierarchical_fallback(article):
-            parent_article, subsection = self._parse_hierarchical_article(article)
-            logger.info(f"→ Trying hierarchical fallback: {parent_article} → subsection {subsection}")
-            
+        logger.info(f"→ Fetching article {article} from {code} (local store)")
+        cleaned_article = self._extract_base_article_identifier(article)
+
+        # 1) Prefer local write-through store (.txt/.json) if previously persisted
+        local_text, local_meta = self._try_local_store_read(code, cleaned_article)
+        if local_text:
+            return local_text, local_meta
+
+        # 2) Curated markdowns in data/fr_code_text/<Code Name>/
+        md_path = self._resolve_existing_local_file(code, cleaned_article)
+        if md_path and md_path.exists():
             try:
-                # Try to get the parent article
-                parent_content = self._call_pylegifrance_api(code, parent_article)
-                if parent_content:
-                    logger.info(f"✓ Retrieved parent article {parent_article}")
-                    
-                    # Use LLM to extract the specific subsection
-                    subsection_content = self._extract_subsection_with_llm(parent_content, subsection, article)
-                    if subsection_content:
-                        logger.info(f"✓ Retrieved {article} via hierarchical fallback")
-                        return subsection_content, {
-                            "source": "hierarchical_fallback", 
-                            "success": True,
-                            "parent_article": parent_article,
-                            "subsection": subsection,
-                            "method": "llm_extraction"
-                        }
-                    else:
-                        logger.warning(f"LLM failed to extract subsection {subsection} from {parent_article}")
-                        return "", {
-                            "source": "hierarchical_fallback", 
-                            "success": False, 
-                            "error": f"LLM extraction failed for subsection {subsection}",
-                            "parent_article": parent_article,
-                            "subsection": subsection
-                        }
-                else:
-                    logger.warning(f"Parent article {parent_article} not found")
+                text = md_path.read_text(encoding="utf-8")
+                # Strip markdown headers/front-matter
+                lines = text.split('\n')
+                content_start = 0
+                for i, line in enumerate(lines):
+                    if line.strip() and not line.startswith('#') and not line.startswith('---'):
+                        content_start = i
+                        break
+                content = '\n'.join(lines[content_start:]).strip()
+                return content, {"source": "local_fr", "success": True, "file": str(md_path)}
             except Exception as e:
-                logger.error(f"Hierarchical fallback failed for {article}: {e}")
-        
-        # All methods failed
-        logger.error(f"Could not retrieve article {article} from {code}")
-        return "", {"source": "none", "success": False, "error": "All retrieval methods failed"}
+                logger.warning(f"Error reading curated file {md_path}: {e}")
+
+        # 3) Hierarchical carve from parent if applicable (e.g., L. 118-1-2)
+        if self._should_try_hierarchical_fallback(cleaned_article):
+            parent_article, subsection = self._parse_hierarchical_article(cleaned_article)
+            logger.info(f"→ Trying local hierarchical fallback: {parent_article} → subsection {subsection}")
+
+            # Try local store for parent
+            parent_text, _ = self._try_local_store_read(code, parent_article)
+            if not parent_text:
+                parent_md = self._resolve_existing_local_file(code, parent_article)
+                if parent_md and parent_md.exists():
+                    try:
+                        parent_raw = parent_md.read_text(encoding='utf-8')
+                        parent_lines = parent_raw.split('\n')
+                        start = 0
+                        for i, line in enumerate(parent_lines):
+                            if line.strip() and not line.startswith('#') and not line.startswith('---'):
+                                start = i
+                                break
+                        parent_text = '\n'.join(parent_lines[start:]).strip()
+                    except Exception as e:
+                        logger.warning(f"Error reading parent curated file {parent_md}: {e}")
+
+            if parent_text:
+                subsection_content = self._deterministic_carve_from_parent(parent_text, subsection)
+                if not subsection_content:
+                    subsection_content = self._extract_subsection_with_llm(parent_text, subsection, cleaned_article)
+                if subsection_content:
+                    return subsection_content, {
+                        "source": "local_fr_hierarchical",
+                        "success": True,
+                        "parent_article": parent_article,
+                        "subsection": subsection,
+                        "method": "deterministic_or_llm"
+                    }
+
+        # No local content found
+        logger.error(f"Could not retrieve article {cleaned_article} from local store for code {code}")
+        return "", {"source": "local_fr", "success": False, "error": "Local article not found"}
 
     def _should_try_hierarchical_fallback(self, article: str) -> bool:
         """
@@ -497,9 +510,11 @@ Trouvez et extrayez le contenu complet de la partie "{specific_part}"."""
             True if hierarchical fallback should be attempted
         """
         # Only for articles with multiple hierarchy levels (e.g., L. 118-1-2, not L. 118-1)
-        return (article.startswith("L. ") and 
-                article.count("-") >= 2 and
-                self.mistral_client is not None)
+        starts_with_l = article.startswith("L. ")
+        has_multiple_hyphens = article.count("-") >= 2
+        # Deterministic carve can run without LLM; so we do not require Mistral for fallback eligibility
+        print(f"🔍 DEBUG: Hierarchical fallback check for '{article}': starts_with_L={starts_with_l}, hyphens={article.count('-')}>=2={has_multiple_hyphens}")
+        return (starts_with_l and has_multiple_hyphens)
     
     def _parse_hierarchical_article(self, article: str) -> Tuple[str, str]:
         """
@@ -573,61 +588,240 @@ Trouvez et extrayez le contenu complet de la sous-section "{subsection}"."""
             logger.error(f"LLM subsection extraction failed: {e}")
             return None
     
-    def _call_pylegifrance_api(self, code: str, article: str) -> Optional[str]:
+    # NOTE: pylegifrance support removed; local-only retrieval is used for French codes.
+
+    def _extract_base_article_identifier(self, article: str) -> str:
         """
-        Call pylegifrance API to retrieve article text.
+        Extract the base article identifier by removing subsection information.
         
         Args:
-            code: The legal code name
-            article: The article identifier
+            article: Full article identifier (e.g., "L. 254-1 (au 3° du II)")
             
         Returns:
-            Article text if successful, None otherwise
+            Base article identifier (e.g., "L. 254-1")
         """
-        # Normalize code name to match pylegifrance constants
-        code_lower = code.lower().strip()
-        code_enum = self.code_name_mapping.get(code_lower)
+        # Remove subsection information in parentheses
+        if '(' in article:
+            base_article = article.split('(')[0].strip()
+        else:
+            base_article = article
+            
+        # Remove any trailing whitespace or punctuation
+        base_article = base_article.strip()
         
-        if not code_enum:
-            logger.warning(f"Unknown code name for pylegifrance: {code}")
+        return base_article
+
+    # --- Deterministic carve helpers ---
+
+    def _deterministic_carve_from_parent(self, parent_text: str, subsection: str) -> Optional[str]:
+        """Deterministically extract a numbered subsection from a parent article text.
+
+        Strategy:
+        - Anchor on lines starting with the subsection number using common legal list markers:
+          '{n}°', '{n})', '{n}.'.
+        - If not found, try roman section header for subsection '1' as 'I.' (and 'II.' for '2', etc.).
+        - Capture until the next subsection anchor or the next roman section header, whichever comes first.
+        - Works without LLM; returns None if patterns are not present.
+        """
+        if not subsection or not subsection.strip():
             return None
-        
-        # Clean up article identifier for search
-        search_article = article.replace(" ", "").replace(".", "")
-        
-        logger.debug(f"recherche_code params: code_enum={code_enum}, search_article={search_article}")
-        
+
+        n = re.escape(subsection.strip())
+        # Roman headers (section boundaries)
+        # Roman section header lines, normalized forms like "I. – ..." or "I. - ..." or just "I. ..."
+        # Accept a mandatory dot after the roman numeral, optional dash (en-dash or hyphen) after the dot.
+        roman_header = re.compile(
+            r"(?m)^\s*[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?\s*\.\s*(?:[\-–]\s*)?"
+        )
+        # Subsection start patterns
+        start_patterns = [
+            re.compile(rf"(?m)^\s*{n}°\b"),
+            re.compile(rf"(?m)^\s*{n}\)\b"),
+            re.compile(rf"(?m)^\s*{n}\.(?=\s)"),
+        ]
+        # Try roman mapping for small n if numeric markers not found
+        roman_map = {
+            "1": "I",
+            "2": "II",
+            "3": "III",
+            "4": "IV",
+            "5": "V",
+            "6": "VI",
+            "7": "VII",
+            "8": "VIII",
+            "9": "IX",
+            "10": "X",
+        }
+        # Next subsection patterns (generic next number)
+        next_subsection = re.compile(r"(?m)^\s*\d+(?:°|\)|\.)\b")
+
+        # Find start
+        start_idx = None
+        for pat in start_patterns:
+            m = pat.search(parent_text)
+            if m:
+                start_idx = m.start()
+                break
+        if start_idx is None:
+            # Try roman header as section start if mapping exists
+            r = roman_map.get(subsection.strip())
+            if r:
+                m_rom_start = re.search(rf"(?m)^\s*{r}(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?\s*[.\-–]\s", parent_text)
+                if m_rom_start:
+                    start_idx = m_rom_start.start()
+                else:
+                    return None
+
+        # Determine end: next subsection or next roman header
+        end_candidates: List[int] = []
+        m_next = next_subsection.search(parent_text, pos=start_idx + 1)
+        if m_next:
+            end_candidates.append(m_next.start())
+        m_roman = roman_header.search(parent_text, pos=start_idx + 1)
+        if m_roman:
+            end_candidates.append(m_roman.start())
+
+        end_idx = min(end_candidates) if end_candidates else len(parent_text)
+
+        return parent_text[start_idx:end_idx].strip() or None
+
+    
+
+    # --- Local store (read-first, write-through) ---
+
+    def _local_store_paths(self, code: str, article: str) -> Tuple[Path, Path]:
+        base_dir = Path("data/fr_code_text") / self._slugify_code_name(code)
+        base_dir.mkdir(parents=True, exist_ok=True)
+        file_stem = article.replace(" ", "_").replace("/", "-")
+        return base_dir / f"{file_stem}.txt", base_dir / f"{file_stem}.json"
+
+    def _slugify_code_name(self, code: str) -> str:
+        s = self._normalize_code_key(code)
+        s = re.sub(r"[^a-z0-9]+", "_", s)
+        s = re.sub(r"_+", "_", s).strip("_")
+        return s or "unknown_code"
+
+    def _normalize_code_key(self, code: str) -> str:
+        """Accent-insensitive, punctuation-normalized key for code mapping."""
+        s = code.strip().lower()
+        # Normalize unicode, strip diacritics
+        s = unicodedata.normalize("NFKD", s)
+        s = "".join(ch for ch in s if not unicodedata.combining(ch))
+        # Normalize quotes/hyphens/spaces
+        s = s.replace("\u2019", "'").replace("’", "'")
+        s = re.sub(r"\s+", " ", s)
+        return s
+
+    def _try_local_store_read(self, code: str, article: str) -> Tuple[Optional[str], Dict]:
+        txt_path, meta_path = self._local_store_paths(code, article)
+        # Preferred write-through location (.txt)
+        if txt_path.exists():
+            try:
+                text = txt_path.read_text(encoding="utf-8")
+                meta = {"source": "local", "success": True, "meta_file": str(meta_path)}
+                return text, meta
+            except Exception as e:
+                logger.warning(f"Local store read failed: {e}")
+
+        # Heuristic: read from existing curated markdowns under data/fr_code_text/<Code Name>/article <ID>.md
         try:
-            # Check if Legifrance credentials are available
-            if not (os.getenv('LEGIFRANCE_CLIENT_ID') and os.getenv('LEGIFRANCE_CLIENT_SECRET')):
-                logger.warning("Legifrance credentials not available")
-                return None
-            result = recherche_code(code_name=code_enum, search=search_article)
-            
-            # Handle the actual API response structure: list of dicts with 'article' key
-            if result and isinstance(result, list) and len(result) > 0:
-                first_result = result[0]
-                if isinstance(first_result, dict) and 'article' in first_result:
-                    article_data = first_result['article']
-                    if isinstance(article_data, dict):
-                        # Prefer plain text over HTML
-                        text = article_data.get('texte', '')
-                        if text:
-                            return text
-                        # Fallback to HTML version if plain text not available
-                        html_text = article_data.get('texteHtml', '')
-                        if html_text:
-                            # Basic HTML tag removal for fallback
-                            import re
-                            text = re.sub(r'<[^>]+>', '', html_text)
-                            return text
-            
-            logger.warning(f"No text found in pylegifrance result for {code} {article}")
-            return None
-                
+            resolved = self._resolve_existing_local_file(code, article)
+            if resolved and resolved.exists():
+                text = resolved.read_text(encoding="utf-8")
+                # Strip any leading markdown headings
+                lines = text.splitlines()
+                content_start = 0
+                for i, line in enumerate(lines):
+                    if line.strip() and not line.startswith('#') and not line.startswith('---'):
+                        content_start = i
+                        break
+                content = "\n".join(lines[content_start:]).strip() + ("\n" if text.endswith("\n") else "")
+                return content, {"source": "local_fr_md", "success": True, "file": str(resolved)}
         except Exception as e:
-            logger.error(f"pylegifrance API call failed: {e}")
-            raise
+            logger.warning(f"Heuristic local .md read failed: {e}")
+
+        return None, {}
+
+    def _resolve_existing_local_file(self, code: str, article: str) -> Optional[Path]:
+        """Best-effort resolution of an existing curated file for a French code article.
+
+        Looks under data/fr_code_text/<Code Dir>/ for files like:
+          - "article <ID>.md" (preferred) or 
+          - "<ID>.md" / .txt variants.
+
+        Where <ID> is derived from the article string by removing spaces and dots, e.g.,
+        "L. 254-1" → "L254-1".
+        """
+        base_dir = Path("data/fr_code_text")
+        if not base_dir.exists():
+            return None
+
+        def _norm(s: str) -> str:
+            # Robust normalization: lowercase, strip accents, collapse whitespace,
+            # normalize special apostrophes and quotes, standardize dashes
+            s = (s or "").strip().lower()
+            s = s.replace("’", "'")
+            s = unicodedata.normalize("NFKD", s)
+            s = "".join(ch for ch in s if not unicodedata.combining(ch))
+            s = re.sub(r"[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]", "-", s)
+            s = re.sub(r"\s+", " ", s)
+            return s
+
+        target_dir: Optional[Path] = None
+        norm_code = _norm(code)
+        logger.info(f"Local FR resolver: norm_code='{norm_code}' raw_code='{code}' base_dir='{base_dir}'")
+        for d in base_dir.iterdir():
+            if d.is_dir():
+                norm_d = _norm(d.name)
+                logger.info(f"  Consider dir: '{d.name}' norm='{norm_d}' match={norm_d == norm_code}")
+                if norm_d == norm_code:
+                    target_dir = d
+                    break
+        # Fallback: try relaxed startswith/contains to handle minor wording differences
+        if not target_dir:
+            for d in base_dir.iterdir():
+                if not d.is_dir():
+                    continue
+                norm_d = _norm(d.name)
+                if norm_code in norm_d or norm_d in norm_code:
+                    logger.warning("Local FR resolver: Using relaxed directory match '%s' for code '%s'", d.name, code)
+                    target_dir = d
+                    break
+        if not target_dir:
+            logger.warning("Local FR resolver: No matching directory for code")
+            return None
+
+        # Build candidate stems
+        art_compact = article.replace(" ", "").replace(".", "")
+        logger.info(f"  Article raw='{article}', compact='{art_compact}'")
+        candidates = [
+            f"article {art_compact}",
+            art_compact,
+            article.replace(" ", "_").replace("/", "-"),
+        ]
+        exts = [".md", ".txt"]
+        for stem in candidates:
+            for ext in exts:
+                p = target_dir / f"{stem}{ext}"
+                logger.info(f"    Try file: {p} exists={p.exists()}")
+                if p.exists():
+                    return p
+        # Last resort: glob match for case-insensitive
+        for ext in exts:
+            matches = list(target_dir.glob(f"*{art_compact}{ext}"))
+            logger.info(f"    Glob '*{art_compact}{ext}' -> {len(matches)} matches")
+            if matches:
+                return matches[0]
+        return None
+
+    def _persist_to_local_store(self, code: str, article: str, text: str, metadata: Dict) -> None:
+        try:
+            txt_path, meta_path = self._local_store_paths(code, article)
+            txt_path.write_text(text, encoding="utf-8")
+            meta = {"source": metadata.get("source"), "persisted_from": metadata.get("source"), "success": True}
+            meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception as e:
+            logger.warning(f"Local store write failed: {e}")
     
     def clear_cache(self) -> int:
         """

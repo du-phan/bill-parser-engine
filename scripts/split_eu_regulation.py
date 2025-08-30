@@ -48,6 +48,7 @@ class EURegulationSplitter:
         self.article_pattern = re.compile(r'^#+\s*Article\s+(\d+|premier)\s*$|^Article\s+(\d+|premier)\s*$', re.IGNORECASE | re.MULTILINE)
         
         # Patterns for internal structure
+        # Accept both ")" and "." forms; normalized spacing ensured by normalization script
         self.numbered_point_pattern = re.compile(r'^(\d+)\)\s+(.+)', re.MULTILINE)
         self.numbered_paragraph_pattern = re.compile(r'^(\d+)\.\s+(.+)', re.MULTILINE)
         self.lettered_point_pattern = re.compile(r'^([a-z])\)\s+(.+)', re.MULTILINE)

@@ -4,6 +4,6 @@
 ---
 
 
-L 309/14            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/14            FR                         Journal officiel de l'Union européenne                                24.11.2009
 
-L'État membre rapporteur évalue les informations supplémentaires et fait part de son évaluation aux autres États membres, à la Commission et à l'Autorité dans les meilleurs délais et au plus tard six mois après les avoir reçues.
+L. - 'État membre rapporteur évalue les informations supplémentaires et fait part de son évaluation aux autres États membres, à la Commission et à l'Autorité dans les meilleurs délais et au plus tard six mois après les avoir reçues.

@@ -25,16 +25,16 @@ Partage d'essais et d'études impliquant l'utilisation d'animaux vertébrés
 
 4. Si le demandeur potentiel et le ou les titulaires d'autorisations de produits phytopharmaceutiques contenant la même substance active ou le même phytoprotecteur ou synergiste ou d'adjuvants ne parviennent pas à un accord sur le partage de rapports d'essais et d'études impliquant l'utilisation d'animaux vertébrés, le demandeur potentiel en informe l'autorité compétente de l'État membre visée à l'article 61, paragraphe 1.
 
-L'impossibilité de parvenir à un accord tel que visé au paragraphe 3 n'empêche pas l'autorité compétente dudit État membre d'utiliser les rapports d'essais et d'études impliquant l'utilisation d'animaux vertébrés pour examiner la demande introduite par le demandeur potentiel.
+L. - 'impossibilité de parvenir à un accord tel que visé au paragraphe 3 n'empêche pas l'autorité compétente dudit État membre d'utiliser les rapports d'essais et d'études impliquant l'utilisation d'animaux vertébrés pour examiner la demande introduite par le demandeur potentiel.
 
 5. Au plus tard le 14 décembre 2016, la Commission présente un rapport sur les effets des dispositions du présent règlement concernant la protection des données des essais et des études impliquant des animaux vertébrés. La Commission présente ce rapport au Parlement européen et au Conseil, assorti, le cas échéant, d'une proposition législative appropriée.
 ---
 
 
-L 309/32            FR                         Journal officiel de l'Union européenne                                24.11.2009
+L. - 309/32            FR                         Journal officiel de l'Union européenne                                24.11.2009
 
-6.    Le ou  les titulaire(s) des autorisations correspondantes disposent d'une créance sur le demandeur potentiel pour un partage  équitable des  coûts  qu'il(s) supporte(nt). L'autorité compétente de l'État membre peut enjoindre aux parties concernées de régler la question par le biais d'un arbitrage formel et contraignant  prévu  en droit national. À  défaut, les parties peuvent saisir de la question les juridictions des États membres. Les  sentences arbitrales ou les décisions judiciaires tiennent compte   des principes définis au paragraphe 3   et ont force exécutoire devant les juridictions des États membres.
+6. Le ou  les titulaire(s) des autorisations correspondantes disposent d'une créance sur le demandeur potentiel pour un partage  équitable des  coûts  qu'il(s) supporte(nt). L'autorité compétente de l'État membre peut enjoindre aux parties concernées de régler la question par le biais d'un arbitrage formel et contraignant  prévu  en droit national. À  défaut, les parties peuvent saisir de la question les juridictions des États membres. Les  sentences arbitrales ou les décisions judiciaires tiennent compte   des principes définis au paragraphe 3   et ont force exécutoire devant les juridictions des États membres.
 
-CHAPITRE VI
+C. - HAPITRE VI
 
 ACCÈS DU PUBLIC À L'INFORMATION

@@ -11,4 +11,4 @@
 ---
 
 
-24.11.2009 | FR | Journal officiel de l'Union européenne | L 309/9
+24. 11.2009 | FR | Journal officiel de l'Union européenne | L 309/9

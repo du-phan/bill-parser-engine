@@ -28,6 +28,8 @@ import json
 import logging
 import os
 from typing import List, Optional
+import time
+import re
 
 from mistralai import Mistral
 
@@ -80,7 +82,7 @@ class ReferenceObjectLinker:
     - Call clear_cache() to invalidate all cached results for this component
     """
 
-    def __init__(self, api_key: Optional[str] = None, use_cache: bool = True, max_iterations: int = 5, high_confidence_threshold: float = 0.9):
+    def __init__(self, api_key: Optional[str] = None, use_cache: bool = True, max_iterations: int = 2, high_confidence_threshold: float = 0.9, per_reference_time_budget_ms: int = 3000):
         """
         Initialize the reference object linker with Mistral client.
 
@@ -99,6 +101,7 @@ class ReferenceObjectLinker:
         self.optimizer_feedback_tool_schema = self._create_optimizer_feedback_tool_schema()
         self.max_iterations = max(1, max_iterations)
         self.high_confidence_threshold = high_confidence_threshold
+        self.per_reference_time_budget_ms = max(500, per_reference_time_budget_ms)
 
     def _create_tool_schema(self) -> List[dict]:
         """
@@ -265,6 +268,14 @@ class ReferenceObjectLinker:
             try:
                 # Context switching based on reference source
                 context_text = self._select_context(ref.source, original_law_article, intermediate_after_state_text)
+
+                # Deterministic internal-structure anchoring (for DEFINITIONAL):
+                # If we can find a specific section/alinéa anchor, narrow context to a small window
+                if ref.source == ReferenceSourceType.DEFINITIONAL:
+                    narrowed = self._narrow_context_by_anchor(ref.reference_text, context_text)
+                    if narrowed:
+                        logger.info(f"Narrowed context by structural anchor for ref: {ref.reference_text}")
+                        context_text = narrowed
                 
                 # Skip if no context available
                 if not context_text.strip():
@@ -318,7 +329,8 @@ class ReferenceObjectLinker:
                             if linked_ref.confidence >= self.high_confidence_threshold:
                                 logger.info(f"High confidence ({linked_ref.confidence:.3f}) - skipping iteration for reference: {linked_ref.reference_text}")
                             else:
-                                linked_ref = self._evaluate_and_correct_link(linked_ref, context_text)
+                                # Enforce a per-reference time budget for iterations
+                                linked_ref = self._evaluate_and_correct_link(linked_ref, context_text, self.per_reference_time_budget_ms)
                         
                         # Cache the result if caching is enabled
                         if self.use_cache and self.cache and linked_ref:
@@ -405,6 +417,40 @@ Pour la question, considérez :
 
 Utilisez l'appel de fonction pour fournir votre analyse complète.
 """
+
+    def _narrow_context_by_anchor(self, reference_text: str, context_text: str) -> Optional[str]:
+        """Narrow context using structural anchors like 'du II', 'du 2° du II', 'premier alinéa'.
+
+        Returns a smaller window around the detected anchor to reduce ambiguity.
+        """
+        # Roman section pattern with optional suffix (bis, ter, ...)
+        roman = r"[IVXLCDM]+(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?"
+        # Point number pattern with optional suffix
+        point = r"\d+°(?:\s+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))?"
+        patterns = [
+            rf"(?i)du\s+({roman})",
+            rf"(?i)du\s+({point})\s+du\s+({roman})",
+            rf"(?i)au\s+({roman})",
+            rf"(?i)au\s+({point})\s+du\s+({roman})",
+            r"(?i)premier\s+alinéa|deuxième\s+alinéa|troisième\s+alinéa",
+        ]
+        for pat in patterns:
+            m = re.search(pat, reference_text)
+            if m:
+                # Find corresponding anchor line in context
+                anchor = m.group(0)
+                # Build a permissive anchor regex for context
+                # Normalize common punctuation variants in context for matching (dash forms)
+                # while keeping the anchor literal; use a small set of equivalents in regex.
+                dash_equiv = r"[\-–]"  # hyphen or en-dash
+                normalized_anchor = re.sub(r"[\-–]", dash_equiv, m.group(1) if m.lastindex else anchor)
+                anchor_rx = re.compile(normalized_anchor, re.IGNORECASE)
+                ctx_match = anchor_rx.search(context_text)
+                if ctx_match:
+                    start = max(0, ctx_match.start() - 300)
+                    end = min(len(context_text), ctx_match.end() + 300)
+                    return context_text[start:end]
+        return None
 
     def _extract_tool_call(self, response, expected_function_name: str = "link_reference_and_generate_question") -> Optional[dict]:
         """
@@ -500,7 +546,7 @@ Utilisez l'appel de fonction pour fournir votre analyse complète.
             resolution_question=arguments["resolution_question"].strip()
         )
 
-    def _evaluate_and_correct_link(self, linked_ref: LinkedReference, context_text: str) -> Optional[LinkedReference]:
+    def _evaluate_and_correct_link(self, linked_ref: LinkedReference, context_text: str, time_budget_ms: int) -> Optional[LinkedReference]:
         """
         Apply iterative evaluator-optimizer pattern to validate and improve the linking.
         
@@ -520,6 +566,7 @@ Utilisez l'appel de fonction pour fournir votre analyse complète.
         current_result = linked_ref
         iteration_history = []
         
+        start_time = time.time()
         for iteration in range(self.max_iterations):
             try:
                 logger.info(f"Evaluator-optimizer iteration {iteration + 1}/{self.max_iterations} for reference: {linked_ref.reference_text}")
@@ -547,6 +594,12 @@ Utilisez l'appel de fonction pour fournir votre analyse complète.
                     tool_choice="any"
                 )
                 
+                # Time budget check
+                elapsed_ms = int((time.time() - start_time) * 1000)
+                if elapsed_ms >= time_budget_ms:
+                    logger.info(f"Time budget exhausted ({elapsed_ms}ms>={time_budget_ms}ms) - returning current result for ref: {linked_ref.reference_text}")
+                    return current_result
+
                 # Extract evaluation result
                 tool_call = self._extract_tool_call(response, expected_function_name="evaluate_and_correct_link")
                 if not tool_call or not self._validate_evaluator_response(tool_call):

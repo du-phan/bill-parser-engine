@@ -1,0 +1,22 @@
+{
+  "chunk_id": "# TITRE II::Article 3::I::3° bis::e)",
+  "hierarchy_path": [
+    "# TITRE II",
+    "Article 3",
+    "I",
+    "3° bis",
+    "e)"
+  ],
+  "text": "e) Au premier alinéa du IV, le mot : « clôture » est remplacé par le mot : « fin » ;\n\n",
+  "titre_text": "# TITRE II",
+  "article_label": "Article 3",
+  "article_introductory_phrase": "",
+  "major_subdivision_label": "I",
+  "major_subdivision_introductory_phrase": "– Le code de l'environnement est ainsi modifié :",
+  "numbered_point_label": "3° bis",
+  "numbered_point_introductory_phrase": "L'article L. 181-10-1 est ainsi modifié :",
+  "lettered_subdivision_label": "e)",
+  "structural_anchor_hint": null,
+  "start_pos": 20532,
+  "end_pos": 20618
+}

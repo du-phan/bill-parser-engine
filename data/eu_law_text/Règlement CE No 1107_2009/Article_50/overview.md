@@ -30,7 +30,7 @@ d) que les conséquences sur les autorisations pour des utilisations mineures so
 
 3. Par dérogation au paragraphe 1, un produit phytopharmaceutique contenant une substance dont on envisage la substitution est autorisé en l'absence d'évaluation comparative dans les cas où il est nécessaire d'acquérir une expérience préalable grâce à l'utilisation de ce produit dans la pratique.
 
-Ces autorisations sont accordées une fois pour une période n'excédant pas cinq ans.
+C. - es autorisations sont accordées une fois pour une période n'excédant pas cinq ans.
 
 4. Pour les produits phytopharmaceutiques contenant une substance dont on envisage la substitution, les États membres effectuent l'étude comparative prévue au paragraphe 1 régulièrement et au plus tard lors du renouvellement ou de la modification de l'autorisation.
 

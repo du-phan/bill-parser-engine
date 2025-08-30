@@ -21,7 +21,7 @@ This article contains 5 parts:
 
 3. En cas de conclusion positive sur l'équivalence et lorsque cette conclusion ne soulève aucune objection, l'article 29, paragraphe 1, point b), est réputé respecté. Toutefois, si un État membre examinant la demande n'arrive pas à la même conclusion que l'État membre rapporteur ou vice versa, il en informe le demandeur, les autres États membres et la Commission, en indiquant les motifs de ce désaccord.
 
-Les États membres concernés s'efforcent d'aboutir à un accord sur le point de savoir s'il est satisfait à l'article 29, paragraphe 1, point b). Ils donnent au demandeur la possibilité de présenter des observations.
+L. - es États membres concernés s'efforcent d'aboutir à un accord sur le point de savoir s'il est satisfait à l'article 29, paragraphe 1, point b). Ils donnent au demandeur la possibilité de présenter des observations.
 
 4. Si les États membres concernés ne parviennent pas à un accord dans les quarante - cinq jours, l'État membre évaluant l'équivalence soumet le dossier à la Commission. Une décision indiquant s'il est satisfait aux conditions visées à l'article 29, paragraphe 1, point b), est adoptée selon la procédure de réglementation visée à l'article 79, paragraphe 3. La période de quarante-cinq jours débute à la date à laquelle l'État membre examinant la demande d'autorisation a informé l'État membre rapporteur ou vice versa de son désaccord sur la conclusion établie par ce dernier, conformément au paragraphe 3.
 

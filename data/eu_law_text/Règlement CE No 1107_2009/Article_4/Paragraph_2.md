@@ -6,4 +6,4 @@ a) ils n'ont pas d'effet nocif sur la santé des êtres humains, y compris les g
 
 b) ils n'ont pas d'effet inacceptable sur l'environnement.
 
-Il existe des méthodes d'usage courant permettant de mesurer les résidus qui sont significatifs du point de vue toxicologique, écotoxicologique, environnemental ou de l'eau potable. Les normes analytiques doivent être généralement disponibles.
+I. - l existe des méthodes d'usage courant permettant de mesurer les résidus qui sont significatifs du point de vue toxicologique, écotoxicologique, environnemental ou de l'eau potable. Les normes analytiques doivent être généralement disponibles.

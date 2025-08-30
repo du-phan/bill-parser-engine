@@ -1,11 +1,11 @@
 #### Article 18
 #### Programme de travail
 
-La Commission peut établir un programme de travail dans lequel sont rassemblées des substances actives similaires, en fixant des priorités sur la base des problèmes de sécurité pour la santé humaine, animale, et pour l'environnement et, dans la mesure du possible, de la nécessité d'un contrôle et d'une gestion efficaces de la résistance des ennemis des cultures ciblés. Ce programme peut imposer aux parties intéressées de fournir, dans un délai qu'il fixe, toutes les données nécessaires aux États membres, à la Commission et à l'Autorité.
+L. - a Commission peut établir un programme de travail dans lequel sont rassemblées des substances actives similaires, en fixant des priorités sur la base des problèmes de sécurité pour la santé humaine, animale, et pour l'environnement et, dans la mesure du possible, de la nécessité d'un contrôle et d'une gestion efficaces de la résistance des ennemis des cultures ciblés. Ce programme peut imposer aux parties intéressées de fournir, dans un délai qu'il fixe, toutes les données nécessaires aux États membres, à la Commission et à l'Autorité.
 ---
 
 
-Le programme comporte les éléments suivants:
+L. - e programme comporte les éléments suivants:
 
 a) les procédures concernant l'introduction et l'évaluation des demandes de renouvellement des approbations;
 
